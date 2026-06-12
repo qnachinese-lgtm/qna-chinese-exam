@@ -1,0 +1,8 @@
+{
+    "rewrites": [
+          {
+                  "source": "/(.*)",
+                  "destination": "/華語教學認證模擬考.html"
+          }
+    ]
+}
