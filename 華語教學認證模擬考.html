@@ -1645,8 +1645,7 @@ async function submitLogin(){
     const newAcc = {name, email, pw: await hashPw(pw), createdAt: new Date().toISOString(), method: 'email'};
     accounts.push(newAcc);
     localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
-    fbSaveUsers(accounts);
-
+  
     switchTab('login');
     document.getElementById('user-email-input-reg').value = '';
     document.getElementById('user-name-input').value = '';
@@ -2136,7 +2135,6 @@ async function resetUserPassword(){
   if(!acc){ msgEl.style.color='#c62828'; msgEl.textContent='帳號錯誤'; return; }
   acc.pw = await hashPw(pw);
   localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
-  fbSaveUsers(accounts);
   _userOTPCode=''; _userOTPExpiry=0; _userOTPName='';
   document.getElementById('user-forgot-box').style.display='none';
   const errEl = document.getElementById('login-error');
@@ -2618,7 +2616,6 @@ function deleteUser(name){
   if(!confirm(`確定要刪除帳號「${name}」及其所有記錄嗎？`)) return;
   let accounts = getUserAccounts().filter(a=>a.name!==name);
   localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
-  fbSaveUsers(accounts);
   let history = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').filter(r=>r.name!==name);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
   fbDeleteUserHistory(name);
@@ -2674,7 +2671,6 @@ function openResetPwModal(name){
     if(!acc){ alert('帳號不存在'); return; }
     acc.pw = hashed;
     localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
-    fbSaveUsers(accounts);
     renderAdminPanel();
     // Show the new password clearly
     const msg = document.createElement('div');
@@ -2709,7 +2705,6 @@ async function saveModal(){
     if(email !== undefined) acc.email = email || acc.email;
   }
   localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
-  fbSaveUsers(accounts);
   closeModal();
   renderAdminPanel();
 }
@@ -3004,7 +2999,6 @@ async function saveProfileEmail(){
   if(!acc){ msgEl.className='profile-msg err'; msgEl.textContent='找不到帳號'; return; }
   acc.email = email;
   localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
-  fbSaveUsers(accounts);
   document.getElementById('profile-email-display').textContent = email;
   msgEl.className='profile-msg ok'; msgEl.textContent='✅ 信箱已更新';
   setTimeout(()=>msgEl.textContent='', 3000);
@@ -3028,7 +3022,6 @@ async function saveProfilePassword(){
   // Save new password
   acc.pw = await hashPw(newPw);
   localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
-  fbSaveUsers(accounts);
   ['profile-pw-old','profile-pw-new','profile-pw-confirm'].forEach(id=>document.getElementById(id).value='');
   msgEl.className='profile-msg ok'; msgEl.textContent='✅ 密碼已成功更新';
   setTimeout(()=>msgEl.textContent='', 3000);
