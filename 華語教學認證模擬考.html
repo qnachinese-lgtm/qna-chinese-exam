@@ -3748,21 +3748,31 @@ function renderQReview(){
 
   <!-- 管理員白名單管理 -->
   <div id="admin-whitelist-section" style="border-top:2px solid #e0e0e0;padding-top:20px">
-    <div class="admin-header" style="margin-bottom:16px">
+    <div class="admin-header" style="margin-bottom:20px">
       <span class="admin-title">👤 管理員存取權限</span>
     </div>
-    <div class="admin-section">設定哪些 Google 郵箱可以登入後臺</div>
 
-    <!-- 新增管理員 -->
-    <div style="background:#f5f5f5;border-radius:8px;padding:12px;margin-bottom:16px">
-      <div style="display:flex;gap:8px;align-items:center">
-        <input type="email" id="admin-email-add" placeholder="輸入 Gmail 郵箱（如 admin@gmail.com）"
-          style="flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem">
-        <button class="admin-add-btn" onclick="addAdminEmail()" style="margin:0;padding:8px 16px">＋ 新增</button>
+    <!-- 新增管理員卡片 -->
+    <div style="background:#f9f9f9;border:1px solid #e0e0e0;border-radius:12px;padding:20px;margin-bottom:24px">
+      <h4 style="margin:0 0 16px;font-size:.95rem;color:#2c2c2c;font-weight:600">🆕 新增管理員</h4>
+      <p style="margin:0 0 12px;font-size:.85rem;color:#666">設定哪些 Google 郵箱可以登入後臺</p>
+
+      <div style="margin-bottom:12px">
+        <label style="display:block;font-size:.85rem;color:#666;margin-bottom:6px;font-weight:500">Gmail（忘記密碼使用）</label>
+        <input type="email" id="admin-email-add" placeholder="管理員 Gmail 信箱"
+          style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem;box-sizing:border-box">
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button onclick="document.getElementById('admin-email-add').value=''"
+          style="padding:10px 24px;border:1px solid #ddd;background:#fff;border-radius:6px;font-size:.9rem;cursor:pointer;color:#666;font-weight:600;transition:all .2s">取消</button>
+        <button class="admin-add-btn" onclick="addAdminEmail()"
+          style="padding:10px 24px;background:#2196f3;color:#fff;border:none;border-radius:6px;font-size:.9rem;cursor:pointer;font-weight:600;transition:all .2s">＋ 新增</button>
       </div>
     </div>
 
-    <!-- 白名單表格 -->
+    <!-- 管理員列表 -->
+    <h4 style="margin:0 0 12px;font-size:.95rem;color:#2c2c2c;font-weight:600">已新增的管理員</h4>
     <div style="overflow-x:auto">
     <table class="admin-table">
       <thead><tr>
