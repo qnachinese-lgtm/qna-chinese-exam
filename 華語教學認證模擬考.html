@@ -1664,8 +1664,6 @@ async function submitLogin(){
 
     if(!email){ errEl.textContent='請輸入 Gmail 電郵地址'; return; }
     if(!pw)  { errEl.textContent='請輸入密碼'; return; }
-
-    let accounts = getUserAccounts();
     const acc = accounts.find(a=>a.email===email);
     if(!acc){ errEl.textContent='找不到此郵箱，請先建立帳號'; return; }
     if(isHashed(acc.pw)){
