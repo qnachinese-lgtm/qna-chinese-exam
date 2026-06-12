@@ -1669,6 +1669,7 @@ async function submitLogin(){
     if(isHashed(acc.pw)){
       if(acc.pw !== await hashPw(pw)){ errEl.textContent='密碼錯誤'; return; }
     } else {
+      let accounts = getUserAccounts();
       if(acc.pw !== pw){ errEl.textContent='密碼錯誤'; return; }
       acc.pw = await hashPw(pw);
       localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
