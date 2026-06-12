@@ -368,7 +368,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
       </div>
     </div>
     <div class="login-error" id="login-error"></div>
-   <button class="login-btn" id="login-submit-btn" onclick="submitLogin()" style="pointer-events:auto;opacity:1;">登入 →</button>
+    <button class="login-btn" id="login-submit-btn" onclick="submitLogin()">登入 →</button>
     <div id="user-forgot-wrap" style="text-align:center;margin-top:8px;display:none">
       <button type="button" style="background:none;border:none;color:#1976d2;font-size:.8rem;cursor:pointer;text-decoration:underline" onclick="toggleUserForgot()">忘記密碼？</button>
     </div>
@@ -1669,7 +1669,6 @@ async function submitLogin(){
     if(isHashed(acc.pw)){
       if(acc.pw !== await hashPw(pw)){ errEl.textContent='密碼錯誤'; return; }
     } else {
-      let accounts = getUserAccounts();
       if(acc.pw !== pw){ errEl.textContent='密碼錯誤'; return; }
       acc.pw = await hashPw(pw);
       localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
