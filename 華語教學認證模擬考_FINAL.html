@@ -1640,8 +1640,7 @@ async function submitLogin(){
     if(!name){ errEl.textContent='請輸入學習者名稱'; return; }
     if(!pw){ errEl.textContent='請輸入密碼'; return; }
     if(pw !== confirmPw){ errEl.textContent='兩次密碼不一致'; return; }
-
-    let accounts = getUserAccounts();
+    // accounts 已在函數開始定義
     if(accounts.find(a=>a.email===email)){ errEl.textContent='此 Gmail 已被使用'; return; }
     if(accounts.find(a=>a.name===name)){ errEl.textContent='此學習者名稱已被使用'; return; }
 
