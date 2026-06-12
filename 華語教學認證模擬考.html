@@ -1622,8 +1622,6 @@ function switchTab(tab){
 }
 
 async function submitLogin(){
-  let accounts = getUserAccounts();
-
   const isRegister = document.getElementById('tab-register').classList.contains('active');
   const errEl = document.getElementById('login-error');
   let email, pw, name, confirmPw;
@@ -1640,7 +1638,7 @@ async function submitLogin(){
     if(!pw){ errEl.textContent='請輸入密碼'; return; }
     if(pw !== confirmPw){ errEl.textContent='兩次密碼不一致'; return; }
 
-    // 使用上面定義的 accounts
+    let accounts = getUserAccounts();
     if(accounts.find(a=>a.email===email)){ errEl.textContent='此 Gmail 已被使用'; return; }
     if(accounts.find(a=>a.name===name)){ errEl.textContent='此學習者名稱已被使用'; return; }
 
@@ -1664,6 +1662,8 @@ async function submitLogin(){
 
     if(!email){ errEl.textContent='請輸入 Gmail 電郵地址'; return; }
     if(!pw)  { errEl.textContent='請輸入密碼'; return; }
+
+    let accounts = getUserAccounts();
     const acc = accounts.find(a=>a.email===email);
     if(!acc){ errEl.textContent='找不到此郵箱，請先建立帳號'; return; }
     if(isHashed(acc.pw)){
@@ -1673,22 +1673,21 @@ async function submitLogin(){
       acc.pw = await hashPw(pw);
       localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
     }
+
+    st.currentUser = acc.name;
+    localStorage.setItem('tocfl_current_user', st.currentUser);
+    localStorage.setItem('tocfl_user_email', email);
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('subject-screen').style.display='block';
+    document.getElementById('user-bar-name').textContent = st.currentUser;
+    document.getElementById('user-email-input').value='';
+    document.getElementById('user-pw-input').value='';
+    document.getElementById('login-error').textContent='';
+    renderProgressPanel();
+    updateWrongReviewBtn();
+    startSessionTimer();
   }
-
-  st.currentUser = accounts.find(a=>a.email===email).name;
-  localStorage.setItem('tocfl_current_user', st.currentUser);
-  localStorage.setItem('tocfl_user_email', email);
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('subject-screen').style.display='block';
-  document.getElementById('user-bar-name').textContent = st.currentUser;
-  document.getElementById('user-email-input').value='';
-  document.getElementById('user-pw-input').value='';
-  document.getElementById('login-error').textContent='';
-  renderProgressPanel();
-  updateWrongReviewBtn();
-  startSessionTimer();
 }
-
 // ════════════════════════════════════════════════
 //  TIMER
 // ════════════════════════════════════════════════
