@@ -1595,7 +1595,22 @@ function initAdminWhitelist(){
 
 function getAdminWhitelist(){
   initAdminWhitelist();
-  return JSON.parse(localStorage.getItem(ADMINS_KEY)||'[]');
+  const data = JSON.parse(localStorage.getItem(ADMINS_KEY)||'[]');
+  // 如果是舊格式（字符串數組），轉換為新格式（對象數組）
+  if(data.length > 0 && typeof data[0] === 'string'){
+    return data; // 用於向後兼容
+  }
+  return data;
+}
+
+function getAdminAccounts(){
+  const data = JSON.parse(localStorage.getItem(ADMINS_KEY)||'[]');
+  // 如果是舊格式（字符串數組），轉換為新格式（對象數組）
+  if(data.length > 0 && typeof data[0] === 'string'){
+    // 舊格式：直接返回空數組，提示升級
+    return [];
+  }
+  return data; // 新格式：{name, pw, email}
 }
 
 function isAdminEmail(email){
@@ -3318,12 +3333,27 @@ function renderAdminWhitelist(){
     setTimeout(() => renderAdminWhitelist(), 200);
     return;
   }
-  const whitelist = getAdminWhitelist();
-  console.log('🔄 渲染管理員列表:', whitelist);
-  tbody.innerHTML = whitelist.map((email,i)=>{
+  const admins = getAdminAccounts();
+  console.log('🔄 渲染管理員列表:', admins);
+
+  if(!admins.length){
+    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#999;padding:20px">尚無管理員帳號</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = admins.map((admin,i)=>{
     return `<tr>
-      <td>${email}</td>
-      <td style="text-align:center"><button class="admin-delete-btn" onclick="removeAdminEmail('${email}')">移除</button></td>
+      <td>${admin.name}</td>
+      <td class="pw-cell"><span style="color:#aaa;font-family:sans-serif;font-size:.8rem">🔒 已加密</span></td>
+      <td>${admin.email||'—'}</td>
+      <td>
+        <div class="admin-action-cell" style="display:flex;gap:6px;justify-content:center">
+          ${_isMasterAdmin ? `<button class="admin-edit-btn" onclick="openEditAdminModal(${i})" style="padding:4px 12px;font-size:.8rem">編輯</button>
+          <button class="admin-pw-btn" onclick="openResetAdminPwModal('${admin.name}')" style="padding:4px 12px;font-size:.8rem">重設</button>
+          <button class="admin-delete-btn" onclick="deleteAdminAccount('${admin.name}')" style="padding:4px 12px;font-size:.8rem">刪除</button>` :
+          `<span style="font-size:.8rem;color:#999">（只讀）</span>`}
+        </div>
+      </td>
     </tr>`;
   }).join('');
   console.log('✅ 管理員列表已更新');
@@ -3623,15 +3653,37 @@ function openEditModal(idx){
   document.getElementById('admin-modal-overlay').style.display='flex';
 }
 
-function openAddModal(){
+// 區分學習者和管理員的新增函數
+function openAddLearnerModal(){
   _editIdx = -1;
-  document.getElementById('modal-title').textContent='新增帳號';
+  document.getElementById('modal-title').textContent='新增學習者帳號';
   document.getElementById('modal-name').value='';
   document.getElementById('modal-pw').value='';
   document.getElementById('modal-email').value='';
   document.getElementById('modal-idx').value='';
   document.getElementById('modal-error').textContent='';
+  window._addingAdminAccount = false; // 標記為新增學習者
   document.getElementById('admin-modal-overlay').style.display='flex';
+}
+
+function openAddAdminModal(){
+  if(!_isMasterAdmin){
+    alert('❌ 只有主管理員才能新增管理員帳號');
+    return;
+  }
+  _editIdx = -1;
+  document.getElementById('modal-title').textContent='新增管理員帳號';
+  document.getElementById('modal-name').value='';
+  document.getElementById('modal-pw').value='';
+  document.getElementById('modal-email').value='';
+  document.getElementById('modal-idx').value='';
+  document.getElementById('modal-error').textContent='';
+  window._addingAdminAccount = true; // 標記為新增管理員
+  document.getElementById('admin-modal-overlay').style.display='flex';
+}
+
+function openAddModal(){
+  openAddLearnerModal(); // 預設為新增學習者
 }
 
 function closeModal(){
@@ -3681,44 +3733,158 @@ async function saveModal(){
   const pw    = document.getElementById('modal-pw').value;
   const email = document.getElementById('modal-email').value.trim().toLowerCase();
   const errEl = document.getElementById('modal-error');
+  const isAddingAdmin = window._addingAdminAccount || false;
+
   if(!name){ errEl.textContent='請輸入名稱'; return; }
-  let accounts = getUserAccounts();
-  let isNew = false;
 
-  if(_editIdx < 0){
-    // Add new
-    if(!pw){ errEl.textContent='請輸入密碼'; return; }
-    if(accounts.find(a=>a.name===name)){ errEl.textContent='此名稱已存在'; return; }
-    const newAcc = {name, pw: await hashPw(pw)};
-    if(email) newAcc.email = email;
-    accounts.push(newAcc);
-    isNew = true;
+  if(isAddingAdmin){
+    // 保存管理員帳號
+    if(!_isMasterAdmin){ errEl.textContent='❌ 只有主管理員才能新增管理員'; return; }
+    let admins = getAdminAccounts();
+
+    if(_editIdx < 0){
+      // 新增管理員
+      if(!pw){ errEl.textContent='請輸入密碼'; return; }
+      if(!email){ errEl.textContent='請輸入 Gmail'; return; }
+      if(admins.find(a=>a.name===name)){ errEl.textContent='此名稱已存在'; return; }
+      if(admins.find(a=>a.email===email)){ errEl.textContent='此 Gmail 已被使用'; return; }
+
+      const newAdmin = {name, pw: await hashPw(pw), email};
+      admins.push(newAdmin);
+    } else {
+      // 編輯管理員
+      const admin = admins[_editIdx];
+      if(!admin){ errEl.textContent='帳號不存在'; return; }
+      if(name !== admin.name && admins.find(a=>a.name===name)){ errEl.textContent='此名稱已被使用'; return; }
+      admin.name = name;
+      if(pw) admin.pw = await hashPw(pw);
+      if(email && email !== admin.email && admins.find(a=>a.email===email)){ errEl.textContent='此 Gmail 已被使用'; return; }
+      if(email) admin.email = email;
+    }
+
+    localStorage.setItem(ADMINS_KEY, JSON.stringify(admins));
+    const msg = '✅ ' + (_editIdx < 0 ? '管理員新增成功' : '管理員已儲存');
+    showToast(msg, '#2e7d32');
   } else {
-    // Edit existing
-    const acc = accounts[_editIdx];
-    if(!acc){ errEl.textContent='帳號不存在'; return; }
-    if(name !== acc.name && accounts.find(a=>a.name===name)){ errEl.textContent='此名稱已被使用'; return; }
-    acc.name = name;
-    if(pw) acc.pw = await hashPw(pw);
-    if(email !== undefined) acc.email = email || acc.email;
-  }
+    // 保存學習者帳號（原有邏輯）
+    let accounts = getUserAccounts();
+    let isNew = false;
 
-  // 儲存到本地和 Firestore
-  localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
-  fbSaveUsers(accounts);
+    if(_editIdx < 0){
+      // 新增學習者
+      if(!pw){ errEl.textContent='請輸入密碼'; return; }
+      if(accounts.find(a=>a.name===name)){ errEl.textContent='此名稱已存在'; return; }
+      const newAcc = {name, pw: await hashPw(pw)};
+      if(email) newAcc.email = email;
+      accounts.push(newAcc);
+      isNew = true;
+    } else {
+      // 編輯學習者
+      const acc = accounts[_editIdx];
+      if(!acc){ errEl.textContent='帳號不存在'; return; }
+      if(name !== acc.name && accounts.find(a=>a.name===name)){ errEl.textContent='此名稱已被使用'; return; }
+      acc.name = name;
+      if(pw) acc.pw = await hashPw(pw);
+      if(email !== undefined) acc.email = email || acc.email;
+    }
+
+    localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
+    fbSaveUsers(accounts);
+    const msg = isNew?'✅ 學習者新增成功':'✅ 學習者已儲存';
+    showToast(msg, '#2e7d32');
+  }
 
   // 清空編輯數據
   _editIdx = -1;
   _originalEditData = {};
-
-  // 顯示保存成功提示
-  const msg = document.createElement('div');
-  msg.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#2e7d32;color:#fff;padding:14px 22px;border-radius:10px;z-index:9999;font-size:.95rem;box-shadow:0 4px 20px rgba(0,0,0,.3);text-align:center;max-width:320px';
-  msg.textContent=isNew?'✅ 帳號新增成功':'✅ 帳號已儲存';
-  document.body.appendChild(msg);
-  setTimeout(()=>msg.remove(), 2000);
+  window._addingAdminAccount = false;
 
   closeModal();
+  renderAdminPanel();
+}
+
+function showToast(msg, bgColor='#2e7d32'){
+  const toast = document.createElement('div');
+  toast.style.cssText=`position:fixed;top:20px;left:50%;transform:translateX(-50%);background:${bgColor};color:#fff;padding:14px 22px;border-radius:10px;z-index:9999;font-size:.95rem;box-shadow:0 4px 20px rgba(0,0,0,.3);text-align:center;max-width:320px`;
+  toast.textContent=msg;
+  document.body.appendChild(toast);
+  setTimeout(()=>toast.remove(), 2000);
+}
+
+// ═══════════════════════════════════════════
+//  管理員帳號管理
+// ═══════════════════════════════════════════
+function openEditAdminModal(idx){
+  if(!_isMasterAdmin){
+    alert('❌ 只有主管理員才能編輯管理員帳號');
+    return;
+  }
+  const admins = getAdminAccounts();
+  const admin = admins[idx];
+  if(!admin) return;
+
+  _editIdx = idx;
+  document.getElementById('modal-title').textContent='編輯管理員帳號';
+  document.getElementById('modal-name').value = admin.name;
+  document.getElementById('modal-pw').value = '';
+  document.getElementById('modal-email').value = admin.email || '';
+  document.getElementById('modal-idx').value = idx;
+  document.getElementById('modal-error').textContent='';
+  window._addingAdminAccount = true;
+  document.getElementById('admin-modal-overlay').style.display='flex';
+}
+
+async function deleteAdminAccount(name){
+  if(!_isMasterAdmin){
+    alert('❌ 只有主管理員才能刪除管理員帳號');
+    return;
+  }
+
+  if(name.toLowerCase() === MASTER_ADMIN_EMAIL.toLowerCase()){
+    alert('❌ 無法刪除主管理員帳戶！');
+    return;
+  }
+
+  if(!confirm(`確定要刪除管理員帳號「${name}」嗎？`)) return;
+
+  let admins = getAdminAccounts();
+  admins = admins.filter(a => a.name !== name);
+  localStorage.setItem(ADMINS_KEY, JSON.stringify(admins));
+
+  showToast(`✅ 管理員「${name}」已刪除`, '#c62828');
+  renderAdminPanel();
+}
+
+async function openResetAdminPwModal(name){
+  if(!_isMasterAdmin){
+    alert('❌ 只有主管理員才能重設管理員密碼');
+    return;
+  }
+
+  const newPw = prompt(`請輸入新密碼（用於管理員「${name}」）:`);
+  if(!newPw) return;
+  if(newPw.length < 6){
+    alert('密碼至少需要 6 個字元');
+    return;
+  }
+
+  let admins = getAdminAccounts();
+  const admin = admins.find(a => a.name === name);
+  if(!admin){
+    alert('❌ 管理員帳號不存在');
+    return;
+  }
+
+  admin.pw = await hashPw(newPw);
+  localStorage.setItem(ADMINS_KEY, JSON.stringify(admins));
+
+  // 顯示密碼提示
+  const msg = document.createElement('div');
+  msg.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#4a148c;color:#fff;padding:14px 22px;border-radius:10px;z-index:9999;font-size:.95rem;box-shadow:0 4px 20px rgba(0,0,0,.3);text-align:center;max-width:320px';
+  msg.innerHTML=`<div style="margin-bottom:6px;font-size:.85rem;opacity:.85">✅ 密碼已重設</div><div style="font-size:1.1rem;font-weight:700;letter-spacing:.05em">帳號：${name}</div><div style="font-size:1.1rem;font-weight:700;letter-spacing:.05em">密碼：${newPw}</div><div style="font-size:.75rem;opacity:.7;margin-top:6px">（5秒後自動關閉）</div>`;
+  document.body.appendChild(msg);
+  setTimeout(()=>msg.remove(), 5000);
+
   renderAdminPanel();
 }
 
@@ -3822,14 +3988,20 @@ function renderQReview(){
   </div>
 
   <!-- 學習者帳號管理 -->
-  <div class="admin-section">📚 管理所有學習者帳號與成績記錄</div>
-  <div style="overflow-x:auto;margin-bottom:30px">
-  <table class="admin-table">
-    <thead><tr>
-      <th>名稱</th><th>密碼</th><th>Gmail</th><th>考試次數</th><th>最近成績</th><th>操作</th>
-    </tr></thead>
-    <tbody id="admin-tbody"></tbody>
-  </table>
+  <div style="margin-bottom:30px">
+    <div class="admin-header" style="margin-bottom:16px">
+      <span class="admin-title">📚 新增學習者帳號</span>
+      <button class="admin-add-btn" onclick="openAddLearnerModal()" style="margin-left:auto">＋ 新增學習者</button>
+    </div>
+    <div class="admin-section">管理所有學習者帳號與成績記錄</div>
+    <div style="overflow-x:auto">
+      <table class="admin-table">
+        <thead><tr>
+          <th>名稱</th><th>密碼</th><th>Gmail</th><th>考試次數</th><th>最近成績</th><th>操作</th>
+        </tr></thead>
+        <tbody id="admin-tbody"></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- 主管理員密碼管理 -->
@@ -3920,40 +4092,20 @@ function renderQReview(){
     </div>
   </div>
 
-  <!-- 管理員白名單管理 -->
+  <!-- 管理員帳號管理 -->
   <div id="admin-whitelist-section" style="border-top:2px solid #e0e0e0;padding-top:20px">
-    <div class="admin-header" style="margin-bottom:20px">
-      <span class="admin-title">👤 管理員存取權限</span>
+    <div class="admin-header" style="margin-bottom:16px">
+      <span class="admin-title">👤 新增管理員帳號</span>
+      <button class="admin-add-btn" onclick="openAddAdminModal()" style="margin-left:auto">＋ 新增管理員</button>
     </div>
-
-    <!-- 新增管理員卡片 -->
-    <div style="background:#f9f9f9;border:1px solid #e0e0e0;border-radius:12px;padding:20px;margin-bottom:24px">
-      <h4 style="margin:0 0 16px;font-size:.95rem;color:#2c2c2c;font-weight:600">🆕 新增管理員</h4>
-      <p style="margin:0 0 12px;font-size:.85rem;color:#666">設定哪些 Google 郵箱可以登入後臺</p>
-
-      <div style="margin-bottom:12px">
-        <label style="display:block;font-size:.85rem;color:#666;margin-bottom:6px;font-weight:500">Gmail（忘記密碼使用）</label>
-        <input type="email" id="admin-email-add" placeholder="管理員 Gmail 信箱"
-          style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem;box-sizing:border-box">
-      </div>
-
-      <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button onclick="document.getElementById('admin-email-add').value=''"
-          style="padding:10px 24px;border:1px solid #ddd;background:#fff;border-radius:6px;font-size:.9rem;cursor:pointer;color:#666;font-weight:600;transition:all .2s">取消</button>
-        <button class="admin-add-btn" onclick="addAdminEmail()"
-          style="padding:10px 24px;background:#2196f3;color:#fff;border:none;border-radius:6px;font-size:.9rem;cursor:pointer;font-weight:600;transition:all .2s">＋ 新增</button>
-      </div>
-    </div>
-
-    <!-- 管理員列表 -->
-    <h4 style="margin:0 0 12px;font-size:.95rem;color:#2c2c2c;font-weight:600">已新增的管理員</h4>
+    <div class="admin-section">設定可登入後臺的管理員帳號</div>
     <div style="overflow-x:auto">
-    <table class="admin-table">
-      <thead><tr>
-        <th>Google 郵箱</th><th style="text-align:center">操作</th>
-      </tr></thead>
-      <tbody id="admin-whitelist-tbody"></tbody>
-    </table>
+      <table class="admin-table">
+        <thead><tr>
+          <th>名稱</th><th>密碼</th><th>Gmail</th><th>操作</th>
+        </tr></thead>
+        <tbody id="admin-whitelist-tbody"></tbody>
+      </table>
     </div>
   </div>
 </div>`);
