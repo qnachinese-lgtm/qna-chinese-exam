@@ -1,8 +1,8 @@
 {
-    "rewrites": [
-          {
-                  "source": "/(.*)",
-                  "destination": "/華語教學認證模擬考.html"
-          }
-    ]
+      "rewrites": [
+              {
+                        "source": "/(?!.*\\.(html|json)$)(.*)",
+                        "destination": "/404.html"
+              }
+      ]
 }
