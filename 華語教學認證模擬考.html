@@ -320,9 +320,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 .btn-xlsx { padding:10px 18px; background:#2e7d32; color:#fff; border:none; border-radius:9px; font-size:.9rem; font-weight:600; cursor:pointer; margin:4px; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1436,7 +1434,8 @@ if(!qs.length){ alert('所選條件下沒有題目，請調整篩選條件'); re
   st.questions = qs; st.idx = 0; st.correct = 0; st.wrong = 0; st.answered = false; st.examResults = [];
   st.stats = {}; st.selected.forEach(s => { st.stats[s]={correct:0,total:0}; });
   st.isReviewMode = false;
-  navigateToScreen('exam-screen', '/exam/taking');
+  document.getElementById('subject-screen').style.display='none';
+  document.getElementById('exam-screen').style.display='block';
   startExamTimer();
   renderQ();
 }
@@ -1535,7 +1534,8 @@ function confirmExit(){
 function showResult(){
   stopExamTimer();
   clearExamResume();
-  navigateToScreen('result-screen', '/results');
+  document.getElementById('exam-screen').style.display='none';
+  document.getElementById('result-screen').style.display='block';
   if(!st.isReviewMode) saveWrongQs(st.examResults);
   const done = st.correct+st.wrong;
   const total = st.questions.length;
@@ -1568,7 +1568,8 @@ function retryExam(){ document.getElementById('result-screen').style.display='no
 function goHome(){
   stopExamTimer();
   clearExamResume();
-  navigateToScreen('subject-screen', '/exam');
+  document.getElementById('result-screen').style.display='none';
+  document.getElementById('subject-screen').style.display='block';
   renderProgressPanel();
   updateWrongReviewBtn();
   document.querySelectorAll('.subject-card').forEach(c=>c.classList.remove('selected'));
@@ -1595,22 +1596,7 @@ function initAdminWhitelist(){
 
 function getAdminWhitelist(){
   initAdminWhitelist();
-  const data = JSON.parse(localStorage.getItem(ADMINS_KEY)||'[]');
-  // 如果是舊格式（字符串數組），轉換為新格式（對象數組）
-  if(data.length > 0 && typeof data[0] === 'string'){
-    return data; // 用於向後兼容
-  }
-  return data;
-}
-
-function getAdminAccounts(){
-  const data = JSON.parse(localStorage.getItem(ADMINS_KEY)||'[]');
-  // 如果是舊格式（字符串數組），轉換為新格式（對象數組）
-  if(data.length > 0 && typeof data[0] === 'string'){
-    // 舊格式：直接返回空數組，提示升級
-    return [];
-  }
-  return data; // 新格式：{name, pw, email}
+  return JSON.parse(localStorage.getItem(ADMINS_KEY)||'[]');
 }
 
 function isAdminEmail(email){
@@ -1620,421 +1606,6 @@ function isAdminEmail(email){
 
 function getUserAccounts(){
   return JSON.parse(localStorage.getItem(USERS_KEY)||'[]');
-}
-
-// ═══════════════════════════════════════════
-// 主管理員系統
-// ═══════════════════════════════════════════
-
-const MASTER_ADMIN_EMAIL = 'qnachinese@gmail.com';
-let _currentUserEmail = null;
-let _isMasterAdmin = false;
-let _adminRole = null; // 'master' | 'admin' | null
-
-async function initMasterAdminSystem(){
-  if(!_currentUser) return;
-  _currentUserEmail = (_currentUser.email || _currentUser.user?.email || '').toLowerCase().trim();
-  _isMasterAdmin = (_currentUserEmail === MASTER_ADMIN_EMAIL.toLowerCase());
-
-  // 獲取該用戶的角色
-  if(_isMasterAdmin){
-    _adminRole = 'master';
-  } else if(getAdminWhitelist().includes(_currentUserEmail)){
-    _adminRole = 'admin';
-  } else {
-    _adminRole = null;
-  }
-  console.log(`👤 用戶: ${_currentUserEmail}, 角色: ${_adminRole}`);
-}
-
-// 只有主管理員才能執行敏感操作
-function canManageAdmins(){
-  return _isMasterAdmin;
-}
-
-function canEditAccounts(){
-  return _isMasterAdmin || _adminRole === 'admin';
-}
-
-function canViewAccounts(){
-  return _adminRole !== null; // 任何管理員都能看
-}
-
-// 獲取主管理員密碼
-async function getMasterAdminPassword(){
-  if(!_db) return null;
-  try {
-    const doc = await _db.collection('config').doc('master_admin').get();
-    return doc.exists ? doc.data().password : null;
-  } catch(e){
-    console.warn('獲取密碼失敗:', e);
-    return null;
-  }
-}
-
-// 設置主管理員密碼
-async function setMasterAdminPassword(newPassword){
-  if(!_isMasterAdmin){
-    alert('❌ 只有主管理員才能設置密碼');
-    return false;
-  }
-  if(!_db) return false;
-
-  try {
-    const hashedPw = await hashPw(newPassword);
-    await _db.collection('config').doc('master_admin').set({
-      password: hashedPw,
-      updatedAt: new Date().toISOString(),
-      updatedBy: _currentUserEmail
-    });
-    return true;
-  } catch(e){
-    console.error('設置密碼失敗:', e);
-    return false;
-  }
-}
-
-// UI 密碼設置函數
-async function setMasterPassword(){
-  if(!_isMasterAdmin){
-    alert('❌ 只有主管理員才能設置密碼');
-    return;
-  }
-
-  const pw = document.getElementById('master-pw-input').value;
-  const msgEl = document.getElementById('master-pw-msg');
-
-  if(!pw){
-    msgEl.style.color = '#c62828';
-    msgEl.textContent = '❌ 請輸入新密碼';
-    return;
-  }
-
-  if(pw.length < 6){
-    msgEl.style.color = '#c62828';
-    msgEl.textContent = '❌ 密碼必須至少 6 個字符';
-    return;
-  }
-
-  msgEl.style.color = '#666';
-  msgEl.textContent = '⏳ 保存中...';
-
-  const success = await setMasterAdminPassword(pw);
-  if(success){
-    msgEl.style.color = '#2e7d32';
-    msgEl.textContent = '✅ 密碼已保存';
-    document.getElementById('master-pw-input').value = '';
-    setTimeout(() => msgEl.textContent = '', 3000);
-  } else {
-    msgEl.style.color = '#c62828';
-    msgEl.textContent = '❌ 密碼保存失敗，請稍後再試';
-  }
-}
-
-// 切換主管理員密碼面板
-async function switchMasterPwTab(tab){
-  const tabs = ['set', 'change', 'forgot'];
-  tabs.forEach(t => {
-    document.getElementById(`master-pw-panel-${t}`).style.display = t === tab ? 'block' : 'none';
-    const btn = document.getElementById(`master-pw-tab-${t}`);
-    if(btn) {
-      btn.style.borderBottomColor = t === tab ? '#4a90d9' : 'transparent';
-      btn.style.color = t === tab ? '#4a90d9' : '#999';
-    }
-  });
-
-  // 如果是「設置密碼」標籤，檢查密碼是否已設置
-  if(tab === 'set'){
-    const storedPw = await getMasterAdminPassword();
-    const statusDiv = document.getElementById('master-pw-status-set');
-    const formDiv = document.getElementById('master-pw-form-set');
-    if(storedPw){
-      // 密碼已設置
-      statusDiv.style.display = 'block';
-      formDiv.style.display = 'none';
-    } else {
-      // 密碼未設置
-      statusDiv.style.display = 'none';
-      formDiv.style.display = 'block';
-      document.getElementById('master-pw-input').value = '';
-      document.getElementById('master-pw-msg').textContent = '';
-    }
-  }
-
-  // 重置其他表單
-  document.getElementById('master-pw-old').value = '';
-  document.getElementById('master-pw-new').value = '';
-  document.getElementById('master-pw-confirm').value = '';
-  document.getElementById('master-pw-change-msg').textContent = '';
-  document.getElementById('master-pw-forgot-msg1').textContent = '';
-  document.getElementById('master-pw-forgot-msg2').textContent = '';
-  document.getElementById('master-pw-forgot-msg3').textContent = '';
-}
-
-// 修改管理員密碼（需驗證當前密碼）
-async function changeMasterPassword(){
-  if(!_isMasterAdmin){
-    alert('❌ 只有主管理員才能修改密碼');
-    return;
-  }
-
-  const oldPw = document.getElementById('master-pw-old').value;
-  const newPw = document.getElementById('master-pw-new').value;
-  const confirmPw = document.getElementById('master-pw-confirm').value;
-  const msgEl = document.getElementById('master-pw-change-msg');
-
-  if(!oldPw){ msgEl.style.color = '#c62828'; msgEl.textContent = '❌ 請輸入當前密碼'; return; }
-  if(!newPw){ msgEl.style.color = '#c62828'; msgEl.textContent = '❌ 請輸入新密碼'; return; }
-  if(!confirmPw){ msgEl.style.color = '#c62828'; msgEl.textContent = '❌ 請確認新密碼'; return; }
-  if(newPw !== confirmPw){ msgEl.style.color = '#c62828'; msgEl.textContent = '❌ 兩次密碼不一致'; return; }
-  if(newPw.length < 6){ msgEl.style.color = '#c62828'; msgEl.textContent = '❌ 密碼必須至少 6 個字符'; return; }
-
-  msgEl.style.color = '#666';
-  msgEl.textContent = '⏳ 驗證中...';
-
-  // 驗證當前密碼
-  const storedPw = await getMasterAdminPassword();
-  const oldPwHash = await hashPw(oldPw);
-  if(storedPw !== oldPwHash){
-    msgEl.style.color = '#c62828';
-    msgEl.textContent = '❌ 當前密碼錯誤';
-    return;
-  }
-
-  msgEl.textContent = '⏳ 修改中...';
-  const success = await setMasterAdminPassword(newPw);
-  if(success){
-    msgEl.style.color = '#2e7d32';
-    msgEl.textContent = '✅ 密碼已修改';
-    document.getElementById('master-pw-old').value = '';
-    document.getElementById('master-pw-new').value = '';
-    document.getElementById('master-pw-confirm').value = '';
-    setTimeout(() => msgEl.textContent = '', 3000);
-  } else {
-    msgEl.style.color = '#c62828';
-    msgEl.textContent = '❌ 密碼修改失敗，請稍後再試';
-  }
-}
-
-// 全局變數追蹤 OTP 狀態
-let _masterAdminOTPCode = '';
-let _masterAdminOTPExpiry = 0;
-
-// 一般管理員 OTP 狀態
-let _generalAdminOTPCode = '';
-let _generalAdminOTPExpiry = 0;
-let _generalAdminOTPEmail = '';
-let _generalAdminOTPAttempts = 0;
-let _generalAdminOTPLockUntil = 0;
-
-// 請求主管理員 OTP
-async function requestMasterAdminOTP(){
-  if(!_isMasterAdmin){
-    alert('❌ 只有主管理員才能重設密碼');
-    return;
-  }
-
-  const msgEl = document.getElementById('master-pw-forgot-msg1');
-  msgEl.style.color = '#666';
-  msgEl.textContent = '⏳ 發送驗證碼中...';
-
-  const code = Math.floor(Math.random() * 900000) + 100000;
-  _masterAdminOTPCode = code.toString();
-  _masterAdminOTPExpiry = Date.now() + 10 * 60 * 1000; // 10 分鐘
-
-  // 寄送驗證碼（使用 EmailJS）
-  try {
-    const expireAt = new Date(Date.now()+10*60*1000);
-    const hh = String(expireAt.getHours()).padStart(2,'0');
-    const mm = String(expireAt.getMinutes()).padStart(2,'0');
-    await emailjs.send(EJS_SERVICE, EJS_TEMPLATE, {
-      email: 'qnachinese@gmail.com',
-      passcode: code,
-      time: hh+':'+mm
-    });
-    msgEl.style.color = '#2e7d32';
-    msgEl.textContent = '✅ 驗證碼已發送到信箱';
-    document.getElementById('master-pw-forgot-step1').style.display = 'none';
-    document.getElementById('master-pw-forgot-step2').style.display = 'block';
-  } catch(e){
-    msgEl.style.color = '#c62828';
-    msgEl.textContent = '❌ 發送失敗，請稍後再試';
-    console.error('發送 OTP 失敗:', e);
-  }
-}
-
-// 驗證主管理員 OTP
-function verifyMasterAdminOTP(){
-  const code = document.getElementById('master-pw-otp').value;
-  const msgEl = document.getElementById('master-pw-forgot-msg2');
-
-  if(!code){ msgEl.style.color = '#c62828'; msgEl.textContent = '❌ 請輸入驗證碼'; return; }
-  if(Date.now() > _masterAdminOTPExpiry){
-    msgEl.style.color = '#c62828';
-    msgEl.textContent = '❌ 驗證碼已過期，請重新申請';
-    document.getElementById('master-pw-forgot-step2').style.display = 'none';
-    document.getElementById('master-pw-forgot-step1').style.display = 'block';
-    return;
-  }
-  if(code !== _masterAdminOTPCode){
-    msgEl.style.color = '#c62828';
-    msgEl.textContent = '❌ 驗證碼錯誤';
-    return;
-  }
-
-  msgEl.style.color = '#2e7d32';
-  msgEl.textContent = '✅ 驗證成功';
-  document.getElementById('master-pw-forgot-step2').style.display = 'none';
-  document.getElementById('master-pw-forgot-step3').style.display = 'block';
-}
-
-// 重設主管理員密碼
-async function resetMasterAdminPassword(){
-  const newPw = document.getElementById('master-pw-forgot-new').value;
-  const confirmPw = document.getElementById('master-pw-forgot-confirm').value;
-  const msgEl = document.getElementById('master-pw-forgot-msg3');
-
-  if(!newPw){ msgEl.style.color = '#c62828'; msgEl.textContent = '❌ 請輸入新密碼'; return; }
-  if(!confirmPw){ msgEl.style.color = '#c62828'; msgEl.textContent = '❌ 請確認新密碼'; return; }
-  if(newPw !== confirmPw){ msgEl.style.color = '#c62828'; msgEl.textContent = '❌ 兩次密碼不一致'; return; }
-  if(newPw.length < 6){ msgEl.style.color = '#c62828'; msgEl.textContent = '❌ 密碼必須至少 6 個字符'; return; }
-
-  msgEl.style.color = '#666';
-  msgEl.textContent = '⏳ 重設中...';
-
-  const success = await setMasterAdminPassword(newPw);
-  if(success){
-    msgEl.style.color = '#2e7d32';
-    msgEl.textContent = '✅ 密碼已重設';
-    setTimeout(() => {
-      switchMasterPwTab('set');
-      document.getElementById('master-pw-forgot-step3').style.display = 'none';
-      document.getElementById('master-pw-forgot-step1').style.display = 'block';
-      document.getElementById('master-pw-otp').value = '';
-    }, 2000);
-  } else {
-    msgEl.style.color = '#c62828';
-    msgEl.textContent = '❌ 密碼重設失敗，請稍後再試';
-  }
-}
-
-// ═══════════════════════════════════════════
-// FIRESTORE 跨設備同步
-// ═══════════════════════════════════════════
-
-// 從 Firestore 獲取用戶帳號
-async function getAccountsFromFirestore(){
-  if(!_db || !_currentUser) return null;
-  try {
-    const snap = await _db.collection('users').get();
-    if(!snap.empty){
-      const accounts = snap.docs.map(d => d.data());
-      localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
-      return accounts;
-    }
-  } catch(e){ console.warn('Firestore 讀取失敗:', e); }
-  return null;
-}
-
-// 保存用戶帳號到 Firestore
-async function saveAccountsToFirestore(accounts){
-  if(!_db || !_currentUser) return false;
-  try {
-    const batch = _db.batch();
-    accounts.forEach((acc, idx) => {
-      const docRef = _db.collection('users').doc(acc.email || `user_${idx}`);
-      batch.set(docRef, acc, { merge: true });
-    });
-    await batch.commit();
-    console.log('✅ 帳號已保存到 Firestore');
-    return true;
-  } catch(e){ console.error('❌ Firestore 保存失敗:', e); return false; }
-}
-
-// 新增帳號時保存到 Firestore
-async function addAccountToFirestore(account){
-  if(!_db) {
-    console.warn('Firestore 未初始化');
-    return false;
-  }
-  try {
-    await _db.collection('users').doc(account.email).set(account);
-    console.log('✅ 新帳號已保存到 Firestore');
-    return true;
-  } catch(e){ console.error('❌ 保存帳號失敗:', e); return false; }
-}
-
-// Google 登入並同步數據
-async function googleSignIn(){
-  if(!_auth) { alert('Firebase 未初始化'); return; }
-  try {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    const result = await _auth.signInWithPopup(provider);
-    console.log('✅ Google 登入成功:', result.user.email);
-
-    // 同步 Firestore 數據到本地
-    await getAccountsFromFirestore();
-    await getAdminWhitelistFromFirestore();
-
-    // 初始化主管理員系統
-    await initMasterAdminSystem();
-
-    // 顯示相應的管理員面板
-    showAdminPanel();
-  } catch(error){
-    console.error('❌ 登入失敗:', error);
-    alert('登入失敗: ' + error.message);
-  }
-}
-
-// 從 Firestore 獲取管理員白名單
-async function getAdminWhitelistFromFirestore(){
-  if(!_db) return;
-  try {
-    const doc = await _db.collection('config').doc('admins').get();
-    if(doc.exists){
-      const data = doc.data();
-      const whitelist = data.emails || [];
-      localStorage.setItem(ADMINS_KEY, JSON.stringify(whitelist));
-      console.log('✅ 管理員白名單已同步');
-    }
-  } catch(e){ console.warn('白名單同步失敗:', e); }
-}
-
-// 保存管理員白名單到 Firestore
-async function saveAdminWhitelistToFirestore(){
-  if(!_db || !_currentUser) return false;
-  try {
-    const whitelist = getAdminWhitelist();
-    await _db.collection('config').doc('admins').set({ emails: whitelist }, { merge: true });
-    console.log('✅ 白名單已保存到 Firestore');
-    return true;
-  } catch(e){ console.error('❌ 白名單保存失敗:', e); return false; }
-}
-
-// 初始化 Firestore 監聽器 - 實時同步
-function setupFirestoreListeners(){
-  if(!_db) return;
-
-  // 監聽用戶帳號變化
-  _db.collection('users').onSnapshot((snapshot) => {
-    const accounts = snapshot.docs.map(d => d.data());
-    localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
-    console.log('🔄 用戶帳號已同步:', accounts.length, '個');
-  }, (error) => {
-    console.warn('❌ 用戶帳號監聽失敗:', error);
-  });
-
-  // 監聽管理員白名單變化
-  _db.collection('config').doc('admins').onSnapshot((doc) => {
-    if(doc.exists){
-      const whitelist = doc.data().emails || [];
-      localStorage.setItem(ADMINS_KEY, JSON.stringify(whitelist));
-      console.log('🔄 管理員白名單已同步');
-    }
-  }, (error) => {
-    console.warn('❌ 白名單監聽失敗:', error);
-  });
 }
 
 function switchTab(tab){
@@ -2051,6 +1622,8 @@ function switchTab(tab){
 }
 
 async function submitLogin(){
+  let accounts = getUserAccounts();
+
   const isRegister = document.getElementById('tab-register').classList.contains('active');
   const errEl = document.getElementById('login-error');
   let email, pw, name, confirmPw;
@@ -2067,7 +1640,7 @@ async function submitLogin(){
     if(!pw){ errEl.textContent='請輸入密碼'; return; }
     if(pw !== confirmPw){ errEl.textContent='兩次密碼不一致'; return; }
 
-    let accounts = getUserAccounts();
+    // 使用上面定義的 accounts
     if(accounts.find(a=>a.email===email)){ errEl.textContent='此 Gmail 已被使用'; return; }
     if(accounts.find(a=>a.name===name)){ errEl.textContent='此學習者名稱已被使用'; return; }
 
@@ -2075,11 +1648,6 @@ async function submitLogin(){
     accounts.push(newAcc);
     localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
     fbSaveUsers(accounts);
-
-    // 同時保存到 Firestore（跨設備同步）
-    if(_db){
-      await addAccountToFirestore(newAcc).catch(e => console.warn('Firestore 保存失敗:', e));
-    }
 
     switchTab('login');
     document.getElementById('user-email-input-reg').value = '';
@@ -2112,24 +1680,8 @@ async function submitLogin(){
   st.currentUser = accounts.find(a=>a.email===email).name;
   localStorage.setItem('tocfl_current_user', st.currentUser);
   localStorage.setItem('tocfl_user_email', email);
-
-  // 🌐 跨設備同步：保存登入信息到 Firestore
-  if(_db && _auth && email){
-    try {
-      const userDocRef = window.firebase.firestore().collection('users').doc(email);
-      userDocRef.set({
-        name: st.currentUser,
-        email: email,
-        lastLogin: new Date(),
-        device: navigator.userAgent,
-        platform: navigator.platform
-      }, { merge: true }).catch(e => console.warn('⚠️ Firestore 同步失敗:', e));
-    } catch(e) {
-      console.warn('⚠️ Firestore 同步錯誤:', e);
-    }
-  }
-
-  navigateToScreen('subject-screen', '/exam');
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('subject-screen').style.display='block';
   document.getElementById('user-bar-name').textContent = st.currentUser;
   document.getElementById('user-email-input').value='';
   document.getElementById('user-pw-input').value='';
@@ -2246,7 +1798,8 @@ function startReviewMode(){
   if(st.mode==='random') qs = qs.sort(()=>Math.random()-.5);
   st.questions=qs; st.idx=0; st.correct=0; st.wrong=0; st.answered=false; st.examResults=[];
   st.stats={}; st.isReviewMode=true;
-  navigateToScreen('exam-screen', '/exam/taking');
+  document.getElementById('subject-screen').style.display='none';
+  document.getElementById('exam-screen').style.display='block';
   startExamTimer();
   renderQ();
 }
@@ -2609,35 +2162,15 @@ function resetLoginError(){
 
 function changeUser(){
   stopSessionTimer();
-
-  // 🌐 跨設備同步：註銷時更新 Firestore 登出時間
-  const email = localStorage.getItem('tocfl_user_email');
-  if(_db && email){
-    try {
-      window.firebase.firestore().collection('users').doc(email.toLowerCase()).update({
-        lastLogout: new Date()
-      }).catch(e => console.warn('⚠️ Firestore 更新失敗:', e));
-    } catch(e) {
-      console.warn('⚠️ Firestore 更新錯誤:', e);
-    }
-  }
-
   st.currentUser = null;
   localStorage.removeItem('tocfl_current_user');
-  localStorage.removeItem('tocfl_user_email');
-  // 使用 History API 返回登入頁面
-  navigateToScreen('login-screen', '/');
-  // 清空表單
+  document.getElementById('subject-screen').style.display='none';
   document.getElementById('user-email-input').value='';
   document.getElementById('user-pw-input').value='';
   document.getElementById('login-error').textContent='';
-  // 重置忘記密碼框
-  const forgotBox = document.getElementById('user-forgot-box');
-  if(forgotBox) forgotBox.style.display='none';
-  // 切換到登入標籤並顯示忘記密碼按鈕
   switchTab('login');
-  const fw=document.getElementById('user-forgot-wrap');
-  if(fw) fw.style.display='block';
+  document.getElementById('login-screen').style.display='flex';
+  const fw=document.getElementById('user-forgot-wrap'); if(fw) fw.style.display='block';
 }
 
 function saveExamRecord(pct, total){
@@ -2665,12 +2198,14 @@ function saveExamRecord(pct, total){
 }
 
 function showHistory(){
-  navigateToScreen('history-screen', '/history');
+  document.getElementById('subject-screen').style.display='none';
+  document.getElementById('history-screen').style.display='block';
   renderHistory();
 }
 
 function closeHistory(){
-  navigateToScreen('subject-screen', '/exam');
+  document.getElementById('history-screen').style.display='none';
+  document.getElementById('subject-screen').style.display='block';
 }
 
 function clearHistory(){
@@ -2725,54 +2260,15 @@ function renderHistory(){
 // Check for returning user on page load
 window.addEventListener('load', ()=>{
   initFirebase();
-  // 初始化登入標籤（確保忘記密碼按鈕顯示）
-  switchTab('login');
-
-  // 檢查管理員 Session（優先檢查）
-  const adminSession = localStorage.getItem(ADMIN_SESSION_KEY);
-  if(adminSession){
-    const email = adminSession.toLowerCase();
-    const isMaster = (email === MASTER_ADMIN_EMAIL.toLowerCase());
-    const isWhitelisted = getAdminWhitelist().includes(email);
-
-    if(isMaster || isWhitelisted){
-      _currentUserEmail = email;
-      _isMasterAdmin = isMaster;
-      _adminRole = isMaster ? 'master' : (isWhitelisted ? 'admin' : null);
-      showAdminPanel();
-      return;
-    }
-  }
-
   const savedUser = localStorage.getItem('tocfl_current_user');
-  const savedEmail = localStorage.getItem('tocfl_user_email');
-
   if(savedUser){
     const accounts = JSON.parse(localStorage.getItem(USERS_KEY)||'[]');
     if(accounts.find(a=>a.name===savedUser)){
       st.currentUser = savedUser;
       document.getElementById('user-email-input').value = savedUser;
       document.getElementById('user-bar-name').textContent = savedUser;
-
-      // 🌐 跨設備同步：從 Firestore 檢查最新數據
-      if(_db && savedEmail){
-        window.firebase.firestore().collection('users').doc(savedEmail.toLowerCase()).get()
-          .then(doc => {
-            if(doc.exists){
-              const data = doc.data();
-              console.log(`✅ 從 Firestore 恢復用戶數據: ${data.name}`);
-              // 更新本地用戶信息（如果有差異）
-              const acc = accounts.find(a=>a.email===savedEmail.toLowerCase());
-              if(acc && data.name !== acc.name){
-                acc.name = data.name;
-                localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
-              }
-            }
-          })
-          .catch(e => console.warn('⚠️ Firestore 讀取失敗:', e));
-      }
-
-      navigateToScreen('subject-screen', '/exam');
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('subject-screen').style.display='block';
       renderProgressPanel();
       updateWrongReviewBtn();
       startSessionTimer();
@@ -2784,57 +2280,6 @@ window.addEventListener('load', ()=>{
   window.addEventListener('offline', ()=>{ document.getElementById('offline-banner').style.display='flex'; });
   window.addEventListener('online',  ()=>{ document.getElementById('offline-banner').style.display='none'; });
   if(!navigator.onLine) document.getElementById('offline-banner').style.display='flex';
-});
-
-// ═══════════════════════════════════════════
-//  瀏覽器返回按鈕功能 (History API)
-// ═══════════════════════════════════════════
-const SCREEN_URLS = {
-  'login': '/',
-  'subject-screen': '/exam',
-  'exam-screen': '/exam/taking',
-  'result-screen': '/results',
-  'history-screen': '/history',
-  'profile-screen': '/profile',
-  'admin-screen': '/admin'
-};
-
-// 統一的屏幕顯示函數
-function showScreen(screenId){
-  // 隱藏所有屏幕
-  ['login-screen','subject-screen','exam-screen','result-screen','history-screen','profile-screen','admin-screen','notfound-screen'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.style.display = 'none';
-  });
-
-  // 顯示指定的屏幕
-  if(screenId && document.getElementById(screenId)){
-    if(screenId === 'login-screen'){
-      document.getElementById(screenId).style.display = 'flex';
-    } else {
-      document.getElementById(screenId).style.display = 'block';
-    }
-  } else if(screenId && screenId !== 'notfound-screen'){
-    // 無效屏幕，顯示 404
-    const notfound = document.getElementById('notfound-screen');
-    if(notfound) {
-      notfound.style.display = 'flex';
-    } else {
-      document.getElementById('login-screen').style.display = 'flex';
-    }
-  }
-}
-
-// 切換到指定屏幕並更新 URL
-function navigateToScreen(screenId, urlPath){
-  showScreen(screenId);
-  window.history.pushState({screen: screenId}, '', urlPath);
-}
-
-// 監聽瀏覽器返回按鈕
-window.addEventListener('popstate', (event)=>{
-  const screenId = event.state?.screen || 'login-screen';
-  showScreen(screenId);
 });
 
 
@@ -2890,45 +2335,13 @@ const FB_CONFIG = {
 };
 
 let _db = null;
-let _auth = null;
-let _currentUser = null;
 
 function initFirebase(){
   try {
     if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
     _db = firebase.firestore();
-    _auth = firebase.auth();
-
-    // 監聽登入狀態
-    _auth.onAuthStateChanged((user) => {
-      _currentUser = user;
-      if(user){
-        console.log('✅ 已登入:', user.email);
-        // 設定 Firestore 實時監聽
-        setupFirestoreListeners();
-        syncFromCloud();
-      }
-    });
-
-    // 初始化 Google Sign-In
-    window.google?.accounts?.id?.initialize({
-      client_id: FB_CONFIG.appId.split(':')[0] + '.apps.googleusercontent.com',
-      callback: handleGoogleSignIn
-    });
-  } catch(e){ console.warn('Firebase unavailable:', e); }
-}
-
-// Google Sign-In 回調
-async function handleGoogleSignIn(response) {
-  try {
-    const credential = firebase.auth.GoogleAuthProvider.credential(response.credential);
-    const result = await _auth.signInWithCredential(credential);
-    console.log('✅ Google 登入成功:', result.user.email);
     syncFromCloud();
-  } catch(error) {
-    console.error('❌ Google 登入失敗:', error);
-    document.getElementById('login-error').textContent = '登入失敗：' + error.message;
-  }
+  } catch(e){ console.warn('Firebase unavailable:', e); }
 }
 
 async function syncFromCloud(){
@@ -3041,7 +2454,8 @@ function checkExamResume(){
       st.stats        = saved.stats;
       st.isReviewMode = false;
       st.answered     = false;
-      navigateToScreen('exam-screen', '/exam/taking');
+      document.getElementById('subject-screen').style.display='none';
+      document.getElementById('exam-screen').style.display='block';
       startExamTimer();
       renderQ();
     } else {
@@ -3059,8 +2473,6 @@ function checkExamResume(){
 function openAdminLogin(){
   document.getElementById('admin-login-screen').style.display='flex';
   document.getElementById('aforg-section').style.display='none';
-  document.getElementById('admin-email-input').value='';
-  document.getElementById('admin-pw-input-google').value='';
   document.getElementById('admin-pw-input').value='';
   document.getElementById('admin-login-err').textContent='';
 }
@@ -3071,143 +2483,27 @@ function openAdminLoginFromHome(){
 
 function closeAdminLogin(){
   document.getElementById('admin-login-screen').style.display='none';
-  // 清除表單
-  document.getElementById('admin-email-input').value = '';
-  document.getElementById('admin-pw-input-google').value = '';
-  document.getElementById('admin-email-otp').value = '';
-  document.getElementById('admin-login-err').textContent = '';
-  document.getElementById('admin-general-err').textContent = '';
-  // 清除 OTP 狀態
-  _generalAdminOTPCode = '';
-  _generalAdminOTPEmail = '';
 }
 
-// 主管理員登入（僅 qnachinese@gmail.com）
+// 後臺 Google 郵箱驗證登入
 async function adminGoogleLogin(){
-  const pw = document.getElementById('admin-pw-input-google')?.value || '';
+  const email = document.getElementById('admin-email-input')?.value?.trim().toLowerCase() || '';
   const errEl = document.getElementById('admin-login-err');
 
-  if(!pw){ errEl.textContent='請輸入密碼'; return; }
-
-  errEl.textContent = '⏳ 驗證中...';
-  const storedPw = await getMasterAdminPassword();
-  if(!storedPw){
-    errEl.textContent = '❌ 密碼尚未設定，請先設定密碼';
-    return;
-  }
-  const pwHash = await hashPw(pw);
-  if(storedPw !== pwHash){
-    errEl.textContent = '❌ 密碼錯誤';
-    return;
-  }
-
-  // 設定管理員 session（主管理員）
-  localStorage.setItem(ADMIN_SESSION_KEY, MASTER_ADMIN_EMAIL.toLowerCase());
-
-  // 初始化主管理員系統
-  _currentUserEmail = MASTER_ADMIN_EMAIL.toLowerCase();
-  _isMasterAdmin = true;
-  _adminRole = 'master';
-
-  errEl.textContent = '✅ 登入成功！';
-  setTimeout(() => {
-    document.getElementById('admin-login-screen').style.display='none';
-    showAdminPanel();
-  }, 500);
-}
-
-// 一般管理員登入：請求 OTP
-async function requestGeneralAdminOTP(){
-  const email = document.getElementById('admin-email-input')?.value?.trim().toLowerCase() || '';
-  const errEl = document.getElementById('admin-general-err');
-
-  if(!email){ errEl.textContent='❌ 請輸入郵箱'; return; }
+  if(!email){ errEl.textContent='請輸入 Gmail 郵箱'; return; }
   if(!email.endsWith('@gmail.com') && !email.endsWith('@google.com')){
-    errEl.textContent='❌ 請輸入有效的 Google 郵箱'; return;
+    errEl.textContent='請輸入有效的 Google 郵箱'; return;
   }
 
   // 檢查白名單
-  const whitelist = getAdminWhitelist();
-  if(!whitelist.includes(email)){
-    errEl.textContent='❌ 此郵箱無後臺存取權限'; return;
+  if(!isAdminEmail(email)){
+    errEl.textContent='此郵箱無後臺存取權限'; return;
   }
 
-  errEl.textContent = '📧 發送驗證碼中...';
-  try {
-    _generalAdminOTPCode = _genOTP();
-    _generalAdminOTPExpiry = Date.now() + 10*60*1000;
-    _generalAdminOTPEmail = email;
-    _generalAdminOTPAttempts = 0;
-    _generalAdminOTPLockUntil = 0;
-
-    await sendOTP(email, _generalAdminOTPCode);
-    errEl.textContent = '✅ 驗證碼已發送（10分鐘內有效）';
-    errEl.style.color = '#2e7d32';
-  } catch(e){
-    errEl.textContent = '❌ 發送失敗，請稍後再試';
-    errEl.style.color = '#d32f2f';
-    console.error('發送 OTP 失敗:', e);
-  }
-}
-
-// 一般管理員登入：驗證 OTP
-async function adminGeneralLogin(){
-  const email = document.getElementById('admin-email-input')?.value?.trim().toLowerCase() || '';
-  const otp = document.getElementById('admin-email-otp')?.value?.trim() || '';
-  const errEl = document.getElementById('admin-general-err');
-
-  if(!email){ errEl.textContent='❌ 請輸入郵箱'; errEl.style.color = '#d32f2f'; return; }
-  if(!otp){ errEl.textContent='❌ 請輸入驗證碼'; errEl.style.color = '#d32f2f'; return; }
-
-  // 檢查白名單
-  const whitelist = getAdminWhitelist();
-  if(!whitelist.includes(email)){
-    errEl.textContent='❌ 此郵箱無後臺存取權限'; errEl.style.color = '#d32f2f'; return;
-  }
-
-  // 檢查暴力破解保護
-  if(_generalAdminOTPLockUntil > Date.now()){
-    const mins = Math.ceil((_generalAdminOTPLockUntil - Date.now()) / 60000);
-    errEl.textContent = `❌ 嘗試次數過多，請在 ${mins} 分鐘後重試`; errEl.style.color = '#d32f2f';
-    return;
-  }
-
-  // 檢查郵箱是否匹配
-  if(email !== _generalAdminOTPEmail){
-    errEl.textContent='❌ 郵箱不匹配，請重新請求驗證碼'; errEl.style.color = '#d32f2f'; return;
-  }
-
-  // 檢查驗證碼是否過期
-  if(Date.now() > _generalAdminOTPExpiry){
-    errEl.textContent='❌ 驗證碼已過期，請重新請求'; errEl.style.color = '#d32f2f'; return;
-  }
-
-  // 檢查驗證碼是否正確
-  if(otp !== _generalAdminOTPCode){
-    _generalAdminOTPAttempts++;
-    if(_generalAdminOTPAttempts >= 3){
-      _generalAdminOTPLockUntil = Date.now() + 15*60*1000; // 鎖定 15 分鐘
-      errEl.textContent='❌ 驗證碼錯誤，已鎖定 15 分鐘'; errEl.style.color = '#d32f2f';
-    } else {
-      errEl.textContent=`❌ 驗證碼錯誤（剩餘 ${3-_generalAdminOTPAttempts} 次）`; errEl.style.color = '#d32f2f';
-    }
-    return;
-  }
-
-  // 驗證成功！設定管理員 session
+  // 設定管理員 session
   localStorage.setItem(ADMIN_SESSION_KEY, email);
-
-  // 初始化管理員系統
-  _currentUserEmail = email;
-  _isMasterAdmin = false;
-  _adminRole = 'admin';
-
-  errEl.textContent = '✅ 驗證成功！';
-  errEl.style.color = '#2e7d32';
-  setTimeout(() => {
-    document.getElementById('admin-login-screen').style.display='none';
-    showAdminPanel();
-  }, 500);
+  document.getElementById('admin-login-screen').style.display='none';
+  showAdminPanel();
 }
 
 async function adminLogin(){
@@ -3220,12 +2516,6 @@ async function adminLogin(){
     const hashed = await hashPw(pw);
     localStorage.setItem(ADMIN_KEY, hashed);
     fbSaveAdminPw(hashed);
-
-    // 初始化主管理員系統（重要！）
-    _currentUserEmail = MASTER_ADMIN_EMAIL.toLowerCase();
-    _isMasterAdmin = true;
-    _adminRole = 'master';
-
     document.getElementById('admin-login-screen').style.display='none';
     showAdminPanel();
     return;
@@ -3233,62 +2523,29 @@ async function adminLogin(){
   if(!pw){ errEl.textContent='請輸入密碼'; return; }
   const match = isHashed(stored) ? (stored === await hashPw(pw)) : (stored === pw);
   if(!match){ errEl.textContent='密碼錯誤'; return; }
-
-  // 初始化主管理員系統（重要！）
-  _currentUserEmail = MASTER_ADMIN_EMAIL.toLowerCase();
-  _isMasterAdmin = true;
-  _adminRole = 'master';
-
   document.getElementById('admin-login-screen').style.display='none';
   showAdminPanel();
 }
 
 let _adminPrevScreen = 'subject-screen';
 function showAdminPanel(){
-  navigateToScreen('admin-screen', '/admin');
+  const screens = ['login-screen','subject-screen','exam-screen','result-screen','history-screen'];
+  screens.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el && el.style.display!=='none'){ _adminPrevScreen=id; el.style.display='none'; }
+  });
+  document.getElementById('admin-screen').style.display='block';
   renderAdminPanel();
 }
 
 function closeAdminPanel(){
   localStorage.removeItem(ADMIN_SESSION_KEY);
-  navigateToScreen('subject-screen', '/exam');
+  document.getElementById('admin-screen').style.display='none';
+  const prev = document.getElementById(_adminPrevScreen||'subject-screen');
+  if(prev) prev.style.display = _adminPrevScreen==='login-screen' ? 'flex' : 'block';
 }
 
 function renderAdminPanel(){
-  // 如果還沒有初始化，跳過權限檢查（會在 googleSignIn 後初始化）
-  if(!_currentUserEmail && !_adminRole){
-    return;
-  }
-
-  // 檢查權限
-  if(_adminRole === null){
-    document.getElementById('admin-screen').style.display='none';
-    alert('❌ 您沒有管理員權限');
-    return;
-  }
-
-  // 顯示用戶資訊和角色
-  const roleDisplay = _isMasterAdmin ? '👑 主管理員' : (_adminRole === 'admin' ? '👤 管理員' : '❓ 無权限');
-  const infoEl = document.querySelector('.admin-header');
-  if(infoEl){
-    const existingInfo = infoEl.querySelector('[id="admin-role-display"]');
-    if(existingInfo) existingInfo.remove();
-    const info = document.createElement('div');
-    info.id = 'admin-role-display';
-    info.style.cssText = 'font-size:.85rem;color:#666;margin-left:auto';
-    info.textContent = `${_currentUserEmail} - ${roleDisplay}`;
-    infoEl.appendChild(info);
-  }
-
-  // 主管理員才能看到密碼設定和管理員管理
-  const pwMgmtSection = document.getElementById('admin-pw-mgmt-section');
-  const adminWhitelistSection = document.getElementById('admin-whitelist-section');
-  if(pwMgmtSection) pwMgmtSection.style.display = _isMasterAdmin ? 'block' : 'none';
-  if(adminWhitelistSection) adminWhitelistSection.style.display = _isMasterAdmin ? 'block' : 'none';
-
-  // 普通管理員無法刪除帳號（只讀）
-  const isReadOnly = !_isMasterAdmin && _adminRole === 'admin';
-
   const accounts = getUserAccounts();
   const history  = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
   const tbody = document.getElementById('admin-tbody');
@@ -3309,63 +2566,32 @@ function renderAdminPanel(){
       <td>${lastScore}</td>
       <td>
         <div class="admin-action-cell">
-          ${_isMasterAdmin ? `<button class="admin-edit-btn" onclick="openEditModal(${i})">編輯</button>
+          <button class="admin-edit-btn" onclick="openEditModal(${i})">編輯</button>
           <button class="admin-pw-btn" onclick="openResetPwModal('${acc.name}')">重設密碼</button>
           <button class="admin-reset-btn" onclick="resetUserHistory('${acc.name}')">清除記錄</button>
-          <button class="admin-delete-btn" onclick="deleteUser('${acc.name}')">刪除</button>` :
-          `<span style="font-size:.8rem;color:#999">（只讀）</span>`}
-        </div>
+          <button class="admin-delete-btn" onclick="deleteUser('${acc.name}')">刪除</button>
         </div>
       </td>
     </tr>`;
   }).join('');
 
-  // 延遲渲染管理員白名單，確保 HTML 已加載
-  setTimeout(() => {
-    renderAdminWhitelist();
-  }, 100);
+  // 渲染管理員白名單
+  renderAdminWhitelist();
 }
 
 function renderAdminWhitelist(){
   const tbody = document.getElementById('admin-whitelist-tbody');
-  if(!tbody) {
-    console.warn('⚠️ admin-whitelist-tbody 未找到，稍後重試');
-    setTimeout(() => renderAdminWhitelist(), 200);
-    return;
-  }
-  const admins = getAdminAccounts();
-  console.log('🔄 渲染管理員列表:', admins);
-
-  if(!admins.length){
-    tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#999;padding:20px">尚無管理員帳號</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = admins.map((admin,i)=>{
+  if(!tbody) return;
+  const whitelist = getAdminWhitelist();
+  tbody.innerHTML = whitelist.map((email,i)=>{
     return `<tr>
-      <td>${admin.name}</td>
-      <td class="pw-cell"><span style="color:#aaa;font-family:sans-serif;font-size:.8rem">🔒 已加密</span></td>
-      <td>${admin.email||'—'}</td>
-      <td>
-        <div class="admin-action-cell" style="display:flex;gap:6px;justify-content:center">
-          ${_isMasterAdmin ? `<button class="admin-edit-btn" onclick="openEditAdminModal(${i})" style="padding:4px 12px;font-size:.8rem">編輯</button>
-          <button class="admin-pw-btn" onclick="openResetAdminPwModal('${admin.name}')" style="padding:4px 12px;font-size:.8rem">重設</button>
-          <button class="admin-delete-btn" onclick="deleteAdminAccount('${admin.name}')" style="padding:4px 12px;font-size:.8rem">刪除</button>` :
-          `<span style="font-size:.8rem;color:#999">（只讀）</span>`}
-        </div>
-      </td>
+      <td>${email}</td>
+      <td style="text-align:center"><button class="admin-delete-btn" onclick="removeAdminEmail('${email}')">移除</button></td>
     </tr>`;
   }).join('');
-  console.log('✅ 管理員列表已更新');
 }
 
-async function addAdminEmail(){
-  // 權限檢查：只有主管理員才能添加
-  if(!_isMasterAdmin){
-    alert('❌ 只有主管理員才能添加管理員');
-    return;
-  }
-
+function addAdminEmail(){
   const input = document.getElementById('admin-email-add');
   if(!input) return;
   const email = input.value.trim().toLowerCase();
@@ -3378,246 +2604,24 @@ async function addAdminEmail(){
 
   whitelist.push(email);
   localStorage.setItem(ADMINS_KEY, JSON.stringify(whitelist));
-
-  console.log('✅ 本地保存成功:', whitelist);
-
-  // 同步到 Firestore
-  if(_db){
-    await saveAdminWhitelistToFirestore().catch(e => console.warn('Firestore 同步失敗:', e));
-  }
-
-  // 清空輸入框
   input.value='';
-
-  // 立即刷新列表顯示（不用等待）
   renderAdminWhitelist();
-
-  // 顯示成功訊息
-  alert(`✅ 已添加 ${email} 為管理員`);
 }
 
-async function removeAdminEmail(email){
-  // 權限檢查：只有主管理員才能移除
-  if(!_isMasterAdmin){
-    alert('❌ 只有主管理員才能移除管理員');
-    return;
-  }
-
-  // 防止移除主管理員
-  if(email.toLowerCase() === MASTER_ADMIN_EMAIL.toLowerCase()){
-    alert('❌ 無法移除主管理員帳戶！');
-    return;
-  }
-
+function removeAdminEmail(email){
   if(!confirm(`確定要移除 ${email} 的管理權限嗎？`)) return;
   let whitelist = getAdminWhitelist().filter(e=>e!==email);
   localStorage.setItem(ADMINS_KEY, JSON.stringify(whitelist));
-
-  // 同步到 Firestore
-  if(_db){
-    await saveAdminWhitelistToFirestore().catch(e => console.warn('Firestore 同步失敗:', e));
-  }
-
   renderAdminWhitelist();
-}
-
-// ============ 登入界面忘記密碼相關 ============
-let _adminForgotOTPCode = null;
-let _adminForgotOTPExpiry = null;
-
-function openAdminForgotPassword(){
-  // 隱藏登入表單，顯示忘記密碼表單
-  document.getElementById('admin-login-form').style.display = 'none';
-  document.getElementById('admin-forgot-section').style.display = 'block';
-
-  // 重置忘記密碼表單
-  document.getElementById('admin-forgot-email').value = '';
-  document.getElementById('admin-forgot-otp').value = '';
-  document.getElementById('admin-forgot-newpw').value = '';
-  document.getElementById('admin-forgot-confirmpw').value = '';
-  document.getElementById('admin-forgot-msg1').textContent = '';
-  document.getElementById('admin-forgot-msg2').textContent = '';
-  document.getElementById('admin-forgot-msg3').textContent = '';
-
-  // 隱藏步驟 2 和 3
-  document.getElementById('admin-forgot-step2').style.display = 'none';
-  document.getElementById('admin-forgot-step3').style.display = 'none';
-}
-
-function closeAdminForgotPassword(){
-  // 返回登入表單
-  document.getElementById('admin-forgot-section').style.display = 'none';
-  document.getElementById('admin-login-form').style.display = 'block';
-
-  // 重置登入表單
-  document.getElementById('admin-email-input').value = '';
-  document.getElementById('admin-pw-input-google').value = '';
-  document.getElementById('admin-login-err').textContent = '';
-}
-
-async function requestAdminForgotOTP(){
-  const email = document.getElementById('admin-forgot-email').value.trim().toLowerCase();
-  const msgDiv = document.getElementById('admin-forgot-msg1');
-
-  if(!email){
-    msgDiv.textContent = '❌ 請輸入郵箱';
-    msgDiv.style.color = '#d32f2f';
-    return;
-  }
-
-  // 檢查是否為主管理員郵箱
-  if(email !== 'qnachinese@gmail.com'){
-    msgDiv.textContent = '❌ 只有主管理員可以重設密碼';
-    msgDiv.style.color = '#d32f2f';
-    return;
-  }
-
-  try {
-    msgDiv.textContent = '📧 發送中...';
-    msgDiv.style.color = '#1976d2';
-
-    // 生成 OTP 碼
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    _adminForgotOTPCode = otpCode;
-    _adminForgotOTPExpiry = Date.now() + 5 * 60 * 1000; // 5 分鐘有效
-
-    // 發送 OTP 郵件
-    try {
-      await emailjs.send('gmail', 'template_forgot_password', {
-        to_email: email,
-        otp_code: otpCode,
-        subject: 'QNA 中文考試系統 - 密碼重設驗證碼'
-      });
-    } catch(emailError){
-      console.warn('EmailJS 發送失敗，使用本地測試：', emailError);
-      // 如果 EmailJS 未配置，在控制台顯示 OTP
-      console.log('🔧 OTP (本地測試):', otpCode);
-    }
-
-    msgDiv.textContent = '✓ 驗證碼已發送至 ' + email;
-    msgDiv.style.color = '#2e7d32';
-
-    // 顯示 OTP 輸入框
-    setTimeout(() => {
-      document.getElementById('admin-forgot-step2').style.display = 'block';
-    }, 500);
-
-  } catch(error){
-    console.error('發送 OTP 失敗:', error);
-    msgDiv.textContent = '❌ 發送失敗，請重試';
-    msgDiv.style.color = '#d32f2f';
-  }
-}
-
-async function verifyAdminForgotOTP(){
-  const otpInput = document.getElementById('admin-forgot-otp').value.trim();
-  const msgDiv = document.getElementById('admin-forgot-msg2');
-
-  if(!otpInput){
-    msgDiv.textContent = '❌ 請輸入驗證碼';
-    msgDiv.style.color = '#d32f2f';
-    return;
-  }
-
-  // 檢查 OTP 是否正確且未過期
-  if(Date.now() > _adminForgotOTPExpiry){
-    msgDiv.textContent = '❌ 驗證碼已過期，請重新申請';
-    msgDiv.style.color = '#d32f2f';
-    _adminForgotOTPCode = null;
-    return;
-  }
-
-  if(otpInput !== _adminForgotOTPCode){
-    msgDiv.textContent = '❌ 驗證碼不正確';
-    msgDiv.style.color = '#d32f2f';
-    return;
-  }
-
-  msgDiv.textContent = '✓ 驗證成功';
-  msgDiv.style.color = '#2e7d32';
-
-  // 顯示密碼輸入框
-  setTimeout(() => {
-    document.getElementById('admin-forgot-step3').style.display = 'block';
-  }, 500);
-}
-
-async function resetAdminForgotPassword(){
-  const newPw = document.getElementById('admin-forgot-newpw').value;
-  const confirmPw = document.getElementById('admin-forgot-confirmpw').value;
-  const msgDiv = document.getElementById('admin-forgot-msg3');
-
-  if(!newPw || !confirmPw){
-    msgDiv.textContent = '❌ 請輸入密碼';
-    msgDiv.style.color = '#d32f2f';
-    return;
-  }
-
-  if(newPw !== confirmPw){
-    msgDiv.textContent = '❌ 密碼不相符';
-    msgDiv.style.color = '#d32f2f';
-    return;
-  }
-
-  try {
-    msgDiv.textContent = '🔒 設置中...';
-    msgDiv.style.color = '#1976d2';
-
-    // 雜湊密碼
-    const encoder = new TextEncoder();
-    const data = encoder.encode(newPw);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-    // 保存到 Firestore
-    if(_db){
-      const masterAdminRef = doc(_db, 'config', 'masterAdmin');
-      await setDoc(masterAdminRef, {
-        passwordHash: hashHex,
-        updatedAt: new Date(),
-        email: 'qnachinese@gmail.com'
-      }, { merge: true });
-    }
-
-    // 本地保存
-    localStorage.setItem('masterAdminPassword', hashHex);
-
-    msgDiv.textContent = '✓ 密碼已重設';
-    msgDiv.style.color = '#2e7d32';
-
-    // 3 秒後返回登入界面
-    setTimeout(() => {
-      closeAdminForgotPassword();
-      msgDiv.textContent = '';
-    }, 3000);
-
-  } catch(error){
-    console.error('重設密碼失敗:', error);
-    msgDiv.textContent = '❌ 重設失敗，請重試';
-    msgDiv.style.color = '#d32f2f';
-  }
 }
 
 // togglePwCell removed — passwords are hashed and cannot be displayed
 
 function deleteUser(name){
-  // 權限檢查：只有主管理員才能刪除
-  if(!_isMasterAdmin){
-    alert('❌ 只有主管理員才能刪除帳號');
-    return;
-  }
-
   if(!confirm(`確定要刪除帳號「${name}」及其所有記錄嗎？`)) return;
   let accounts = getUserAccounts().filter(a=>a.name!==name);
   localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
   fbSaveUsers(accounts);
-
-  // 從 Firestore 中刪除該用戶文檔
-  if(_db){
-    _db.collection('users').doc(name).delete().catch(e=>console.warn('Firestore 刪除失敗:', e));
-  }
-
   let history = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').filter(r=>r.name!==name);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
   fbDeleteUserHistory(name);
@@ -3633,17 +2637,11 @@ function resetUserHistory(name){
 }
 
 let _editIdx = -1;
-let _originalEditData = {}; // 儲存編輯前的原始數據
-
 function openEditModal(idx){
   const accounts = getUserAccounts();
   const acc = accounts[idx];
   if(!acc) return;
   _editIdx = idx;
-
-  // 儲存原始數據
-  _originalEditData = {name: acc.name, email: acc.email||''};
-
   document.getElementById('modal-title').textContent='編輯帳號';
   document.getElementById('modal-name').value = acc.name;
   document.getElementById('modal-pw').value = '';
@@ -3653,56 +2651,18 @@ function openEditModal(idx){
   document.getElementById('admin-modal-overlay').style.display='flex';
 }
 
-// 區分學習者和管理員的新增函數
-function openAddLearnerModal(){
-  _editIdx = -1;
-  document.getElementById('modal-title').textContent='新增學習者帳號';
-  document.getElementById('modal-name').value='';
-  document.getElementById('modal-pw').value='';
-  document.getElementById('modal-email').value='';
-  document.getElementById('modal-idx').value='';
-  document.getElementById('modal-error').textContent='';
-  window._addingAdminAccount = false; // 標記為新增學習者
-  document.getElementById('admin-modal-overlay').style.display='flex';
-}
-
-function openAddAdminModal(){
-  if(!_isMasterAdmin){
-    alert('❌ 只有主管理員才能新增管理員帳號');
-    return;
-  }
-  _editIdx = -1;
-  document.getElementById('modal-title').textContent='新增管理員帳號';
-  document.getElementById('modal-name').value='';
-  document.getElementById('modal-pw').value='';
-  document.getElementById('modal-email').value='';
-  document.getElementById('modal-idx').value='';
-  document.getElementById('modal-error').textContent='';
-  window._addingAdminAccount = true; // 標記為新增管理員
-  document.getElementById('admin-modal-overlay').style.display='flex';
-}
-
 function openAddModal(){
-  openAddLearnerModal(); // 預設為新增學習者
+  _editIdx = -1;
+  document.getElementById('modal-title').textContent='新增帳號';
+  document.getElementById('modal-name').value='';
+  document.getElementById('modal-pw').value='';
+  document.getElementById('modal-email').value='';
+  document.getElementById('modal-idx').value='';
+  document.getElementById('modal-error').textContent='';
+  document.getElementById('admin-modal-overlay').style.display='flex';
 }
 
 function closeModal(){
-  // 檢查是否有未儲存的更改
-  if(_editIdx >= 0){
-    const currentName = document.getElementById('modal-name').value.trim();
-    const currentEmail = document.getElementById('modal-email').value.trim().toLowerCase();
-    const hasChanges = (currentName !== _originalEditData.name) || (currentEmail !== _originalEditData.email);
-
-    if(hasChanges){
-      if(!confirm('有未儲存的更改，確定要放棄嗎？')){
-        return; // 用戶選擇不放棄，保持 modal 打開
-      }
-    }
-  }
-
-  // 清空數據
-  _editIdx = -1;
-  _originalEditData = {};
   document.getElementById('admin-modal-overlay').style.display='none';
 }
 
@@ -3733,158 +2693,27 @@ async function saveModal(){
   const pw    = document.getElementById('modal-pw').value;
   const email = document.getElementById('modal-email').value.trim().toLowerCase();
   const errEl = document.getElementById('modal-error');
-  const isAddingAdmin = window._addingAdminAccount || false;
-
   if(!name){ errEl.textContent='請輸入名稱'; return; }
-
-  if(isAddingAdmin){
-    // 保存管理員帳號
-    if(!_isMasterAdmin){ errEl.textContent='❌ 只有主管理員才能新增管理員'; return; }
-    let admins = getAdminAccounts();
-
-    if(_editIdx < 0){
-      // 新增管理員
-      if(!pw){ errEl.textContent='請輸入密碼'; return; }
-      if(!email){ errEl.textContent='請輸入 Gmail'; return; }
-      if(admins.find(a=>a.name===name)){ errEl.textContent='此名稱已存在'; return; }
-      if(admins.find(a=>a.email===email)){ errEl.textContent='此 Gmail 已被使用'; return; }
-
-      const newAdmin = {name, pw: await hashPw(pw), email};
-      admins.push(newAdmin);
-    } else {
-      // 編輯管理員
-      const admin = admins[_editIdx];
-      if(!admin){ errEl.textContent='帳號不存在'; return; }
-      if(name !== admin.name && admins.find(a=>a.name===name)){ errEl.textContent='此名稱已被使用'; return; }
-      admin.name = name;
-      if(pw) admin.pw = await hashPw(pw);
-      if(email && email !== admin.email && admins.find(a=>a.email===email)){ errEl.textContent='此 Gmail 已被使用'; return; }
-      if(email) admin.email = email;
-    }
-
-    localStorage.setItem(ADMINS_KEY, JSON.stringify(admins));
-    const msg = '✅ ' + (_editIdx < 0 ? '管理員新增成功' : '管理員已儲存');
-    showToast(msg, '#2e7d32');
+  let accounts = getUserAccounts();
+  if(_editIdx < 0){
+    // Add new
+    if(!pw){ errEl.textContent='請輸入密碼'; return; }
+    if(accounts.find(a=>a.name===name)){ errEl.textContent='此名稱已存在'; return; }
+    const newAcc = {name, pw: await hashPw(pw)};
+    if(email) newAcc.email = email;
+    accounts.push(newAcc);
   } else {
-    // 保存學習者帳號（原有邏輯）
-    let accounts = getUserAccounts();
-    let isNew = false;
-
-    if(_editIdx < 0){
-      // 新增學習者
-      if(!pw){ errEl.textContent='請輸入密碼'; return; }
-      if(accounts.find(a=>a.name===name)){ errEl.textContent='此名稱已存在'; return; }
-      const newAcc = {name, pw: await hashPw(pw)};
-      if(email) newAcc.email = email;
-      accounts.push(newAcc);
-      isNew = true;
-    } else {
-      // 編輯學習者
-      const acc = accounts[_editIdx];
-      if(!acc){ errEl.textContent='帳號不存在'; return; }
-      if(name !== acc.name && accounts.find(a=>a.name===name)){ errEl.textContent='此名稱已被使用'; return; }
-      acc.name = name;
-      if(pw) acc.pw = await hashPw(pw);
-      if(email !== undefined) acc.email = email || acc.email;
-    }
-
-    localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
-    fbSaveUsers(accounts);
-    const msg = isNew?'✅ 學習者新增成功':'✅ 學習者已儲存';
-    showToast(msg, '#2e7d32');
+    // Edit existing
+    const acc = accounts[_editIdx];
+    if(!acc){ errEl.textContent='帳號不存在'; return; }
+    if(name !== acc.name && accounts.find(a=>a.name===name)){ errEl.textContent='此名稱已被使用'; return; }
+    acc.name = name;
+    if(pw) acc.pw = await hashPw(pw);
+    if(email !== undefined) acc.email = email || acc.email;
   }
-
-  // 清空編輯數據
-  _editIdx = -1;
-  _originalEditData = {};
-  window._addingAdminAccount = false;
-
+  localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
+  fbSaveUsers(accounts);
   closeModal();
-  renderAdminPanel();
-}
-
-function showToast(msg, bgColor='#2e7d32'){
-  const toast = document.createElement('div');
-  toast.style.cssText=`position:fixed;top:20px;left:50%;transform:translateX(-50%);background:${bgColor};color:#fff;padding:14px 22px;border-radius:10px;z-index:9999;font-size:.95rem;box-shadow:0 4px 20px rgba(0,0,0,.3);text-align:center;max-width:320px`;
-  toast.textContent=msg;
-  document.body.appendChild(toast);
-  setTimeout(()=>toast.remove(), 2000);
-}
-
-// ═══════════════════════════════════════════
-//  管理員帳號管理
-// ═══════════════════════════════════════════
-function openEditAdminModal(idx){
-  if(!_isMasterAdmin){
-    alert('❌ 只有主管理員才能編輯管理員帳號');
-    return;
-  }
-  const admins = getAdminAccounts();
-  const admin = admins[idx];
-  if(!admin) return;
-
-  _editIdx = idx;
-  document.getElementById('modal-title').textContent='編輯管理員帳號';
-  document.getElementById('modal-name').value = admin.name;
-  document.getElementById('modal-pw').value = '';
-  document.getElementById('modal-email').value = admin.email || '';
-  document.getElementById('modal-idx').value = idx;
-  document.getElementById('modal-error').textContent='';
-  window._addingAdminAccount = true;
-  document.getElementById('admin-modal-overlay').style.display='flex';
-}
-
-async function deleteAdminAccount(name){
-  if(!_isMasterAdmin){
-    alert('❌ 只有主管理員才能刪除管理員帳號');
-    return;
-  }
-
-  if(name.toLowerCase() === MASTER_ADMIN_EMAIL.toLowerCase()){
-    alert('❌ 無法刪除主管理員帳戶！');
-    return;
-  }
-
-  if(!confirm(`確定要刪除管理員帳號「${name}」嗎？`)) return;
-
-  let admins = getAdminAccounts();
-  admins = admins.filter(a => a.name !== name);
-  localStorage.setItem(ADMINS_KEY, JSON.stringify(admins));
-
-  showToast(`✅ 管理員「${name}」已刪除`, '#c62828');
-  renderAdminPanel();
-}
-
-async function openResetAdminPwModal(name){
-  if(!_isMasterAdmin){
-    alert('❌ 只有主管理員才能重設管理員密碼');
-    return;
-  }
-
-  const newPw = prompt(`請輸入新密碼（用於管理員「${name}」）:`);
-  if(!newPw) return;
-  if(newPw.length < 6){
-    alert('密碼至少需要 6 個字元');
-    return;
-  }
-
-  let admins = getAdminAccounts();
-  const admin = admins.find(a => a.name === name);
-  if(!admin){
-    alert('❌ 管理員帳號不存在');
-    return;
-  }
-
-  admin.pw = await hashPw(newPw);
-  localStorage.setItem(ADMINS_KEY, JSON.stringify(admins));
-
-  // 顯示密碼提示
-  const msg = document.createElement('div');
-  msg.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#4a148c;color:#fff;padding:14px 22px;border-radius:10px;z-index:9999;font-size:.95rem;box-shadow:0 4px 20px rgba(0,0,0,.3);text-align:center;max-width:320px';
-  msg.innerHTML=`<div style="margin-bottom:6px;font-size:.85rem;opacity:.85">✅ 密碼已重設</div><div style="font-size:1.1rem;font-weight:700;letter-spacing:.05em">帳號：${name}</div><div style="font-size:1.1rem;font-weight:700;letter-spacing:.05em">密碼：${newPw}</div><div style="font-size:.75rem;opacity:.7;margin-top:6px">（5秒後自動關閉）</div>`;
-  document.body.appendChild(msg);
-  setTimeout(()=>msg.remove(), 5000);
-
   renderAdminPanel();
 }
 
@@ -3988,124 +2817,40 @@ function renderQReview(){
   </div>
 
   <!-- 學習者帳號管理 -->
-  <div style="margin-bottom:30px">
-    <div class="admin-header" style="margin-bottom:16px">
-      <span class="admin-title">📚 新增學習者帳號</span>
-      <button class="admin-add-btn" onclick="openAddLearnerModal()" style="margin-left:auto">＋ 新增學習者</button>
-    </div>
-    <div class="admin-section">管理所有學習者帳號與成績記錄</div>
-    <div style="overflow-x:auto">
-      <table class="admin-table">
-        <thead><tr>
-          <th>名稱</th><th>密碼</th><th>Gmail</th><th>考試次數</th><th>最近成績</th><th>操作</th>
-        </tr></thead>
-        <tbody id="admin-tbody"></tbody>
-      </table>
-    </div>
+  <div class="admin-section">📚 管理所有學習者帳號與成績記錄</div>
+  <div style="overflow-x:auto;margin-bottom:30px">
+  <table class="admin-table">
+    <thead><tr>
+      <th>名稱</th><th>密碼</th><th>Gmail</th><th>考試次數</th><th>最近成績</th><th>操作</th>
+    </tr></thead>
+    <tbody id="admin-tbody"></tbody>
+  </table>
   </div>
 
-  <!-- 主管理員密碼管理 -->
-  <div id="admin-pw-mgmt-section" style="border-top:2px solid #e0e0e0;padding-top:20px;margin-bottom:20px">
+  <!-- 管理員白名單管理 -->
+  <div style="border-top:2px solid #e0e0e0;padding-top:20px">
     <div class="admin-header" style="margin-bottom:16px">
-      <span class="admin-title">🔐 主管理員密碼設定</span>
+      <span class="admin-title">👤 管理員存取權限</span>
     </div>
-    <div class="admin-section">只有 qnachinese@gmail.com 可以設置或重設管理員密碼</div>
+    <div class="admin-section">設定哪些 Google 郵箱可以登入後臺</div>
 
-    <!-- 標籤頁 -->
-    <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:2px solid #e0e0e0">
-      <button onclick="switchMasterPwTab('set')" id="master-pw-tab-set"
-        style="padding:10px 16px;border:none;background:none;cursor:pointer;border-bottom:3px solid #4a90d9;color:#4a90d9;font-weight:600">
-        🔒 設置密碼
-      </button>
-      <button onclick="switchMasterPwTab('change')" id="master-pw-tab-change"
-        style="padding:10px 16px;border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;color:#999;font-weight:600">
-        🔄 修改密碼
-      </button>
-      <button onclick="switchMasterPwTab('forgot')" id="master-pw-tab-forgot"
-        style="padding:10px 16px;border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;color:#999;font-weight:600">
-        ❓ 忘記密碼
-      </button>
-    </div>
-
-    <!-- 設置密碼 -->
-    <div id="master-pw-panel-set" style="background:#fff3cd;border-radius:8px;padding:12px;margin-bottom:16px">
-      <!-- 密碼已設置提示 -->
-      <div id="master-pw-status-set" style="display:none;text-align:center;padding:12px">
-        <p style="font-size:1.2rem;margin:0;color:#2e7d32">✅ 密碼已設置</p>
-        <p style="font-size:.85rem;color:#666;margin:8px 0 0">修改密碼請使用「修改密碼」標籤</p>
-      </div>
-      <!-- 設置新密碼 -->
-      <div id="master-pw-form-set">
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input type="password" id="master-pw-input" placeholder="輸入新密碼"
-            style="flex:1;min-width:200px;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem">
-          <button class="admin-add-btn" onclick="setMasterPassword()" style="margin:0;padding:8px 16px">🔒 保存密碼</button>
-        </div>
-        <div id="master-pw-msg" style="margin-top:8px;font-size:.8rem;color:#666"></div>
+    <!-- 新增管理員 -->
+    <div style="background:#f5f5f5;border-radius:8px;padding:12px;margin-bottom:16px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="email" id="admin-email-add" placeholder="輸入 Gmail 郵箱（如 admin@gmail.com）"
+          style="flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem">
+        <button class="admin-add-btn" onclick="addAdminEmail()" style="margin:0;padding:8px 16px">＋ 新增</button>
       </div>
     </div>
 
-    <!-- 修改密碼 -->
-    <div id="master-pw-panel-change" style="display:none;background:#fff3cd;border-radius:8px;padding:12px;margin-bottom:16px">
-      <div style="margin-bottom:12px">
-        <label style="display:block;font-size:.85rem;color:#666;margin-bottom:4px">當前密碼</label>
-        <input type="password" id="master-pw-old" placeholder="請輸入當前密碼"
-          style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem;box-sizing:border-box">
-      </div>
-      <div style="margin-bottom:12px">
-        <label style="display:block;font-size:.85rem;color:#666;margin-bottom:4px">新密碼</label>
-        <input type="password" id="master-pw-new" placeholder="請輸入新密碼"
-          style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem;box-sizing:border-box">
-      </div>
-      <div style="margin-bottom:12px">
-        <label style="display:block;font-size:.85rem;color:#666;margin-bottom:4px">確認新密碼</label>
-        <input type="password" id="master-pw-confirm" placeholder="請再次輸入新密碼"
-          style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem;box-sizing:border-box">
-      </div>
-      <button class="admin-add-btn" onclick="changeMasterPassword()" style="width:100%;padding:10px">🔄 修改密碼</button>
-      <div id="master-pw-change-msg" style="margin-top:8px;font-size:.8rem;color:#666"></div>
-    </div>
-
-    <!-- 忘記密碼 -->
-    <div id="master-pw-panel-forgot" style="display:none;background:#fff3cd;border-radius:8px;padding:12px;margin-bottom:16px">
-      <div id="master-pw-forgot-step1">
-        <p style="font-size:.85rem;color:#666;margin-bottom:12px">將通過驗證碼重設密碼</p>
-        <button class="admin-add-btn" onclick="requestMasterAdminOTP()" style="width:100%;padding:10px">📧 發送驗證碼</button>
-        <div id="master-pw-forgot-msg1" style="margin-top:8px;font-size:.8rem;color:#666"></div>
-      </div>
-      <div id="master-pw-forgot-step2" style="display:none">
-        <p style="font-size:.85rem;color:#666;margin-bottom:8px">驗證碼已發送到 qnachinese@gmail.com（10分鐘內有效）</p>
-        <input type="text" id="master-pw-otp" placeholder="6位數驗證碼" maxlength="6"
-          style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem;margin-bottom:8px;box-sizing:border-box;letter-spacing:2px">
-        <button class="admin-add-btn" onclick="verifyMasterAdminOTP()" style="width:100%;padding:10px">✓ 驗證</button>
-        <div id="master-pw-forgot-msg2" style="margin-top:8px;font-size:.8rem;color:#666"></div>
-      </div>
-      <div id="master-pw-forgot-step3" style="display:none">
-        <p style="font-size:.85rem;color:#666;margin-bottom:8px">驗證成功！請設定新密碼</p>
-        <input type="password" id="master-pw-forgot-new" placeholder="新密碼"
-          style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem;margin-bottom:8px;box-sizing:border-box">
-        <input type="password" id="master-pw-forgot-confirm" placeholder="確認新密碼"
-          style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem;margin-bottom:8px;box-sizing:border-box">
-        <button class="admin-add-btn" onclick="resetMasterAdminPassword()" style="width:100%;padding:10px">🔒 重設密碼</button>
-        <div id="master-pw-forgot-msg3" style="margin-top:8px;font-size:.8rem;color:#666"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 管理員帳號管理 -->
-  <div id="admin-whitelist-section" style="border-top:2px solid #e0e0e0;padding-top:20px">
-    <div class="admin-header" style="margin-bottom:16px">
-      <span class="admin-title">👤 新增管理員帳號</span>
-      <button class="admin-add-btn" onclick="openAddAdminModal()" style="margin-left:auto">＋ 新增管理員</button>
-    </div>
-    <div class="admin-section">設定可登入後臺的管理員帳號</div>
+    <!-- 白名單表格 -->
     <div style="overflow-x:auto">
-      <table class="admin-table">
-        <thead><tr>
-          <th>名稱</th><th>密碼</th><th>Gmail</th><th>操作</th>
-        </tr></thead>
-        <tbody id="admin-whitelist-tbody"></tbody>
-      </table>
+    <table class="admin-table">
+      <thead><tr>
+        <th>Google 郵箱</th><th style="text-align:center">操作</th>
+      </tr></thead>
+      <tbody id="admin-whitelist-tbody"></tbody>
+    </table>
     </div>
   </div>
 </div>`);
@@ -4114,71 +2859,20 @@ function renderQReview(){
   // ── Admin Login Screen ──
   if(!document.getElementById('admin-login-screen')){
     document.body.insertAdjacentHTML('beforeend', `
-<div id="admin-login-screen" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;overflow-y:auto;padding:20px">
-  <div class="admin-login-box" style="margin:20px auto;max-width:420px">
-    <!-- 主管理員登入 -->
-    <div id="master-admin-section">
-      <h3>🔐 主管理者登入</h3>
-      <p style="margin:0 0 16px;color:#666;font-size:.85rem">僅 qnachinese@gmail.com 可使用</p>
-      <input type="password" id="admin-pw-input-google" placeholder="主管理員密碼"
-        onkeydown="if(event.key==='Enter')adminGoogleLogin()" style="margin-bottom:12px">
-      <div class="login-error" id="admin-login-err"></div>
-      <button class="login-btn" onclick="adminGoogleLogin()" style="margin-bottom:12px;background:#8b1a1a">🔐 主管理員登入</button>
-
-      <div style="border-top:1px solid #e0e0e0;padding-top:12px;margin-top:12px">
-        <div style="text-align:center">
-          <button style="background:none;border:none;color:#1976d2;font-size:.8rem;cursor:pointer;text-decoration:underline" onclick="openAdminForgotPassword()">❓ 忘記密碼？</button>
-        </div>
-      </div>
+<div id="admin-login-screen" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center">
+  <div class="admin-login-box">
+    <h3>🔐 管理者後臺</h3>
+    <p style="margin:0 0 20px;color:#666;font-size:.85rem">用 Google 郵箱登入</p>
+    <input type="email" id="admin-email-input" placeholder="Gmail 郵箱（例：admin@gmail.com）"
+      onkeydown="if(event.key==='Enter')adminGoogleLogin()">
+    <div class="login-error" id="admin-login-err"></div>
+    <button class="login-btn" onclick="adminGoogleLogin()" style="margin-bottom:12px">🔐 用 Google 郵箱登入</button>
+    <div style="border-top:1px solid #e0e0e0;padding-top:12px;margin-top:12px">
+      <p style="font-size:.75rem;color:#999;margin-bottom:8px">備用密碼登入</p>
+      <input type="password" id="admin-pw-input" placeholder="管理者密碼"
+        onkeydown="if(event.key==='Enter')adminLogin()" style="margin-bottom:8px">
+      <button class="login-btn" onclick="adminLogin()" style="background:#f5f5f5;color:#555;border:1px solid #ddd">用密碼登入</button>
     </div>
-
-    <!-- 分隔線 -->
-    <div style="border-top:2px solid #ddd;margin:20px 0;padding-top:20px">
-      <p style="text-align:center;font-size:.85rem;color:#999;margin-bottom:12px">一般管理員</p>
-    </div>
-
-    <!-- 一般管理員登入 -->
-    <div id="general-admin-section">
-      <p style="margin:0 0 12px;color:#666;font-size:.85rem">透過 Google 帳號登入</p>
-      <input type="email" id="admin-email-input" placeholder="Gmail 郵箱（例：admin@gmail.com）"
-        onkeydown="if(event.key==='Enter')document.getElementById('admin-email-otp').focus()">
-      <input type="text" id="admin-email-otp" placeholder="驗證碼（已發送至郵箱）"
-        onkeydown="if(event.key==='Enter')adminGeneralLogin()" style="margin-bottom:12px" maxlength="6">
-      <div class="login-error" id="admin-general-err"></div>
-      <button class="login-btn" onclick="requestGeneralAdminOTP()" style="margin-bottom:8px;background:#357abd">📧 發送驗證碼</button>
-      <button class="login-btn" onclick="adminGeneralLogin()" style="background:#357abd">✓ 驗證登入</button>
-    </div>
-
-    <!-- 忘記主管理員密碼流程 -->
-    <div id="admin-forgot-section" style="display:none;border-top:1px solid #e0e0e0;padding-top:12px;margin-top:12px">
-      <div style="text-align:center;margin-bottom:12px">
-        <button style="background:none;border:none;color:#1976d2;font-size:.8rem;cursor:pointer" onclick="closeAdminForgotPassword()">← 返回登入</button>
-      </div>
-      <div id="admin-forgot-step1">
-        <p style="font-size:.85rem;color:#666;margin-bottom:12px">將通過驗證碼重設主管理員密碼</p>
-        <input type="email" id="admin-forgot-email" placeholder="管理員郵箱（qnachinese@gmail.com）"
-          style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem;margin-bottom:8px;box-sizing:border-box">
-        <button class="login-btn" onclick="requestAdminForgotOTP()" style="background:#f9a825;color:#fff;border:none">📧 發送驗證碼</button>
-        <div id="admin-forgot-msg1" style="margin-top:8px;font-size:.8rem;color:#666"></div>
-      </div>
-      <div id="admin-forgot-step2" style="display:none">
-        <p style="font-size:.85rem;color:#666;margin-bottom:8px">驗證碼已發送到 qnachinese@gmail.com（10分鐘內有效）</p>
-        <input type="text" id="admin-forgot-otp" placeholder="6位數驗證碼" maxlength="6"
-          style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem;margin-bottom:8px;box-sizing:border-box;letter-spacing:2px">
-        <button class="login-btn" onclick="verifyAdminForgotOTP()" style="background:#f9a825;color:#fff;border:none;margin-bottom:8px">✓ 驗證</button>
-        <div id="admin-forgot-msg2" style="margin-top:8px;font-size:.8rem;color:#666"></div>
-      </div>
-      <div id="admin-forgot-step3" style="display:none">
-        <p style="font-size:.85rem;color:#666;margin-bottom:8px">驗證成功！請設定新密碼</p>
-        <input type="password" id="admin-forgot-newpw" placeholder="新密碼"
-          style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem;margin-bottom:8px;box-sizing:border-box">
-        <input type="password" id="admin-forgot-confirmpw" placeholder="確認新密碼"
-          style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem;margin-bottom:8px;box-sizing:border-box">
-        <button class="login-btn" onclick="resetAdminForgotPassword()" style="background:#2e7d32;color:#fff;border:none">🔒 重設密碼</button>
-        <div id="admin-forgot-msg3" style="margin-top:8px;font-size:.8rem;color:#666"></div>
-      </div>
-    </div>
-
     <div style="text-align:center;margin-top:12px">
       <button style="background:none;border:none;color:#aaa;font-size:.8rem;cursor:pointer" onclick="closeAdminLogin()">✕ 取消</button>
     </div>
@@ -4269,42 +2963,6 @@ function renderQReview(){
 </div>`);
   }
 
-  // ── 404 Not Found Screen ──
-  if(!document.getElementById('notfound-screen')){
-    main.insertAdjacentHTML('beforeend', `
-<div id="notfound-screen" style="display:none;text-align:center;padding:60px 20px;min-height:80vh;display:flex;align-items:center;justify-content:center">
-  <div style="max-width:600px">
-    <div style="font-size:120px;margin-bottom:20px;animation:bounce 2s infinite">
-      😕
-    </div>
-    <h1 style="font-size:2.5rem;margin:20px 0;color:#8b1a1a;font-weight:700">找不到頁面</h1>
-    <p style="font-size:1.1rem;color:#666;margin:20px 0;line-height:1.6">
-      看起來您訪問的頁面不存在或已被移除。<br>
-      請回到首頁重新開始！
-    </p>
-    <div style="margin:30px 0">
-      <button onclick="navigateToScreen('login-screen', '/')"
-        style="background:#c0392b;color:#fff;border:none;padding:12px 32px;font-size:1rem;border-radius:8px;cursor:pointer;font-weight:600;transition:background .2s;margin-right:10px">
-        🏠 返回首頁
-      </button>
-      <button onclick="window.history.back()"
-        style="background:#f5f5f5;color:#666;border:2px solid #ddd;padding:10px 32px;font-size:1rem;border-radius:8px;cursor:pointer;font-weight:600;transition:all .2s">
-        ← 上一頁
-      </button>
-    </div>
-    <p style="font-size:.85rem;color:#999;margin-top:40px">
-      錯誤代碼：404 | 找不到資源
-    </p>
-  </div>
-  <style>
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-20px); }
-    }
-  </style>
-</div>`);
-  }
-
   // ── Task #18: Offline Banner ──
   if(!document.getElementById('offline-banner')){
     document.body.insertAdjacentHTML('afterbegin', `
@@ -4319,7 +2977,10 @@ function renderQReview(){
 //  PROFILE (學習者專區)
 // ════════════════════════════════════════════════
 function showProfile(){
-  navigateToScreen('profile-screen', '/profile');
+  const screens = ['subject-screen','history-screen','exam-screen','result-screen'];
+  screens.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+  const screen = document.getElementById('profile-screen');
+  screen.style.display = 'block';
   // Populate
   const accounts = getUserAccounts();
   const acc = accounts.find(a=>a.name===st.currentUser);
@@ -4332,7 +2993,8 @@ function showProfile(){
 }
 
 function closeProfile(){
-  navigateToScreen('subject-screen', '/exam');
+  document.getElementById('profile-screen').style.display='none';
+  document.getElementById('subject-screen').style.display='block';
 }
 
 async function saveProfileEmail(){
@@ -4376,6 +3038,41 @@ async function saveProfilePassword(){
 }
 
 
+</script>
+
+
+<!-- 👤 管理員帳號管理 -->
+<script>
+function renderAdminSection(){
+  let section = document.querySelector('[style*="管理員存取權限"]');
+  if(!section) return;
+  let div = document.createElement('div');
+  div.style.cssText = 'margin-top:40px;border-top:2px solid #ddd;padding-top:20px';
+  div.innerHTML = `
+    <h3 style="margin-bottom:16px">👤 管理員帳號管理</h3>
+    <button onclick="addAdmin()" style="background:#2196F3;color:white;border:none;padding:10px 20px;margin-bottom:16px;cursor:pointer;font-weight:700">＋ 新增管理員</button>
+    <table style="width:100%;border-collapse:collapse">
+      <thead style="background:#2196F3;color:white">
+        <tr>
+          <th style="padding:12px;text-align:left;font-weight:700">名稱</th>
+          <th style="padding:12px;text-align:left;font-weight:700">密碼</th>
+          <th style="padding:12px;text-align:left;font-weight:700">Email</th>
+          <th style="padding:12px;text-align:left;font-weight:700">操作</th>
+        </tr>
+      </thead>
+      <tbody id="admin-tbody"></tbody>
+    </table>
+  `;
+  section.parentElement.appendChild(div);
+  refreshAdminList();
+}
+function getAdminList(){let l=localStorage.getItem('admin_list');return l?JSON.parse(l):[{name:'主管理員',email:'qnachinese@gmail.com',password:''}];}
+function saveAdminList(l){localStorage.setItem('admin_list',JSON.stringify(l));refreshAdminList();}
+function refreshAdminList(){let t=document.getElementById('admin-tbody');if(!t)return;let l=getAdminList();t.innerHTML=l.map((a,i)=>`<tr style="border-bottom:1px solid #f0f0f0"><td style="padding:12px">\${a.name}</td><td style="font-family:monospace">●●●●●●</td><td>\${a.email}</td><td><button onclick="editAdmin(\${i})" style="background:#2196F3;color:white;border:none;padding:6px 12px;margin-right:6px;cursor:pointer">編輯</button><button onclick="deleteAdmin(\${i})" style="background:#f44336;color:white;border:none;padding:6px 12px;cursor:pointer">刪除</button></td></tr>`).join('');}
+function addAdmin(){if(localStorage.getItem('tocfl_current_user')!=='qnachinese@gmail.com'){alert('❌ 只有主管理員');return;}let n=prompt('名稱:');if(!n)return;let e=prompt('Email:');if(!e)return;let p=prompt('密碼(6字以上):');if(!p||p.length<6){alert('❌ 密碼至少6字');return;}let l=getAdminList();if(l.some(x=>x.email===e)){alert('❌ Email已存在');return;}l.push({name:n,email:e,password:p});saveAdminList(l);alert('✅ 已新增');}
+function editAdmin(i){if(localStorage.getItem('tocfl_current_user')!=='qnachinese@gmail.com'){alert('❌ 只有主管理員');return;}let l=getAdminList();let n=prompt('名稱:',l[i].name);if(!n)return;let p=prompt('新密碼(留空不改):');if(p&&p.length<6){alert('❌ 至少6字');return;}l[i].name=n;if(p)l[i].password=p;saveAdminList(l);alert('✅ 已更新');}
+function deleteAdmin(i){if(localStorage.getItem('tocfl_current_user')!=='qnachinese@gmail.com'){alert('❌ 只有主管理員');return;}let l=getAdminList();if(l[i].email==='qnachinese@gmail.com'){alert('❌ 無法刪除主管理員');return;}if(confirm('確定刪除?')){l.splice(i,1);saveAdminList(l);alert('✅ 已刪除');}}
+document.addEventListener('DOMContentLoaded',renderAdminSection);
 </script>
 </body>
 </html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
