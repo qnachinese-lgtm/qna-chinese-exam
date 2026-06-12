@@ -2090,6 +2090,23 @@ async function submitLogin(){
   st.currentUser = accounts.find(a=>a.email===email).name;
   localStorage.setItem('tocfl_current_user', st.currentUser);
   localStorage.setItem('tocfl_user_email', email);
+
+  // 🌐 跨設備同步：保存登入信息到 Firestore
+  if(_db && _auth && email){
+    try {
+      const userDocRef = window.firebase.firestore().collection('users').doc(email);
+      userDocRef.set({
+        name: st.currentUser,
+        email: email,
+        lastLogin: new Date(),
+        device: navigator.userAgent,
+        platform: navigator.platform
+      }, { merge: true }).catch(e => console.warn('⚠️ Firestore 同步失敗:', e));
+    } catch(e) {
+      console.warn('⚠️ Firestore 同步錯誤:', e);
+    }
+  }
+
   navigateToScreen('subject-screen', '/exam');
   document.getElementById('user-bar-name').textContent = st.currentUser;
   document.getElementById('user-email-input').value='';
@@ -2570,8 +2587,22 @@ function resetLoginError(){
 
 function changeUser(){
   stopSessionTimer();
+
+  // 🌐 跨設備同步：註銷時更新 Firestore 登出時間
+  const email = localStorage.getItem('tocfl_user_email');
+  if(_db && email){
+    try {
+      window.firebase.firestore().collection('users').doc(email.toLowerCase()).update({
+        lastLogout: new Date()
+      }).catch(e => console.warn('⚠️ Firestore 更新失敗:', e));
+    } catch(e) {
+      console.warn('⚠️ Firestore 更新錯誤:', e);
+    }
+  }
+
   st.currentUser = null;
   localStorage.removeItem('tocfl_current_user');
+  localStorage.removeItem('tocfl_user_email');
   // 使用 History API 返回登入頁面
   navigateToScreen('login-screen', '/');
   // 清空表單
@@ -2675,13 +2706,50 @@ window.addEventListener('load', ()=>{
   // 初始化登入標籤（確保忘記密碼按鈕顯示）
   switchTab('login');
 
+  // 檢查管理員 Session（優先檢查）
+  const adminSession = localStorage.getItem(ADMIN_SESSION_KEY);
+  if(adminSession){
+    const email = adminSession.toLowerCase();
+    const isMaster = (email === MASTER_ADMIN_EMAIL.toLowerCase());
+    const isWhitelisted = getAdminWhitelist().includes(email);
+
+    if(isMaster || isWhitelisted){
+      _currentUserEmail = email;
+      _isMasterAdmin = isMaster;
+      _adminRole = isMaster ? 'master' : (isWhitelisted ? 'admin' : null);
+      showAdminPanel();
+      return;
+    }
+  }
+
   const savedUser = localStorage.getItem('tocfl_current_user');
+  const savedEmail = localStorage.getItem('tocfl_user_email');
+
   if(savedUser){
     const accounts = JSON.parse(localStorage.getItem(USERS_KEY)||'[]');
     if(accounts.find(a=>a.name===savedUser)){
       st.currentUser = savedUser;
       document.getElementById('user-email-input').value = savedUser;
       document.getElementById('user-bar-name').textContent = savedUser;
+
+      // 🌐 跨設備同步：從 Firestore 檢查最新數據
+      if(_db && savedEmail){
+        window.firebase.firestore().collection('users').doc(savedEmail.toLowerCase()).get()
+          .then(doc => {
+            if(doc.exists){
+              const data = doc.data();
+              console.log(`✅ 從 Firestore 恢復用戶數據: ${data.name}`);
+              // 更新本地用戶信息（如果有差異）
+              const acc = accounts.find(a=>a.email===savedEmail.toLowerCase());
+              if(acc && data.name !== acc.name){
+                acc.name = data.name;
+                localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
+              }
+            }
+          })
+          .catch(e => console.warn('⚠️ Firestore 讀取失敗:', e));
+      }
+
       navigateToScreen('subject-screen', '/exam');
       renderProgressPanel();
       updateWrongReviewBtn();
@@ -2712,8 +2780,9 @@ const SCREEN_URLS = {
 // 統一的屏幕顯示函數
 function showScreen(screenId){
   // 隱藏所有屏幕
-  ['login-screen','subject-screen','exam-screen','result-screen','history-screen','profile-screen','admin-screen'].forEach(id=>{
-    document.getElementById(id).style.display = 'none';
+  ['login-screen','subject-screen','exam-screen','result-screen','history-screen','profile-screen','admin-screen','notfound-screen'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display = 'none';
   });
 
   // 顯示指定的屏幕
@@ -2722,6 +2791,14 @@ function showScreen(screenId){
       document.getElementById(screenId).style.display = 'flex';
     } else {
       document.getElementById(screenId).style.display = 'block';
+    }
+  } else if(screenId && screenId !== 'notfound-screen'){
+    // 無效屏幕，顯示 404
+    const notfound = document.getElementById('notfound-screen');
+    if(notfound) {
+      notfound.style.display = 'flex';
+    } else {
+      document.getElementById('login-screen').style.display = 'flex';
     }
   }
 }
@@ -3202,6 +3279,12 @@ async function removeAdminEmail(email){
   // 權限檢查：只有主管理員才能移除
   if(!_isMasterAdmin){
     alert('❌ 只有主管理員才能移除管理員');
+    return;
+  }
+
+  // 防止移除主管理員
+  if(email.toLowerCase() === MASTER_ADMIN_EMAIL.toLowerCase()){
+    alert('❌ 無法移除主管理員帳戶！');
     return;
   }
 
@@ -3927,6 +4010,42 @@ function renderQReview(){
     <button class="profile-save-btn" onclick="saveProfilePassword()">更新密碼</button>
     <div class="profile-msg" id="profile-pw-msg"></div>
   </div>
+</div>`);
+  }
+
+  // ── 404 Not Found Screen ──
+  if(!document.getElementById('notfound-screen')){
+    main.insertAdjacentHTML('beforeend', `
+<div id="notfound-screen" style="display:none;text-align:center;padding:60px 20px;min-height:80vh;display:flex;align-items:center;justify-content:center">
+  <div style="max-width:600px">
+    <div style="font-size:120px;margin-bottom:20px;animation:bounce 2s infinite">
+      😕
+    </div>
+    <h1 style="font-size:2.5rem;margin:20px 0;color:#8b1a1a;font-weight:700">找不到頁面</h1>
+    <p style="font-size:1.1rem;color:#666;margin:20px 0;line-height:1.6">
+      看起來您訪問的頁面不存在或已被移除。<br>
+      請回到首頁重新開始！
+    </p>
+    <div style="margin:30px 0">
+      <button onclick="navigateToScreen('login-screen', '/')"
+        style="background:#c0392b;color:#fff;border:none;padding:12px 32px;font-size:1rem;border-radius:8px;cursor:pointer;font-weight:600;transition:background .2s;margin-right:10px">
+        🏠 返回首頁
+      </button>
+      <button onclick="window.history.back()"
+        style="background:#f5f5f5;color:#666;border:2px solid #ddd;padding:10px 32px;font-size:1rem;border-radius:8px;cursor:pointer;font-weight:600;transition:all .2s">
+        ← 上一頁
+      </button>
+    </div>
+    <p style="font-size:.85rem;color:#999;margin-top:40px">
+      錯誤代碼：404 | 找不到資源
+    </p>
+  </div>
+  <style>
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+  </style>
 </div>`);
   }
 
