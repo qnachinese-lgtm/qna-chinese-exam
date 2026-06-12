@@ -1805,6 +1805,13 @@ async function changeMasterPassword(){
 let _masterAdminOTPCode = '';
 let _masterAdminOTPExpiry = 0;
 
+// 一般管理員 OTP 狀態
+let _generalAdminOTPCode = '';
+let _generalAdminOTPExpiry = 0;
+let _generalAdminOTPEmail = '';
+let _generalAdminOTPAttempts = 0;
+let _generalAdminOTPLockUntil = 0;
+
 // 請求主管理員 OTP
 async function requestMasterAdminOTP(){
   if(!_isMasterAdmin){
@@ -3049,59 +3056,143 @@ function openAdminLoginFromHome(){
 
 function closeAdminLogin(){
   document.getElementById('admin-login-screen').style.display='none';
+  // 清除表單
+  document.getElementById('admin-email-input').value = '';
+  document.getElementById('admin-pw-input-google').value = '';
+  document.getElementById('admin-email-otp').value = '';
+  document.getElementById('admin-login-err').textContent = '';
+  document.getElementById('admin-general-err').textContent = '';
+  // 清除 OTP 狀態
+  _generalAdminOTPCode = '';
+  _generalAdminOTPEmail = '';
 }
 
-// 後臺 Google 郵箱驗證登入（需輸入密碼）
+// 主管理員登入（僅 qnachinese@gmail.com）
 async function adminGoogleLogin(){
-  const email = document.getElementById('admin-email-input')?.value?.trim().toLowerCase() || '';
   const pw = document.getElementById('admin-pw-input-google')?.value || '';
   const errEl = document.getElementById('admin-login-err');
 
-  if(!email){ errEl.textContent='請輸入 Gmail 郵箱'; return; }
+  if(!pw){ errEl.textContent='請輸入密碼'; return; }
+
+  errEl.textContent = '⏳ 驗證中...';
+  const storedPw = await getMasterAdminPassword();
+  if(!storedPw){
+    errEl.textContent = '❌ 密碼尚未設定，請先設定密碼';
+    return;
+  }
+  const pwHash = await hashPw(pw);
+  if(storedPw !== pwHash){
+    errEl.textContent = '❌ 密碼錯誤';
+    return;
+  }
+
+  // 設定管理員 session（主管理員）
+  localStorage.setItem(ADMIN_SESSION_KEY, MASTER_ADMIN_EMAIL.toLowerCase());
+
+  // 初始化主管理員系統
+  _currentUserEmail = MASTER_ADMIN_EMAIL.toLowerCase();
+  _isMasterAdmin = true;
+  _adminRole = 'master';
+
+  errEl.textContent = '✅ 登入成功！';
+  setTimeout(() => {
+    document.getElementById('admin-login-screen').style.display='none';
+    showAdminPanel();
+  }, 500);
+}
+
+// 一般管理員登入：請求 OTP
+async function requestGeneralAdminOTP(){
+  const email = document.getElementById('admin-email-input')?.value?.trim().toLowerCase() || '';
+  const errEl = document.getElementById('admin-general-err');
+
+  if(!email){ errEl.textContent='❌ 請輸入郵箱'; return; }
   if(!email.endsWith('@gmail.com') && !email.endsWith('@google.com')){
-    errEl.textContent='請輸入有效的 Google 郵箱'; return;
-  }
-  if(!pw){ errEl.textContent='請輸入主管理員密碼'; return; }
-
-  // 檢查權限（主管理員或在白名單中）
-  const isMaster = (email === MASTER_ADMIN_EMAIL.toLowerCase());
-  const isWhitelisted = getAdminWhitelist().includes(email);
-
-  if(!isMaster && !isWhitelisted){
-    errEl.textContent='此郵箱無後臺存取權限'; return;
+    errEl.textContent='❌ 請輸入有效的 Google 郵箱'; return;
   }
 
-  // 對於主管理員，必須驗證密碼
-  if(isMaster){
-    errEl.textContent = '⏳ 驗證密碼中...';
-    const storedPw = await getMasterAdminPassword();
-    if(!storedPw){
-      errEl.textContent = '❌ 主管理員密碼尚未設定，請先設定密碼';
-      return;
+  // 檢查白名單
+  const whitelist = getAdminWhitelist();
+  if(!whitelist.includes(email)){
+    errEl.textContent='❌ 此郵箱無後臺存取權限'; return;
+  }
+
+  errEl.textContent = '📧 發送驗證碼中...';
+  try {
+    _generalAdminOTPCode = _genOTP();
+    _generalAdminOTPExpiry = Date.now() + 10*60*1000;
+    _generalAdminOTPEmail = email;
+    _generalAdminOTPAttempts = 0;
+    _generalAdminOTPLockUntil = 0;
+
+    await sendOTP(email, _generalAdminOTPCode);
+    errEl.textContent = '✅ 驗證碼已發送（10分鐘內有效）';
+    errEl.style.color = '#2e7d32';
+  } catch(e){
+    errEl.textContent = '❌ 發送失敗，請稍後再試';
+    errEl.style.color = '#d32f2f';
+    console.error('發送 OTP 失敗:', e);
+  }
+}
+
+// 一般管理員登入：驗證 OTP
+async function adminGeneralLogin(){
+  const email = document.getElementById('admin-email-input')?.value?.trim().toLowerCase() || '';
+  const otp = document.getElementById('admin-email-otp')?.value?.trim() || '';
+  const errEl = document.getElementById('admin-general-err');
+
+  if(!email){ errEl.textContent='❌ 請輸入郵箱'; errEl.style.color = '#d32f2f'; return; }
+  if(!otp){ errEl.textContent='❌ 請輸入驗證碼'; errEl.style.color = '#d32f2f'; return; }
+
+  // 檢查白名單
+  const whitelist = getAdminWhitelist();
+  if(!whitelist.includes(email)){
+    errEl.textContent='❌ 此郵箱無後臺存取權限'; errEl.style.color = '#d32f2f'; return;
+  }
+
+  // 檢查暴力破解保護
+  if(_generalAdminOTPLockUntil > Date.now()){
+    const mins = Math.ceil((_generalAdminOTPLockUntil - Date.now()) / 60000);
+    errEl.textContent = `❌ 嘗試次數過多，請在 ${mins} 分鐘後重試`; errEl.style.color = '#d32f2f';
+    return;
+  }
+
+  // 檢查郵箱是否匹配
+  if(email !== _generalAdminOTPEmail){
+    errEl.textContent='❌ 郵箱不匹配，請重新請求驗證碼'; errEl.style.color = '#d32f2f'; return;
+  }
+
+  // 檢查驗證碼是否過期
+  if(Date.now() > _generalAdminOTPExpiry){
+    errEl.textContent='❌ 驗證碼已過期，請重新請求'; errEl.style.color = '#d32f2f'; return;
+  }
+
+  // 檢查驗證碼是否正確
+  if(otp !== _generalAdminOTPCode){
+    _generalAdminOTPAttempts++;
+    if(_generalAdminOTPAttempts >= 3){
+      _generalAdminOTPLockUntil = Date.now() + 15*60*1000; // 鎖定 15 分鐘
+      errEl.textContent='❌ 驗證碼錯誤，已鎖定 15 分鐘'; errEl.style.color = '#d32f2f';
+    } else {
+      errEl.textContent=`❌ 驗證碼錯誤（剩餘 ${3-_generalAdminOTPAttempts} 次）`; errEl.style.color = '#d32f2f';
     }
-    const pwHash = await hashPw(pw);
-    if(storedPw !== pwHash){
-      errEl.textContent = '❌ 密碼錯誤';
-      return;
-    }
+    return;
   }
 
-  // 設定管理員 session
+  // 驗證成功！設定管理員 session
   localStorage.setItem(ADMIN_SESSION_KEY, email);
 
-  // 初始化主管理員系統（重要！）
+  // 初始化管理員系統
   _currentUserEmail = email;
-  _isMasterAdmin = isMaster;
-  if(isMaster){
-    _adminRole = 'master';
-  } else if(isWhitelisted){
-    _adminRole = 'admin';
-  } else {
-    _adminRole = null;
-  }
+  _isMasterAdmin = false;
+  _adminRole = 'admin';
 
-  document.getElementById('admin-login-screen').style.display='none';
-  showAdminPanel();
+  errEl.textContent = '✅ 驗證成功！';
+  errEl.style.color = '#2e7d32';
+  setTimeout(() => {
+    document.getElementById('admin-login-screen').style.display='none';
+    showAdminPanel();
+  }, 500);
 }
 
 async function adminLogin(){
@@ -3871,26 +3962,39 @@ function renderQReview(){
   // ── Admin Login Screen ──
   if(!document.getElementById('admin-login-screen')){
     document.body.insertAdjacentHTML('beforeend', `
-<div id="admin-login-screen" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center">
-  <div class="admin-login-box">
-    <h3>🔐 管理者後臺</h3>
-    <p style="margin:0 0 20px;color:#666;font-size:.85rem">用 Google 郵箱登入</p>
-    <input type="email" id="admin-email-input" placeholder="Gmail 郵箱（例：admin@gmail.com）"
-      onkeydown="if(event.key==='Enter')document.getElementById('admin-pw-input-google').focus()">
-    <input type="password" id="admin-pw-input-google" placeholder="主管理員密碼"
-      onkeydown="if(event.key==='Enter')adminGoogleLogin()" style="margin-bottom:12px">
-    <div class="login-error" id="admin-login-err"></div>
-    <button class="login-btn" onclick="adminGoogleLogin()" style="margin-bottom:12px">🔐 用 Google 郵箱登入</button>
-    <div id="admin-login-form">
+<div id="admin-login-screen" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;overflow-y:auto;padding:20px">
+  <div class="admin-login-box" style="margin:20px auto;max-width:420px">
+    <!-- 主管理員登入 -->
+    <div id="master-admin-section">
+      <h3>🔐 主管理者登入</h3>
+      <p style="margin:0 0 16px;color:#666;font-size:.85rem">僅 qnachinese@gmail.com 可使用</p>
+      <input type="password" id="admin-pw-input-google" placeholder="主管理員密碼"
+        onkeydown="if(event.key==='Enter')adminGoogleLogin()" style="margin-bottom:12px">
+      <div class="login-error" id="admin-login-err"></div>
+      <button class="login-btn" onclick="adminGoogleLogin()" style="margin-bottom:12px;background:#8b1a1a">🔐 主管理員登入</button>
+
       <div style="border-top:1px solid #e0e0e0;padding-top:12px;margin-top:12px">
-        <p style="font-size:.75rem;color:#999;margin-bottom:8px">備用密碼登入</p>
-        <input type="password" id="admin-pw-input" placeholder="管理者密碼"
-          onkeydown="if(event.key==='Enter')adminLogin()" style="margin-bottom:8px">
-        <button class="login-btn" onclick="adminLogin()" style="background:#f5f5f5;color:#555;border:1px solid #ddd;margin-bottom:8px">用密碼登入</button>
         <div style="text-align:center">
           <button style="background:none;border:none;color:#1976d2;font-size:.8rem;cursor:pointer;text-decoration:underline" onclick="openAdminForgotPassword()">❓ 忘記密碼？</button>
         </div>
       </div>
+    </div>
+
+    <!-- 分隔線 -->
+    <div style="border-top:2px solid #ddd;margin:20px 0;padding-top:20px">
+      <p style="text-align:center;font-size:.85rem;color:#999;margin-bottom:12px">一般管理員</p>
+    </div>
+
+    <!-- 一般管理員登入 -->
+    <div id="general-admin-section">
+      <p style="margin:0 0 12px;color:#666;font-size:.85rem">透過 Google 帳號登入</p>
+      <input type="email" id="admin-email-input" placeholder="Gmail 郵箱（例：admin@gmail.com）"
+        onkeydown="if(event.key==='Enter')document.getElementById('admin-email-otp').focus()">
+      <input type="text" id="admin-email-otp" placeholder="驗證碼（已發送至郵箱）"
+        onkeydown="if(event.key==='Enter')adminGeneralLogin()" style="margin-bottom:12px" maxlength="6">
+      <div class="login-error" id="admin-general-err"></div>
+      <button class="login-btn" onclick="requestGeneralAdminOTP()" style="margin-bottom:8px;background:#357abd">📧 發送驗證碼</button>
+      <button class="login-btn" onclick="adminGeneralLogin()" style="background:#357abd">✓ 驗證登入</button>
     </div>
 
     <!-- 忘記主管理員密碼流程 -->
