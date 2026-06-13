@@ -170,6 +170,8 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 <div id="admin-add-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center">
   <div class="admin-modal">
     <h3 id="admin-add-title">新增管理員帳號</h3>
+    <label>名稱（顯示用，可自訂）</label>
+    <input type="text" id="newadmin-name" placeholder="例如：王老師" maxlength="20">
     <label>管理員 Email</label>
     <input type="email" id="newadmin-email" placeholder="對方的 Email">
     <label>密碼（至少6碼）</label>
@@ -268,7 +270,7 @@ async function adminLogin(){
     if(!acc.pw){ err.style.color='#c62828'; err.textContent='此帳號尚未設定密碼，請聯絡主管理員'; return; }
     if(acc.pw !== await hashPw(pw)){ err.style.color='#c62828'; err.textContent='密碼不正確'; return; }
     localStorage.setItem(ADMIN_CLIENT_KEY, email);
-    enterPanel(email, 'admin');
+    enterPanel(email, 'admin', acc.name);
     return;
   }
 
@@ -336,12 +338,12 @@ async function sendReset(){
 // ═══════════════════════════════════════════
 //  登入狀態變化（決定顯示哪個畫面）
 // ═══════════════════════════════════════════
-function enterPanel(email, role){
+function enterPanel(email, role, name){
   _currentRole = role; _currentEmail = (email||'').toLowerCase();
   showScreen('panel');
   document.getElementById('who-am-i').textContent = '登入身分：'+_currentEmail;
   const badge=document.getElementById('role-badge');
-  badge.textContent = role==='master' ? '主管理員' : '管理員（唯讀）';
+  badge.textContent = role==='master' ? '主管理員' : ('管理員'+(name?'（'+name+'）':''));
   badge.className = 'role-badge ' + (role==='master'?'role-master':'role-admin');
   document.getElementById('add-learner-btn').style.display = role==='master' ? '' : 'none';
   document.getElementById('admins-section').style.display  = role==='master' ? 'block' : 'none';
@@ -352,8 +354,9 @@ function enterPanel(email, role){
 async function tryClientAdminSession(){
   const email = localStorage.getItem(ADMIN_CLIENT_KEY);
   if(!email) return;
-  const role = await getRole(email);
-  if(role==='admin'){ enterPanel(email, 'admin'); }
+  const accounts = await getAdminAccounts();
+  const acc = accounts.find(a=>(a.email||'').toLowerCase()===email.toLowerCase());
+  if(acc){ enterPanel(email, 'admin', acc.name); }
   else { localStorage.removeItem(ADMIN_CLIENT_KEY); }
 }
 
@@ -440,13 +443,16 @@ function toggleLearnersTable(){
   b.textContent = hidden ? '隱藏':'顯示';
 }
 
+function getVisibleGroups(){
+  return getUserGroups().filter(g=>!_adminEmails.has((g.primary.email||'').toLowerCase()));
+}
 function renderAdminPanel(){
   const isMaster = _currentRole==='master';
   const head = document.getElementById('learner-head');
   if(head){
     head.innerHTML = '<th>名稱</th><th>密碼</th><th>Gmail</th><th>考試次數</th><th>最近成績</th>' + (isMaster?'<th>操作</th>':'');
   }
-  const groups = getUserGroups().filter(g=>!_adminEmails.has((g.primary.email||'').toLowerCase()));
+  const groups = getVisibleGroups();
   const history  = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
   const tbody = document.getElementById('admin-tbody');
   if(!tbody) return;
@@ -508,7 +514,7 @@ async function renderAdminsList(){
       _adminEmails.add(email.toLowerCase());
       if(email.toLowerCase()===MASTER_EMAIL) return;
       const noPw = acc.pw ? '' : ' <span style="color:#c62828;font-size:.72rem">(未設密碼)</span>';
-      rows += '<tr><td>'+email+noPw+'</td><td><span class="role-badge role-admin">管理員</span></td>'+
+      rows += '<tr><td>'+(acc.name?acc.name+'（'+email+'）':email)+noPw+'</td><td><span class="role-badge role-admin">管理員</span></td>'+
         '<td><div class="admin-action-cell">'+
           '<button class="admin-edit-btn" onclick="openAdminEditModal(\''+email+'\')">編輯</button>'+
           '<button class="admin-pw-btn" onclick="resetAdminPw(\''+email+'\')">重設密碼</button>'+
@@ -524,16 +530,20 @@ function openAdminAddModal(){
   if(_currentRole!=='master') return;
   _editAdminOrig = null;
   document.getElementById('admin-add-title').textContent='新增管理員帳號';
+  document.getElementById('newadmin-name').value='';
   document.getElementById('newadmin-email').value='';
   document.getElementById('newadmin-pw').value='';
   document.getElementById('newadmin-pw').placeholder='幫他設定的密碼（至少6碼）';
   const er=document.getElementById('newadmin-error'); if(er) er.textContent='';
   document.getElementById('admin-add-overlay').style.display='flex';
 }
-function openAdminEditModal(email){
+async function openAdminEditModal(email){
   if(_currentRole!=='master') return;
   _editAdminOrig = (email||'').toLowerCase();
+  const _accs = await getAdminAccounts();
+  const _a = _accs.find(a=>(a.email||'').toLowerCase()===_editAdminOrig);
   document.getElementById('admin-add-title').textContent='編輯管理員帳號';
+  document.getElementById('newadmin-name').value=(_a && _a.name) || '';
   document.getElementById('newadmin-email').value=email;
   document.getElementById('newadmin-pw').value='';
   document.getElementById('newadmin-pw').placeholder='密碼（留空則不修改）';
@@ -546,6 +556,7 @@ async function addAdmin(){   // 彈窗「儲存」：新增或編輯
   if(_currentRole!=='master'){ return; }
   const email=(document.getElementById('newadmin-email').value||'').trim().toLowerCase();
   const pw=document.getElementById('newadmin-pw').value||'';
+  const name=(document.getElementById('newadmin-name').value||'').trim();
   const err=document.getElementById('newadmin-error'); err.textContent='';
   if(!email){ err.textContent='請輸入 Email'; return; }
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ err.textContent='Email 格式不正確'; return; }
@@ -555,12 +566,12 @@ async function addAdmin(){   // 彈窗「儲存」：新增或編輯
     if(_editAdminOrig===null){
       if(accounts.some(a=>(a.email||'').toLowerCase()===email)){ err.textContent='此 Email 已是管理員'; return; }
       if(pw.length<6){ err.textContent='密碼至少 6 碼'; return; }
-      accounts.push({email, pw: await hashPw(pw)});
+      accounts.push({email, name, pw: await hashPw(pw)});
     } else {
       const acc = accounts.find(a=>(a.email||'').toLowerCase()===_editAdminOrig);
       if(!acc){ err.textContent='找不到此管理員'; return; }
       if(email!==_editAdminOrig && accounts.some(a=>(a.email||'').toLowerCase()===email)){ err.textContent='此 Email 已被使用'; return; }
-      acc.email = email;
+      acc.email = email; acc.name = name;
       if(pw){ if(pw.length<6){ err.textContent='密碼至少 6 碼'; return; } acc.pw = await hashPw(pw); }
     }
     await saveAdminAccounts(accounts);
@@ -603,7 +614,7 @@ async function deleteAdmin(email){
 // ═══════════════════════════════════════════
 function deleteUser(gi){
   if(_currentRole!=='master') return;
-  const g = getUserGroups()[gi]; if(!g) return;
+  const g = getVisibleGroups()[gi]; if(!g) return;
   const name = g.primary.name;
   const email = (g.primary.email||'').toLowerCase();
   if(!confirm('確定刪除帳號「'+name+'」及其所有記錄嗎？')) return;
@@ -617,7 +628,7 @@ function deleteUser(gi){
 }
 function resetUserHistory(gi){
   if(_currentRole!=='master') return;
-  const g = getUserGroups()[gi]; if(!g) return;
+  const g = getVisibleGroups()[gi]; if(!g) return;
   const name = g.primary.name;
   if(!confirm('確定清除「'+name+'」的所有考試記錄嗎？')) return;
   fbDeleteUserHistory(name);
@@ -629,7 +640,7 @@ let _isAdd = false;
 let _editGroupIdx = -1;
 function openEditModal(gi){
   if(_currentRole!=='master') return;
-  const g = getUserGroups()[gi]; if(!g) return;
+  const g = getVisibleGroups()[gi]; if(!g) return;
   const acc = g.primary;
   _isAdd = false; _editGroupIdx = gi;
   document.getElementById('modal-title').textContent='編輯帳號';
@@ -652,7 +663,7 @@ function openAddModal(){
 function closeModal(){ document.getElementById('admin-modal-overlay').style.display='none'; }
 function openResetPwModal(gi){
   if(_currentRole!=='master') return;
-  const g = getUserGroups()[gi]; if(!g) return;
+  const g = getVisibleGroups()[gi]; if(!g) return;
   const acc = g.primary;
   const newPw = prompt('重設「'+acc.name+'」的密碼：\n（請輸入新密碼，確認後直接儲存）');
   if(newPw===null) return;
