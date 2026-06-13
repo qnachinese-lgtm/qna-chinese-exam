@@ -14,6 +14,9 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 .admin-title { font-size:1.2rem; font-weight:700; flex:1; }
 .admin-back { background:#f5f5f5; border:1px solid #ddd; border-radius:8px; padding:8px 16px; cursor:pointer; font-size:.9rem; }
 .admin-back:hover { background:#e8e8e8; }
+.role-badge { font-size:.72rem; font-weight:700; padding:3px 10px; border-radius:999px; }
+.role-master { background:#fff3e0; color:#e65100; border:1px solid #ffcc80; }
+.role-admin  { background:#e3f2fd; color:#1565c0; border:1px solid #90caf9; }
 .admin-table { width:100%; border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.08); }
 .admin-table th { background:#4a90d9; color:#fff; padding:10px 14px; text-align:left; font-size:.85rem; }
 .admin-table td { padding:10px 14px; font-size:.85rem; border-bottom:1px solid #f0f0f0; vertical-align:middle; }
@@ -48,15 +51,20 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 .modal-btn-cancel:hover { background:#d0d0d0; }
 
 /* Login screen */
-#admin-login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; }
-.admin-login-box { background:#fff; border-radius:16px; padding:32px 28px; width:300px; max-width:90vw; text-align:center; box-shadow:0 4px 24px rgba(0,0,0,.1); }
-.admin-login-box h3 { margin:0 0 6px; font-size:1.3rem; }
+#admin-login-screen { display:none; align-items:center; justify-content:center; min-height:100vh; }
+.admin-login-box { background:#fff; border-radius:16px; padding:32px 28px; width:320px; max-width:90vw; text-align:center; box-shadow:0 4px 24px rgba(0,0,0,.1); }
+.admin-login-box h3 { margin:0 0 4px; font-size:1.3rem; }
 .admin-login-box p { color:#888; font-size:.85rem; margin:0 0 20px; }
-.admin-login-box input { width:100%; box-sizing:border-box; padding:10px 12px; border:2px solid #e0e0e0; border-radius:8px; font-size:.95rem; margin-bottom:12px; outline:none; }
+.admin-login-box input { width:100%; box-sizing:border-box; padding:11px 12px; border:2px solid #e0e0e0; border-radius:8px; font-size:.95rem; margin-bottom:12px; outline:none; }
 .admin-login-box input:focus { border-color:#4a90d9; }
-.login-error { color:#c62828; font-size:.85rem; margin:8px 0; min-height:18px; }
-.login-btn { width:100%; padding:12px; background:linear-gradient(135deg,#4a90d9,#357abd); color:#fff; border:none; border-radius:8px; font-size:.95rem; font-weight:600; cursor:pointer; margin-bottom:12px; }
+.login-error { color:#c62828; font-size:.85rem; margin:6px 0; min-height:18px; }
+.login-msg-ok { color:#2e7d32; font-size:.85rem; margin:6px 0; min-height:18px; }
+.login-btn { width:100%; padding:12px; background:linear-gradient(135deg,#4a90d9,#357abd); color:#fff; border:none; border-radius:8px; font-size:.95rem; font-weight:600; cursor:pointer; margin-bottom:10px; }
 .login-btn:hover { opacity:.88; }
+.link-btn { background:none; border:none; color:#4a90d9; font-size:.82rem; cursor:pointer; text-decoration:underline; }
+#admin-forgot-box { display:none; margin-top:14px; background:#fff8e1; border:1px solid #ffe082; border-radius:8px; padding:14px; text-align:left; }
+#admin-forgot-box p { font-size:.8rem; color:#5d4037; margin:0 0 8px; }
+#boot-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; color:#888; font-size:.95rem; }
 
 @media(max-width:520px){
   main { padding:16px; }
@@ -66,81 +74,87 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
   .admin-table th, .admin-table td { padding:6px 8px; }
 }
 </style>
-<!-- Firebase（雲端同步，與主程式同一個專案） -->
+<!-- Firebase（真驗證：Auth + Firestore） -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
+<!-- 啟動中（檢查登入狀態時顯示，避免閃過後台） -->
+<div id="boot-screen">載入中…</div>
+
+<!-- 登入畫面 -->
 <div id="admin-login-screen">
   <div class="admin-login-box">
     <h3>🔐 管理者後臺</h3>
-    <p>用 Google 郵箱登入</p>
-    <input type="email" id="admin-email-input" placeholder="Gmail 郵箱（例：admin@gmail.com）"
-      onkeydown="if(event.key==='Enter')adminGoogleLogin()">
+    <p>請用管理員 Email 與密碼登入</p>
+    <input type="email" id="admin-email" placeholder="管理員 Email" autocomplete="username"
+      onkeydown="if(event.key==='Enter')document.getElementById('admin-pw').focus()">
+    <input type="password" id="admin-pw" placeholder="密碼" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')adminLogin()">
     <div class="login-error" id="admin-login-err"></div>
-    <button class="login-btn" onclick="adminGoogleLogin()" style="margin-bottom:12px">🔐 用 Google 郵箱登入</button>
-    <div style="border-top:1px solid #e0e0e0;padding-top:12px;margin-top:12px">
-      <p style="font-size:.75rem;color:#999;margin-bottom:8px">備用密碼登入</p>
-      <input type="password" id="admin-pw-input" placeholder="管理者密碼"
-        onkeydown="if(event.key==='Enter')adminLogin()" style="margin-bottom:8px">
-      <button class="login-btn" onclick="adminLogin()" style="background:#f5f5f5;color:#555;border:1px solid #ddd;margin-bottom:0">用密碼登入</button>
+    <button class="login-btn" onclick="adminLogin()">登入 →</button>
+    <button class="link-btn" onclick="toggleForgot()">忘記密碼？</button>
+
+    <div id="admin-forgot-box">
+      <p>🔑 輸入你的管理員 Email，我們會寄一封「重設密碼」信給你（Firebase 官方寄送）。</p>
+      <input type="email" id="reset-email" placeholder="管理員 Email">
+      <button class="login-btn" style="margin-bottom:0" onclick="sendReset()">寄送重設信</button>
+      <div class="login-msg-ok" id="reset-msg"></div>
     </div>
   </div>
 </div>
 
 <main>
-  <div id="admin-screen" style="display:none">
+  <div id="admin-screen">
     <div class="admin-header">
-      <button class="admin-back" onclick="closeAdminPanel()">← 登出</button>
+      <button class="admin-back" onclick="adminLogout()">← 登出</button>
       <span class="admin-title">⚙️ 管理者後臺</span>
-      <button class="admin-add-btn" onclick="openAddModal()">＋ 新增帳號</button>
+      <span id="role-badge" class="role-badge role-admin"></span>
+      <button id="add-learner-btn" class="admin-add-btn" style="margin:0" onclick="openAddModal()">＋ 新增帳號</button>
     </div>
+    <div id="who-am-i" style="font-size:.8rem;color:#888;margin-bottom:16px"></div>
 
-    <!-- 學習者帳號管理 -->
+    <!-- 學習者名單 -->
     <div class="admin-header" style="margin-bottom:16px">
       <span class="admin-title">📚 學習者名單</span>
       <button id="toggle-learners-btn" class="admin-back" onclick="toggleLearnersTable()" style="background:#4a90e2;color:#fff;border:none;cursor:pointer;padding:8px 16px;border-radius:8px">隱藏</button>
     </div>
     <div id="learners-table-container" style="overflow-x:auto;margin-bottom:30px">
     <table class="admin-table">
-      <thead><tr>
-        <th>名稱</th><th>密碼</th><th>Gmail</th><th>考試次數</th><th>最近成績</th><th>操作</th>
-      </tr></thead>
+      <thead><tr id="learner-head"></tr></thead>
       <tbody id="admin-tbody"></tbody>
     </table>
     </div>
 
-    <!-- 管理員白名單管理 -->
-    <div style="border-top:2px solid #e0e0e0;padding-top:20px">
+    <!-- 管理員白名單（僅主管理員可見） -->
+    <div id="admins-section" style="border-top:2px solid #e0e0e0;padding-top:20px;display:none">
       <div class="admin-header" style="margin-bottom:16px">
         <span class="admin-title">👤 管理員存取權限</span>
       </div>
-      <div class="admin-section">設定哪些 Google 郵箱可以登入後臺</div>
+      <div class="admin-section">只有主管理員（qnachinese@gmail.com）能新增/刪除其他管理員。其他管理員只能查看學習者資料。</div>
 
-      <!-- 新增管理員 -->
       <div style="background:#f5f5f5;border-radius:8px;padding:12px;margin-bottom:16px">
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="email" id="admin-email-add" placeholder="輸入 Gmail 郵箱（如 admin@gmail.com）"
-            style="flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem">
-          <button class="admin-add-btn" onclick="addAdminEmail()" style="margin:0;padding:8px 16px">＋ 新增</button>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="email" id="admin-email-add" placeholder="新管理員的 Email"
+            style="flex:1;min-width:200px;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem">
+          <button class="admin-add-btn" onclick="addAdmin()" style="margin:0;padding:8px 16px">＋ 新增管理員</button>
         </div>
+        <div style="font-size:.75rem;color:#999;margin-top:8px">新增後，請對方到本後台用該 Email 自行設定密碼（第一次登入時會提示建立密碼）。</div>
       </div>
 
-      <!-- 白名單表格 -->
       <div style="overflow-x:auto">
       <table class="admin-table">
-        <thead><tr>
-          <th>Google 郵箱</th><th style="text-align:center">操作</th>
-        </tr></thead>
-        <tbody id="admin-whitelist-tbody"></tbody>
+        <thead><tr><th>管理員 Email</th><th>角色</th><th style="text-align:center">操作</th></tr></thead>
+        <tbody id="admins-tbody"></tbody>
       </table>
       </div>
     </div>
   </div>
 </main>
 
-<!-- Admin Modal -->
+<!-- 編輯/新增學習者 Modal -->
 <div id="admin-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center">
   <div class="admin-modal">
     <h3 id="modal-title">編輯帳號</h3>
@@ -161,17 +175,12 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 
 <script>
 // ═══════════════════════════════════════════
-//  CONSTANTS
+//  設定
 // ═══════════════════════════════════════════
-const USERS_KEY = 'tocfl_users';
-const ADMIN_SESSION_KEY = 'tocfl_admin_session';
-const ADMIN_KEY = 'tocfl_admin_pw';
-const ADMINS_KEY = 'tocfl_admins';
+const USERS_KEY   = 'tocfl_users';
 const STORAGE_KEY = 'tocfl_exam_history';
+const MASTER_EMAIL = 'qnachinese@gmail.com';   // 主管理員（永遠有權限、唯一能管理其他管理員）
 
-// ═══════════════════════════════════════════
-//  FIREBASE 雲端同步（與主程式 華語教學認證模擬考.html 一致）
-// ═══════════════════════════════════════════
 const FB_CONFIG = {
   apiKey: "AIzaSyCSgZ9DmLuKIqqbxrVgAcUfy-QJFhzjjp8",
   authDomain: "qna-chinese.firebaseapp.com",
@@ -180,345 +189,331 @@ const FB_CONFIG = {
   messagingSenderId: "645044163415",
   appId: "1:645044163415:web:c33d1a22422de3083b6412"
 };
-let _db = null;
-function initFirebase(){
-  try {
-    if(typeof firebase === 'undefined') return;
-    if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
-    _db = firebase.firestore();
-    syncFromCloud();
-  } catch(e){ console.warn('Firebase unavailable:', e); }
+firebase.initializeApp(FB_CONFIG);
+const auth = firebase.auth();
+const _db  = firebase.firestore();
+
+let _currentRole = null;   // 'master' | 'admin'
+let _currentEmail = null;
+
+// ═══════════════════════════════════════════
+//  授權判斷
+// ═══════════════════════════════════════════
+async function getRole(email){
+  if(!email) return null;
+  email = email.toLowerCase();
+  if(email === MASTER_EMAIL) return 'master';
+  try{
+    const doc = await _db.collection('admins').doc(email).get();
+    return doc.exists ? 'admin' : null;
+  }catch(e){ console.warn('getRole:', e); return null; }
 }
-async function syncFromCloud(){
-  if(!_db) return;
-  try {
-    const usersSnap = await _db.collection('users').get();
-    if(!usersSnap.empty){
-      localStorage.setItem(USERS_KEY, JSON.stringify(usersSnap.docs.map(d=>d.data())));
+
+// ═══════════════════════════════════════════
+//  登入 / 登出 / 忘記密碼
+// ═══════════════════════════════════════════
+function showScreen(which){
+  document.getElementById('boot-screen').style.display       = which==='boot'  ? 'flex' : 'none';
+  document.getElementById('admin-login-screen').style.display= which==='login' ? 'flex' : 'none';
+  document.getElementById('admin-screen').style.display      = which==='panel' ? 'block': 'none';
+}
+
+async function adminLogin(){
+  const email = (document.getElementById('admin-email').value||'').trim().toLowerCase();
+  const pw    = document.getElementById('admin-pw').value;
+  const err   = document.getElementById('admin-login-err');
+  err.textContent='';
+  if(!email){ err.textContent='請輸入 Email'; return; }
+  if(!pw){ err.textContent='請輸入密碼'; return; }
+
+  const role = await getRole(email);
+  if(!role){ err.textContent='此 Email 沒有後台權限'; return; }
+
+  err.textContent='登入中…'; err.style.color='#888';
+  try{
+    await auth.signInWithEmailAndPassword(email, pw);
+    // onAuthStateChanged 會接手顯示後台
+  }catch(e){
+    err.style.color='#c62828';
+    if(e.code==='auth/user-not-found'){
+      // 已授權但還沒設密碼 → 第一次設定
+      if(pw.length < 6){ err.textContent='第一次設定密碼至少 6 碼'; return; }
+      if(confirm('此 Email 尚未設定密碼。要用剛輸入的密碼建立帳號嗎？')){
+        try{ await auth.createUserWithEmailAndPassword(email, pw); }
+        catch(e2){ err.textContent = '建立失敗：'+(e2.code||e2.message); }
+      } else { err.textContent=''; }
+    } else if(e.code==='auth/wrong-password' || e.code==='auth/invalid-credential'){
+      err.textContent='密碼錯誤';
+    } else if(e.code==='auth/invalid-email'){
+      err.textContent='Email 格式不正確';
+    } else if(e.code==='auth/too-many-requests'){
+      err.textContent='嘗試次數過多，請稍後再試';
+    } else {
+      err.textContent='登入失敗：'+(e.code||e.message);
     }
+  }
+}
+
+function adminLogout(){ auth.signOut(); }
+
+function toggleForgot(){
+  const b = document.getElementById('admin-forgot-box');
+  b.style.display = b.style.display==='block' ? 'none' : 'block';
+  document.getElementById('reset-msg').textContent='';
+  if(b.style.display==='block'){
+    document.getElementById('reset-email').value = document.getElementById('admin-email').value || '';
+  }
+}
+
+async function sendReset(){
+  const email = (document.getElementById('reset-email').value||'').trim().toLowerCase();
+  const msg = document.getElementById('reset-msg');
+  msg.style.color='#c62828';
+  if(!email){ msg.textContent='請輸入 Email'; return; }
+  const role = await getRole(email);
+  if(!role){ msg.textContent='此 Email 沒有後台權限'; return; }
+  try{
+    await auth.sendPasswordResetEmail(email);
+    msg.style.color='#2e7d32';
+    msg.textContent='✅ 重設信已寄至 '+email+'，請查收（含垃圾信匣）。';
+  }catch(e){
+    if(e.code==='auth/user-not-found'){
+      msg.textContent='此 Email 還沒設過密碼，請直接在上方輸入 Email + 新密碼登入即可建立。';
+    } else {
+      msg.textContent='寄送失敗：'+(e.code||e.message);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════
+//  登入狀態變化（決定顯示哪個畫面）
+// ═══════════════════════════════════════════
+auth.onAuthStateChanged(async (user)=>{
+  if(!user){ _currentRole=null; _currentEmail=null; showScreen('login'); return; }
+  const role = await getRole(user.email);
+  if(!role){
+    // 登入了但沒有後台權限（例如學習者帳號）→ 立刻登出擋下
+    await auth.signOut();
+    showScreen('login');
+    const err=document.getElementById('admin-login-err');
+    err.style.color='#c62828'; err.textContent='此帳號沒有後台權限';
+    return;
+  }
+  _currentRole = role; _currentEmail = user.email.toLowerCase();
+  showScreen('panel');
+  document.getElementById('who-am-i').textContent = '登入身分：'+_currentEmail;
+  const badge=document.getElementById('role-badge');
+  badge.textContent = role==='master' ? '主管理員' : '管理員（唯讀）';
+  badge.className = 'role-badge ' + (role==='master'?'role-master':'role-admin');
+  // 只有主管理員看得到「新增學習者」與「管理員白名單」
+  document.getElementById('add-learner-btn').style.display = role==='master' ? '' : 'none';
+  document.getElementById('admins-section').style.display  = role==='master' ? 'block' : 'none';
+  syncFromCloud();
+  renderAdminPanel();
+});
+
+// ═══════════════════════════════════════════
+//  雲端同步（讀學習者資料）
+// ═══════════════════════════════════════════
+async function syncFromCloud(){
+  try{
+    const usersSnap = await _db.collection('users').get();
+    if(!usersSnap.empty) localStorage.setItem(USERS_KEY, JSON.stringify(usersSnap.docs.map(d=>d.data())));
     const histSnap = await _db.collection('examHistory').get();
     if(!histSnap.empty){
       const hist = histSnap.docs.map(d=>d.data());
       hist.sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(hist));
     }
-    const adminSnap = await _db.collection('config').doc('admin').get();
-    if(adminSnap.exists && adminSnap.data().pw){
-      localStorage.setItem(ADMIN_KEY, adminSnap.data().pw);
-    }
-    const scr = document.getElementById('admin-screen');
-    if(scr && scr.style.display !== 'none') renderAdminPanel();
-  } catch(e){ console.warn('Cloud sync failed:', e); }
+    renderAdminPanel();
+  }catch(e){ console.warn('syncFromCloud:', e); }
 }
-function fbSaveUsers(accounts){
-  if(!_db) return;
-  accounts.forEach(acc=>{ _db.collection('users').doc(acc.name).set(acc).catch(e=>console.warn('fbSaveUsers:', e)); });
-}
-function fbDeleteUser(name){
-  if(!_db) return;
-  _db.collection('users').doc(name).delete().catch(e=>console.warn('fbDeleteUser:', e));
-}
+function getUserAccounts(){ return JSON.parse(localStorage.getItem(USERS_KEY)||'[]'); }
+
+function fbSaveUsers(accounts){ accounts.forEach(acc=>{ _db.collection('users').doc(acc.name).set(acc).catch(e=>console.warn(e)); }); }
+function fbDeleteUser(name){ _db.collection('users').doc(name).delete().catch(e=>console.warn(e)); }
 function fbDeleteUserHistory(name){
-  if(!_db) return;
-  _db.collection('examHistory').where('name','==',name).get().then(snap=>{
-    snap.docs.forEach(d=>d.ref.delete());
-  }).catch(e=>console.warn('fbDeleteUserHistory:', e));
-}
-
-// ═══════════════════════════════════════════
-//  HELPER FUNCTIONS
-// ═══════════════════════════════════════════
-function getUserAccounts(){
-  return JSON.parse(localStorage.getItem(USERS_KEY)||'[]');
-}
-
-function getAdminWhitelist(){
-  const list = localStorage.getItem(ADMINS_KEY);
-  return list ? JSON.parse(list) : ['qnachinese@gmail.com'];
-}
-
-function isAdminEmail(email){
-  return getAdminWhitelist().includes(email.toLowerCase());
+  _db.collection('examHistory').where('name','==',name).get().then(s=>s.docs.forEach(d=>d.ref.delete())).catch(e=>console.warn(e));
 }
 
 async function hashPw(pw){
-  const encoder = new TextEncoder();
-  const data = encoder.encode(pw);
+  const data = new TextEncoder().encode(pw);
   const hash = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hash));
-  return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
-}
-
-function isHashed(pw){
-  return pw && pw.length === 64 && /^[0-9a-f]{64}$/.test(pw);
+  return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
 // ═══════════════════════════════════════════
-//  ADMIN LOGIN
-// ═══════════════════════════════════════════
-async function adminGoogleLogin(){
-  const email = document.getElementById('admin-email-input')?.value?.trim().toLowerCase() || '';
-  const errEl = document.getElementById('admin-login-err');
-
-  if(!email){ errEl.textContent='請輸入 Gmail 郵箱'; return; }
-  if(!email.endsWith('@gmail.com') && !email.endsWith('@google.com')){
-    errEl.textContent='請輸入有效的 Google 郵箱'; return;
-  }
-
-  // 檢查白名單
-  if(!isAdminEmail(email)){
-    errEl.textContent='此郵箱無後臺存取權限'; return;
-  }
-
-  // 設定管理員 session
-  localStorage.setItem(ADMIN_SESSION_KEY, email);
-  document.getElementById('admin-login-screen').style.display='none';
-  document.getElementById('admin-screen').style.display='block';
-  renderAdminPanel();
-  syncFromCloud();
-}
-
-async function adminLogin(){
-  const pw = document.getElementById('admin-pw-input')?.value;
-  const errEl = document.getElementById('admin-login-err');
-  const stored = localStorage.getItem(ADMIN_KEY);
-  if(!stored){
-    // First-time setup: set password
-    if(!pw){ errEl.textContent='請設定管理者密碼'; return; }
-    const hashed = await hashPw(pw);
-    localStorage.setItem(ADMIN_KEY, hashed);
-    if(_db) _db.collection('config').doc('admin').set({pw:hashed}).catch(e=>console.warn('save admin pw:', e));
-    document.getElementById('admin-login-screen').style.display='none';
-    document.getElementById('admin-screen').style.display='block';
-    renderAdminPanel();
-    syncFromCloud();
-    return;
-  }
-  if(!pw){ errEl.textContent='請輸入密碼'; return; }
-  const match = isHashed(stored) ? (stored === await hashPw(pw)) : (stored === pw);
-  if(!match){ errEl.textContent='密碼錯誤'; return; }
-  document.getElementById('admin-login-screen').style.display='none';
-  document.getElementById('admin-screen').style.display='block';
-  renderAdminPanel();
-  syncFromCloud();
-}
-
-function closeAdminPanel(){
-  localStorage.removeItem(ADMIN_SESSION_KEY);
-  document.getElementById('admin-screen').style.display='none';
-  document.getElementById('admin-login-screen').style.display='flex';
-  document.getElementById('admin-email-input').value='';
-  document.getElementById('admin-pw-input').value='';
-  document.getElementById('admin-login-err').textContent='';
-}
-
-// ═══════════════════════════════════════════
-//  ADMIN PANEL RENDERING
+//  學習者名單
 // ═══════════════════════════════════════════
 function toggleLearnersTable(){
-  const container = document.getElementById('learners-table-container');
-  const btn = document.getElementById('toggle-learners-btn');
-  const isHidden = container.style.display === 'none';
-  container.style.display = isHidden ? 'block' : 'none';
-  btn.textContent = isHidden ? '隱藏' : '顯示';
+  const c=document.getElementById('learners-table-container');
+  const b=document.getElementById('toggle-learners-btn');
+  const hidden = c.style.display==='none';
+  c.style.display = hidden ? 'block':'none';
+  b.textContent = hidden ? '隱藏':'顯示';
 }
 
 function renderAdminPanel(){
+  const isMaster = _currentRole==='master';
+  const head = document.getElementById('learner-head');
+  if(head){
+    head.innerHTML = '<th>名稱</th><th>密碼</th><th>Gmail</th><th>考試次數</th><th>最近成績</th>' + (isMaster?'<th>操作</th>':'');
+  }
   const accounts = getUserAccounts();
   const history  = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
   const tbody = document.getElementById('admin-tbody');
   if(!tbody) return;
-  if(!accounts.length){
-    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#999;padding:20px">尚無學習者帳號</td></tr>';
-    renderAdminWhitelist();
-    return;
-  }
+  const cols = isMaster ? 6 : 5;
+  if(!accounts.length){ tbody.innerHTML='<tr><td colspan="'+cols+'" style="text-align:center;color:#999;padding:20px">尚無學習者帳號</td></tr>'; renderAdminsList(); return; }
   tbody.innerHTML = accounts.map((acc,i)=>{
     const recs = history.filter(r=>r.name===acc.name);
     const last = recs[0];
-    const lastScore = last ? `${last.pct}分（${last.date}）` : '—';
-    return `<tr>
-      <td>${acc.name}</td>
-      <td class="pw-cell"><span style="color:#aaa;font-family:sans-serif;font-size:.8rem">🔒 已加密</span></td>
-      <td>${acc.email||'—'}</td>
-      <td>${recs.length} 次</td>
-      <td>${lastScore}</td>
-      <td>
-        <div class="admin-action-cell">
-          <button class="admin-edit-btn" onclick="openEditModal(${i})">編輯</button>
-          <button class="admin-pw-btn" onclick="openResetPwModal('${acc.name}')">重設密碼</button>
-          <button class="admin-reset-btn" onclick="resetUserHistory('${acc.name}')">清除記錄</button>
-          <button class="admin-delete-btn" onclick="deleteUser('${acc.name}')">刪除</button>
-        </div>
-      </td>
-    </tr>`;
+    const lastScore = last ? (last.pct+'分（'+last.date+'）') : '—';
+    const actions = isMaster ? ('<td><div class="admin-action-cell">'+
+      '<button class="admin-edit-btn" onclick="openEditModal('+i+')">編輯</button>'+
+      '<button class="admin-pw-btn" onclick="openResetPwModal(\''+acc.name+'\')">重設密碼</button>'+
+      '<button class="admin-reset-btn" onclick="resetUserHistory(\''+acc.name+'\')">清除記錄</button>'+
+      '<button class="admin-delete-btn" onclick="deleteUser(\''+acc.name+'\')">刪除</button>'+
+      '</div></td>') : '';
+    return '<tr><td>'+acc.name+'</td>'+
+      '<td class="pw-cell"><span style="color:#aaa;font-family:sans-serif;font-size:.8rem">🔒 已加密</span></td>'+
+      '<td>'+(acc.email||'—')+'</td>'+
+      '<td>'+recs.length+' 次</td>'+
+      '<td>'+lastScore+'</td>'+ actions +'</tr>';
   }).join('');
-
-  // 渲染管理員白名單
-  renderAdminWhitelist();
+  renderAdminsList();
 }
 
-function renderAdminWhitelist(){
-  const tbody = document.getElementById('admin-whitelist-tbody');
+// ═══════════════════════════════════════════
+//  管理員白名單（master 限定）
+// ═══════════════════════════════════════════
+async function renderAdminsList(){
+  if(_currentRole!=='master') return;
+  const tbody = document.getElementById('admins-tbody');
   if(!tbody) return;
-  const whitelist = getAdminWhitelist();
-  tbody.innerHTML = whitelist.map((email,i)=>{
-    return `<tr>
-      <td>${email}</td>
-      <td style="text-align:center"><button class="admin-delete-btn" onclick="removeAdminEmail('${email}')">移除</button></td>
-    </tr>`;
-  }).join('');
+  let rows = '<tr><td>'+MASTER_EMAIL+'</td><td><span class="role-badge role-master">主管理員</span></td><td style="text-align:center">—</td></tr>';
+  try{
+    const snap = await _db.collection('admins').get();
+    snap.docs.forEach(d=>{
+      const email = d.id;
+      if(email===MASTER_EMAIL) return;
+      rows += '<tr><td>'+email+'</td><td><span class="role-badge role-admin">管理員</span></td>'+
+        '<td style="text-align:center"><button class="admin-delete-btn" onclick="removeAdmin(\''+email+'\')">移除</button></td></tr>';
+    });
+  }catch(e){ console.warn(e); }
+  tbody.innerHTML = rows;
 }
 
-// ═══════════════════════════════════════════
-//  ADMIN EMAIL MANAGEMENT
-// ═══════════════════════════════════════════
-function addAdminEmail(){
+async function addAdmin(){
+  if(_currentRole!=='master'){ alert('只有主管理員能新增'); return; }
   const input = document.getElementById('admin-email-add');
-  if(!input) return;
-  const email = input.value.trim().toLowerCase();
-
-  if(!email){ alert('請輸入郵箱'); return; }
-  if(!email.endsWith('@gmail.com') && !email.endsWith('@google.com')){ alert('請輸入有效的 Google 郵箱'); return; }
-
-  const whitelist = getAdminWhitelist();
-  if(whitelist.includes(email)){ alert('此郵箱已在白名單中'); return; }
-
-  whitelist.push(email);
-  localStorage.setItem(ADMINS_KEY, JSON.stringify(whitelist));
-  input.value='';
-  renderAdminWhitelist();
+  const email = (input.value||'').trim().toLowerCase();
+  if(!email){ alert('請輸入 Email'); return; }
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ alert('Email 格式不正確'); return; }
+  if(email===MASTER_EMAIL){ alert('這已經是主管理員'); return; }
+  try{
+    await _db.collection('admins').doc(email).set({ email, addedBy:_currentEmail, addedAt:new Date().toISOString() });
+    input.value='';
+    renderAdminsList();
+    alert('✅ 已新增管理員：'+email+'\n請對方到本後台用此 Email 自行設定密碼（第一次登入即可建立）。');
+  }catch(e){ alert('新增失敗：'+(e.code||e.message)); }
 }
 
-function removeAdminEmail(email){
-  const whitelist = getAdminWhitelist();
-  const isMaster = email === 'qnachinese@gmail.com';
-  if(isMaster){ alert('無法移除主管理員帳號'); return; }
-  if(!confirm(`確定要移除 ${email} 的管理權限嗎？`)) return;
-  let list = whitelist.filter(e=>e!==email);
-  localStorage.setItem(ADMINS_KEY, JSON.stringify(list));
-  renderAdminWhitelist();
+async function removeAdmin(email){
+  if(_currentRole!=='master'){ alert('只有主管理員能移除'); return; }
+  if(email===MASTER_EMAIL){ alert('無法移除主管理員'); return; }
+  if(!confirm('確定移除管理員 '+email+' 的後台權限嗎？')) return;
+  try{
+    await _db.collection('admins').doc(email).delete();
+    renderAdminsList();
+  }catch(e){ alert('移除失敗：'+(e.code||e.message)); }
 }
 
 // ═══════════════════════════════════════════
-//  LEARNER ACCOUNT MANAGEMENT
+//  學習者管理（master 限定）
 // ═══════════════════════════════════════════
 function deleteUser(name){
-  if(!confirm(`確定要刪除帳號「${name}」及其所有記錄嗎？`)) return;
-  let accounts = getUserAccounts().filter(a=>a.name!==name);
+  if(_currentRole!=='master') return;
+  if(!confirm('確定刪除帳號「'+name+'」及其所有記錄嗎？')) return;
+  const accounts = getUserAccounts().filter(a=>a.name!==name);
   localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
-  let history = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').filter(r=>r.name!==name);
+  const history = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').filter(r=>r.name!==name);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-  fbDeleteUser(name);
-  fbDeleteUserHistory(name);
+  fbDeleteUser(name); fbDeleteUserHistory(name);
   renderAdminPanel();
 }
-
 function resetUserHistory(name){
-  if(!confirm(`確定要清除「${name}」的所有考試記錄嗎？`)) return;
-  let history = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').filter(r=>r.name!==name);
+  if(_currentRole!=='master') return;
+  if(!confirm('確定清除「'+name+'」的所有考試記錄嗎？')) return;
+  const history = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').filter(r=>r.name!==name);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
   fbDeleteUserHistory(name);
   renderAdminPanel();
 }
-
-// ═══════════════════════════════════════════
-//  MODAL MANAGEMENT
-// ═══════════════════════════════════════════
 let _editIdx = -1;
-
 function openEditModal(idx){
-  const accounts = getUserAccounts();
-  const acc = accounts[idx];
-  if(!acc) return;
+  if(_currentRole!=='master') return;
+  const acc = getUserAccounts()[idx]; if(!acc) return;
   _editIdx = idx;
   document.getElementById('modal-title').textContent='編輯帳號';
-  document.getElementById('modal-name').value = acc.name;
-  document.getElementById('modal-pw').value = '';
-  document.getElementById('modal-email').value = acc.email||'';
-  document.getElementById('modal-idx').value = idx;
+  document.getElementById('modal-name').value=acc.name;
+  document.getElementById('modal-pw').value='';
+  document.getElementById('modal-email').value=acc.email||'';
   document.getElementById('modal-error').textContent='';
   document.getElementById('admin-modal-overlay').style.display='flex';
 }
-
 function openAddModal(){
-  _editIdx = -1;
+  if(_currentRole!=='master') return;
+  _editIdx=-1;
   document.getElementById('modal-title').textContent='新增帳號';
   document.getElementById('modal-name').value='';
   document.getElementById('modal-pw').value='';
   document.getElementById('modal-email').value='';
-  document.getElementById('modal-idx').value='';
   document.getElementById('modal-error').textContent='';
   document.getElementById('admin-modal-overlay').style.display='flex';
 }
-
-function closeModal(){
-  document.getElementById('admin-modal-overlay').style.display='none';
-}
-
+function closeModal(){ document.getElementById('admin-modal-overlay').style.display='none'; }
 function openResetPwModal(name){
-  const newPw = prompt(`重設「${name}」的密碼：\n（請輸入新密碼，確認後會直接儲存）`);
-  if(newPw === null) return;
+  if(_currentRole!=='master') return;
+  const newPw = prompt('重設「'+name+'」的密碼：\n（請輸入新密碼，確認後直接儲存）');
+  if(newPw===null) return;
   if(!newPw.trim()){ alert('密碼不可為空白'); return; }
   hashPw(newPw).then(hashed=>{
-    let accounts = getUserAccounts();
-    const acc = accounts.find(a=>a.name===name);
+    const accounts=getUserAccounts();
+    const acc=accounts.find(a=>a.name===name);
     if(!acc){ alert('帳號不存在'); return; }
-    acc.pw = hashed;
+    acc.pw=hashed;
     localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
     fbSaveUsers(accounts);
     renderAdminPanel();
-    const msg = document.createElement('div');
-    msg.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#4a148c;color:#fff;padding:14px 22px;border-radius:10px;z-index:9999;font-size:.95rem;box-shadow:0 4px 20px rgba(0,0,0,.3);text-align:center;max-width:320px';
-    msg.innerHTML=`<div style="margin-bottom:6px;font-size:.85rem;opacity:.85">✅ 密碼已重設</div><div style="font-size:1.1rem;font-weight:700;letter-spacing:.05em">帳號：${name}</div><div style="font-size:1.1rem;font-weight:700;letter-spacing:.05em">密碼：${newPw}</div><div style="font-size:.75rem;opacity:.7;margin-top:6px">（5秒後自動關閉）</div>`;
-    document.body.appendChild(msg);
-    setTimeout(()=>msg.remove(), 5000);
+    alert('✅ 已重設\n帳號：'+name+'\n新密碼：'+newPw);
   });
 }
-
 async function saveModal(){
-  const name  = document.getElementById('modal-name').value.trim();
-  const pw    = document.getElementById('modal-pw').value;
-  const email = document.getElementById('modal-email').value.trim().toLowerCase();
-  const errEl = document.getElementById('modal-error');
-  if(!name){ errEl.textContent='請輸入名稱'; return; }
-  let accounts = getUserAccounts();
-  if(_editIdx < 0){
-    // Add new
-    if(!pw){ errEl.textContent='請輸入密碼'; return; }
-    if(accounts.find(a=>a.name===name)){ errEl.textContent='此名稱已存在'; return; }
-    const newAcc = {name, pw: await hashPw(pw)};
-    if(email) newAcc.email = email;
+  if(_currentRole!=='master') return;
+  const name=document.getElementById('modal-name').value.trim();
+  const pw=document.getElementById('modal-pw').value;
+  const email=document.getElementById('modal-email').value.trim().toLowerCase();
+  const err=document.getElementById('modal-error');
+  if(!name){ err.textContent='請輸入名稱'; return; }
+  const accounts=getUserAccounts();
+  if(_editIdx<0){
+    if(!pw){ err.textContent='請輸入密碼'; return; }
+    if(accounts.find(a=>a.name===name)){ err.textContent='此名稱已存在'; return; }
+    const newAcc={name, pw:await hashPw(pw)}; if(email) newAcc.email=email;
     accounts.push(newAcc);
   } else {
-    // Edit existing
-    const acc = accounts[_editIdx];
-    if(!acc){ errEl.textContent='帳號不存在'; return; }
-    if(name !== acc.name && accounts.find(a=>a.name===name)){ errEl.textContent='此名稱已被使用'; return; }
-    acc.name = name;
-    if(pw) acc.pw = await hashPw(pw);
-    if(email !== undefined) acc.email = email || acc.email;
+    const acc=accounts[_editIdx]; if(!acc){ err.textContent='帳號不存在'; return; }
+    if(name!==acc.name && accounts.find(a=>a.name===name)){ err.textContent='此名稱已被使用'; return; }
+    acc.name=name; if(pw) acc.pw=await hashPw(pw); if(email!==undefined) acc.email=email||acc.email;
   }
   localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
   fbSaveUsers(accounts);
-  closeModal();
-  renderAdminPanel();
+  closeModal(); renderAdminPanel();
 }
 
-// ═══════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════
-window.addEventListener('load', ()=>{
-  initFirebase();
-  // Check if already logged in
-  const session = localStorage.getItem(ADMIN_SESSION_KEY);
-  if(session){
-    document.getElementById('admin-login-screen').style.display='none';
-    document.getElementById('admin-screen').style.display='block';
-    renderAdminPanel();
-  }
-});
-
+// 初始：顯示「載入中」直到 Firebase 回報登入狀態
+showScreen('boot');
 </script>
 
 </body>
