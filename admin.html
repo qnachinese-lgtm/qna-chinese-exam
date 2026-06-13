@@ -139,10 +139,12 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
       <div style="background:#f5f5f5;border-radius:8px;padding:12px;margin-bottom:16px">
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <input type="email" id="admin-email-add" placeholder="新管理員的 Email"
-            style="flex:1;min-width:200px;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem">
+            style="flex:1;min-width:180px;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem">
+          <input type="text" id="admin-pw-add" placeholder="幫他設定的密碼（至少6碼）"
+            style="flex:1;min-width:160px;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem">
           <button class="admin-add-btn" onclick="addAdmin()" style="margin:0;padding:8px 16px">＋ 新增管理員</button>
         </div>
-        <div style="font-size:.75rem;color:#999;margin-top:8px">新增後，請對方到本後台用該 Email 自行設定密碼（第一次登入時會提示建立密碼）。</div>
+        <div style="font-size:.75rem;color:#999;margin-top:8px">輸入對方的 Email 和你幫他設定的密碼即可建立。建立後把這組帳密給他,他就能登入後台（一般管理員只能查看學習者，不能修改）。</div>
       </div>
 
       <div style="overflow-x:auto">
@@ -206,8 +208,9 @@ async function getRole(email){
   email = email.toLowerCase();
   if(email === MASTER_EMAIL) return 'master';
   try{
-    const doc = await _db.collection('admins').doc(email).get();
-    return doc.exists ? 'admin' : null;
+    const doc = await _db.collection('config').doc('admins').get();
+    const emails = (doc.exists && Array.isArray(doc.data().emails)) ? doc.data().emails.map(e=>(e||'').toLowerCase()) : [];
+    return emails.includes(email) ? 'admin' : null;
   }catch(e){ console.warn('getRole:', e); return null; }
 }
 
@@ -446,11 +449,11 @@ async function renderAdminsList(){
   if(!tbody) return;
   let rows = '<tr><td>'+MASTER_EMAIL+'</td><td><span class="role-badge role-master">主管理員</span></td><td style="text-align:center">—</td></tr>';
   try{
-    const snap = await _db.collection('admins').get();
-    snap.docs.forEach(d=>{
-      const email = d.id;
+    const doc = await _db.collection('config').doc('admins').get();
+    const emails = (doc.exists && Array.isArray(doc.data().emails)) ? doc.data().emails : [];
+    emails.forEach(email=>{
       _adminEmails.add((email||'').toLowerCase());
-      if(email===MASTER_EMAIL) return;
+      if((email||'').toLowerCase()===MASTER_EMAIL) return;
       rows += '<tr><td>'+email+'</td><td><span class="role-badge role-admin">管理員</span></td>'+
         '<td style="text-align:center"><button class="admin-delete-btn" onclick="removeAdmin(\''+email+'\')">移除</button></td></tr>';
     });
@@ -461,24 +464,39 @@ async function renderAdminsList(){
 async function addAdmin(){
   if(_currentRole!=='master'){ alert('只有主管理員能新增'); return; }
   const input = document.getElementById('admin-email-add');
+  const pwInput = document.getElementById('admin-pw-add');
   const email = (input.value||'').trim().toLowerCase();
+  const pw = (pwInput && pwInput.value) || '';
   if(!email){ alert('請輸入 Email'); return; }
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ alert('Email 格式不正確'); return; }
   if(email===MASTER_EMAIL){ alert('這已經是主管理員'); return; }
+  if(pw.length<6){ alert('請幫這位管理員設定至少 6 碼的密碼'); return; }
   try{
-    await _db.collection('admins').doc(email).set({ email, addedBy:_currentEmail, addedAt:new Date().toISOString() });
-    input.value='';
+    let created=true;
+    const secApp = firebase.initializeApp(FB_CONFIG, 'sec_'+Date.now());
+    try{
+      await secApp.auth().createUserWithEmailAndPassword(email, pw);
+    }catch(e2){
+      if(e2.code==='auth/email-already-in-use'){ created=false; }
+      else { try{await secApp.delete();}catch(_){} alert('建立失敗：'+(e2.code||e2.message)); return; }
+    }
+    try{ await secApp.auth().signOut(); }catch(_){}
+    try{ await secApp.delete(); }catch(_){}
+    await _db.collection('config').doc('admins').set({ emails: firebase.firestore.FieldValue.arrayUnion(email) }, {merge:true});
+    input.value=''; if(pwInput) pwInput.value='';
     renderAdminsList();
-    alert('✅ 已新增管理員：'+email+'\n請對方到本後台用此 Email 自行設定密碼（第一次登入即可建立）。');
+    alert(created
+      ? ('✅ 已建立管理員：'+email+'\n密碼：'+pw+'\n請把這組帳密給對方,他就能登入後台（只能查看學習者）。')
+      : ('✅ 已將 '+email+' 設為管理員（此 Email 原本已有帳號,沿用原密碼）。'));
   }catch(e){ alert('新增失敗：'+(e.code||e.message)); }
 }
 
 async function removeAdmin(email){
   if(_currentRole!=='master'){ alert('只有主管理員能移除'); return; }
-  if(email===MASTER_EMAIL){ alert('無法移除主管理員'); return; }
+  if((email||'').toLowerCase()===MASTER_EMAIL){ alert('無法移除主管理員'); return; }
   if(!confirm('確定移除管理員 '+email+' 的後台權限嗎？')) return;
   try{
-    await _db.collection('admins').doc(email).delete();
+    await _db.collection('config').doc('admins').set({ emails: firebase.firestore.FieldValue.arrayRemove(email) }, {merge:true});
     renderAdminsList();
   }catch(e){ alert('移除失敗：'+(e.code||e.message)); }
 }
