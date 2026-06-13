@@ -2366,7 +2366,7 @@ async function syncFromCloud(){
       localStorage.setItem(USERS_KEY, JSON.stringify(users));
     }
     // Sync exam history
-    const histSnap = await _db.collection('examHistory').get();
+    const histSnap = await _db.collection('config').doc('examHistory').collection('records').get();
     if(!histSnap.empty){
       const hist = histSnap.docs.map(d=>d.data());
       hist.sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
@@ -2400,12 +2400,12 @@ function fbSaveUsers(accounts){
 function fbAddExamRecord(record){
   if(!_db) return;
   const id = record.name+'_'+record.date+'_'+record.time.replace(/:/g,'');
-  _db.collection('examHistory').doc(id).set(record).catch(e=>console.warn('fbAddExamRecord:', e));
+  _db.collection('config').doc('examHistory').collection('records').doc(id).set(record).catch(e=>console.warn('fbAddExamRecord:', e));
 }
 
 function fbDeleteUserHistory(name){
   if(!_db) return;
-  _db.collection('examHistory').where('name','==',name).get().then(snap=>{
+  _db.collection('config').doc('examHistory').collection('records').where('name','==',name).get().then(snap=>{
     snap.docs.forEach(d=>d.ref.delete());
   }).catch(e=>console.warn('fbDeleteUserHistory:', e));
 }

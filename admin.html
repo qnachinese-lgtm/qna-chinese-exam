@@ -332,12 +332,13 @@ async function syncFromCloud(){
       }
     }
     localStorage.setItem(USERS_KEY, JSON.stringify(usersSnap.docs.map(d=>d.data())));
-    const histSnap = await _db.collection('examHistory').get();
-    if(!histSnap.empty){
+    // 讀考試紀錄；就算這裡失敗也不影響學習者名單顯示
+    try{
+      const histSnap = await _db.collection('config').doc('examHistory').collection('records').get();
       const hist = histSnap.docs.map(d=>d.data());
-      hist.sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
+      hist.sort((a,b)=>((b.date||'')+(b.time||'')).localeCompare((a.date||'')+(a.time||'')));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(hist));
-    }
+    }catch(eh){ console.warn('讀取考試紀錄失敗:', eh); }
     renderAdminPanel();
   }catch(e){ console.warn('syncFromCloud:', e); }
 }
@@ -362,7 +363,7 @@ function fbSaveUserDoc(rec){
   _db.collection('users').doc(rec._docId || rec.name).set(data).catch(e=>console.warn(e));
 }
 function fbDeleteUserHistory(name){
-  _db.collection('examHistory').where('name','==',name).get().then(s=>s.docs.forEach(d=>d.ref.delete())).catch(e=>console.warn(e));
+  _db.collection('config').doc('examHistory').collection('records').where('name','==',name).get().then(s=>s.docs.forEach(d=>d.ref.delete())).catch(e=>console.warn(e));
 }
 
 async function hashPw(pw){
