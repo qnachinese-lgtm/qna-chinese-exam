@@ -1848,63 +1848,132 @@ function exportPDF(){
   const now = new Date();
   const dateStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
-  // Build HTML string and open print window (reliable CJK rendering)
-  let rows = st.examResults.map((r,i)=>{
-    const icon = r.correct ? '✅' : '❌';
-    const chosenLabel = r.chosen!=null ? `${letters[r.chosen]}. ${r.opts[r.chosen]||''}` : '（未作答）';
-    const ansLabel = `${letters[r.ans]}. ${r.opts[r.ans]||''}`;
-    return `<tr style="background:${r.correct?'#f0fff4':'#fff5f5'}">
-      <td>${i+1}</td>
-      <td>${icon}</td>
-      <td style="max-width:260px">${r.q}</td>
-      <td>${chosenLabel}</td>
-      <td>${r.correct?'—':ansLabel}</td>
-    </tr>`;
-  }).join('');
+  // ── Build an elegant, print-ready 成績單 (score report) ──
+  const scoreColor = pct>=70 ? '#1b7a3d' : (pct>=50 ? '#b8860b' : '#c0392b');
+  const passText   = pct>=70 ? '🎉 通過' : (pct>=50 ? '📈 接近通過' : '📚 繼續加油');
+  const R=54, CIRC=2*Math.PI*R, dash=(pct/100*CIRC).toFixed(1);
 
-  let subjectRows = '';
   const subjects = [...new Set(st.examResults.map(r=>r.subject))];
-  subjects.forEach(s=>{
+  const subjCards = subjects.map(s=>{
     const mine = st.examResults.filter(r=>r.subject===s);
     const ok = mine.filter(r=>r.correct).length;
-    const sp = Math.round(ok/mine.length*100);
-    subjectRows += `<tr><td>${SUBJ[s]||s}</td><td>${ok}/${mine.length}</td><td>${sp}%</td></tr>`;
-  });
+    const sp = mine.length?Math.round(ok/mine.length*100):0;
+    const col = sp>=70?'#1b7a3d':(sp>=50?'#b8860b':'#c0392b');
+    return `<div class="subj"><div class="subj-head"><span class="subj-name">${SUBJ[s]||s}</span><span class="subj-stat">${ok} / ${mine.length}　<b style="color:${col}">${sp}%</b></span></div><div class="bar"><div class="fill" style="width:${sp}%;background:${col}"></div></div></div>`;
+  }).join('');
 
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  const rows = st.examResults.map((r,i)=>{
+    const chosenLabel = r.chosen!=null ? `${letters[r.chosen]}. ${r.opts[r.chosen]||''}` : '（未作答）';
+    const ansLabel = `${letters[r.ans]}. ${r.opts[r.ans]||''}`;
+    return `<tr class="${r.correct?'ok':'no'}"><td class="c-num">${i+1}</td><td class="c-res"><span class="pill ${r.correct?'p-ok':'p-no'}">${r.correct?'✓':'✗'}</span></td><td class="c-q">${r.q}</td><td class="c-mine">${chosenLabel}</td><td class="c-ans">${r.correct?'<span class="dash">—</span>':ansLabel}</td></tr>`;
+  }).join('');
+
+  const safeUser = (st.currentUser||'未登入');
+  const docTitle = `成績單_${safeUser}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+
+  const html = `<!DOCTYPE html><html lang="zh-TW"><head><meta charset="UTF-8">
+<title>${docTitle}</title>
 <style>
-body{font-family:'Microsoft JhengHei','PingFang TC',sans-serif;margin:20px;font-size:12px}
-h1{font-size:18px;color:#8b1a1a;margin-bottom:4px}
-.meta{color:#666;margin-bottom:16px}
-table{width:100%;border-collapse:collapse;margin-bottom:20px}
-th,td{border:1px solid #ddd;padding:5px 7px;vertical-align:top;word-break:break-all}
-th{background:#f5f5f5;font-weight:700}
-.score{font-size:42px;font-weight:900;color:${pct>=70?'#2e7d32':'#c62828'}}
-.badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700;
-  background:${pct>=70?'#e8f5e9':'#ffebee'};color:${pct>=70?'#2e7d32':'#c62828'};margin-bottom:14px}
-@media print{body{margin:10px}}
-</style>
-</head><body>
-<h1>對外華語教學能力認證考試 — 模擬考成績單</h1>
-<div class="meta">考試時間：${dateStr}　學習者：${st.currentUser||'未登入'}　總題數：${total}</div>
-<div class="score">${pct}<span style="font-size:24px">分</span></div>
-<div class="badge">${pct>=70?'🎉 通過':'📚 繼續加油'}（答對 ${st.correct} / ${total} 題）</div>
-<table>
-  <tr><th>科目</th><th>答對/總題</th><th>得分率</th></tr>
-  ${subjectRows}
-</table>
-<table>
-  <tr><th>#</th><th>結果</th><th>題目</th><th>你的答案</th><th>正確答案</th></tr>
-  ${rows}
-</table>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--red:#8b1a1a;--ink:#2c2c2c;--mute:#8a7f6f}
+  html,body{background:#e8e2d6}
+  body{font-family:'Microsoft JhengHei','PingFang TC','Noto Sans TC',sans-serif;color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact;line-height:1.5}
+  .sheet{max-width:780px;margin:0 auto;background:#fff}
+  .hd{background:linear-gradient(135deg,#8b1a1a,#6d1414);color:#fff;padding:26px 34px 22px;position:relative}
+  .hd::after{content:'';position:absolute;left:0;right:0;bottom:0;height:4px;background:linear-gradient(90deg,#c9a227,#e7cd6b,#c9a227)}
+  .brand{font-size:13px;letter-spacing:3px;opacity:.85;font-weight:600}
+  .hd h1{font-family:'Noto Serif TC','Microsoft JhengHei',serif;font-size:25px;font-weight:800;margin:6px 0 2px}
+  .hd .sub{font-size:13px;opacity:.82}
+  .seal{position:absolute;top:24px;right:30px;font-size:40px;opacity:.92}
+  .meta{display:flex;flex-wrap:wrap;gap:6px 28px;padding:14px 34px;font-size:13px;color:var(--mute);border-bottom:1px solid #efe7d7;background:#faf6ee}
+  .meta b{color:var(--ink);font-weight:600}
+  .hero{display:flex;align-items:center;gap:28px;padding:24px 34px 18px;page-break-inside:avoid}
+  .hero-info{flex:1}
+  .verdict{display:inline-block;font-size:15px;font-weight:800;padding:6px 16px;border-radius:30px;margin-bottom:8px}
+  .hero-line{font-size:14px;color:var(--mute)}
+  .hero-line b{font-size:17px;color:var(--ink)}
+  .sec-title{font-family:'Noto Serif TC',serif;font-size:15px;font-weight:800;color:var(--red);margin:10px 34px 8px;padding-left:10px;border-left:4px solid #c9a227}
+  .subjects{padding:0 34px}
+  .subj{margin-bottom:11px;page-break-inside:avoid}
+  .subj-head{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+  .subj-name{font-weight:600}
+  .bar{height:9px;background:#eee4d2;border-radius:6px;overflow:hidden}
+  .fill{height:100%;border-radius:6px}
+  .wrap{padding:0 34px}
+  table{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px}
+  thead{display:table-header-group}
+  th{background:var(--red);color:#fff;font-weight:600;padding:8px;text-align:left;font-size:12px}
+  td{padding:8px;border-bottom:1px solid #eee;vertical-align:top}
+  tr{page-break-inside:avoid}
+  tbody tr.ok{background:#f4faf5}
+  tbody tr.no{background:#fdf3f2}
+  .c-num{width:34px;text-align:center}
+  .c-res{width:42px;text-align:center}
+  .c-mine{width:148px}
+  .c-ans{width:148px}
+  td.c-num{color:var(--mute);font-weight:700}
+  td.c-ans{color:#1b7a3d;font-weight:600}
+  tr.no td.c-mine{color:#c0392b}
+  .dash{color:#bbb}
+  .pill{display:inline-block;width:20px;height:20px;line-height:20px;border-radius:50%;font-weight:800;font-size:12px;color:#fff}
+  .p-ok{background:#1b7a3d}.p-no{background:#c0392b}
+  .legend{padding:10px 34px 0;font-size:11px;color:var(--mute)}
+  .ft{margin:22px 34px;padding-top:12px;border-top:1px solid #efe7d7;font-size:11px;color:var(--mute);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
+  @page{size:A4;margin:12mm}
+  @media print{html,body{background:#fff}.sheet{max-width:none}}
+</style></head><body>
+<div class="sheet">
+  <div class="hd">
+    <div class="seal">📚</div>
+    <div class="brand">QNA CHINESE</div>
+    <h1>對外華語教學能力認證考試</h1>
+    <div class="sub">模擬考成績單 · Mock Exam Report</div>
+  </div>
+  <div class="meta">
+    <span>考試時間：<b>${dateStr}</b></span>
+    <span>學習者：<b>${safeUser}</b></span>
+    <span>總題數：<b>${total} 題</b></span>
+  </div>
+  <div class="hero">
+    <div class="ring">
+      <svg width="132" height="132" viewBox="0 0 140 140">
+        <circle cx="70" cy="70" r="${R}" fill="none" stroke="#eee4d2" stroke-width="13"/>
+        <circle cx="70" cy="70" r="${R}" fill="none" stroke="${scoreColor}" stroke-width="13" stroke-linecap="round" stroke-dasharray="${dash} ${CIRC.toFixed(1)}" transform="rotate(-90 70 70)"/>
+        <text x="70" y="74" text-anchor="middle" font-size="40" font-weight="800" fill="${scoreColor}" font-family="sans-serif">${pct}</text>
+        <text x="70" y="97" text-anchor="middle" font-size="13" fill="#999" font-family="sans-serif">分 / 100</text>
+      </svg>
+    </div>
+    <div class="hero-info">
+      <div class="verdict" style="background:${pct>=70?'#e8f5e9':'#fdecea'};color:${scoreColor}">${passText}</div>
+      <div class="hero-line">答對 <b>${st.correct}</b> 題　答錯 <b>${st.wrong}</b> 題　共 <b>${total}</b> 題</div>
+      <div class="hero-line" style="margin-top:4px">通過標準：70 分</div>
+    </div>
+  </div>
+  <div class="sec-title">各科表現</div>
+  <div class="subjects">${subjCards}</div>
+  <div class="sec-title" style="margin-top:18px">作答詳情</div>
+  <div class="wrap">
+    <table>
+      <thead><tr><th class="c-num">#</th><th class="c-res">結果</th><th>題目</th><th class="c-mine">你的作答</th><th class="c-ans">正確答案</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>
+  <div class="legend">✓ 答對　✗ 答錯　·　答對題目的「正確答案」欄以「—」表示</div>
+  <div class="ft">
+    <span>本成績單由 QNA Chinese 模擬考系統自動產生</span>
+    <span>qna-exam-platform.vercel.app</span>
+  </div>
+</div>
 </body></html>`;
 
-  const w = window.open('','_blank','width=900,height=700');
+  const w = window.open('','_blank','width=900,height=720');
+  if(!w){ alert('請允許彈出視窗，才能列印或儲存成績單 PDF'); return; }
   w.document.write(html);
   w.document.close();
   w.focus();
-  setTimeout(()=>w.print(), 600);
+  setTimeout(()=>{ try{ w.print(); }catch(e){} }, 500);
 }
+
 
 // ════════════════════════════════════════════════
 //  ADMIN EXCEL EXPORT
