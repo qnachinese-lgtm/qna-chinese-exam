@@ -145,17 +145,18 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
       </div>
     </div>
 
-    <!-- 訪客試做紀錄 -->
+    <!-- 訪客試做名單 -->
     <div id="guest-section" style="border-top:2px solid #e0e0e0;padding-top:20px;margin-top:24px">
       <div class="admin-header" style="margin-bottom:8px">
-        <span class="admin-title">📝 訪客試做紀錄</span>
+        <span class="admin-title">📝 訪客試做名單</span>
         <span id="guest-summary" style="font-size:.8rem;color:#888;margin-left:auto"></span>
-        <button id="guest-clear-btn" onclick="clearGuestRecords()" style="display:none;background:#ff7043;color:#fff;border:none;cursor:pointer;padding:8px 14px;border-radius:8px;font-weight:600;margin-left:8px">清空訪客紀錄</button>
+        <button id="guest-clear-btn" onclick="clearGuestRecords()" style="display:none;background:#ff7043;color:#fff;border:none;cursor:pointer;padding:8px 14px;border-radius:8px;font-weight:600;margin:0 8px">清空訪客紀錄</button>
+        <button id="toggle-guest-btn" class="admin-back" onclick="toggleGuestTable()" style="background:#4a90e2;color:#fff;border:none;cursor:pointer;padding:8px 16px;border-radius:8px">隱藏</button>
       </div>
-      <div class="admin-section">免註冊訪客的匿名試做紀錄（不含個人身分，僅供了解使用狀況）。</div>
-      <div style="overflow-x:auto">
+      <div class="admin-section">同一個瀏覽器視為同一位訪客（匿名，不含個人身分）。清除瀏覽器資料或換裝置會被視為新的訪客。</div>
+      <div id="guest-table-container" style="overflow-x:auto">
       <table class="admin-table">
-        <thead><tr><th>日期</th><th>時間</th><th>科目</th><th>得分</th></tr></thead>
+        <thead><tr><th>訪客</th><th>試做次數</th><th>最近科目</th><th>最近得分</th><th>最近時間</th></tr></thead>
         <tbody id="guest-tbody"></tbody>
       </table>
       </div>
@@ -467,6 +468,15 @@ function toggleLearnersTable(){
   b.textContent = hidden ? '隱藏':'顯示';
 }
 
+function toggleGuestTable(){
+  const c=document.getElementById('guest-table-container');
+  const b=document.getElementById('toggle-guest-btn');
+  if(!c||!b) return;
+  const hidden = c.style.display==='none';
+  c.style.display = hidden ? 'block':'none';
+  b.textContent = hidden ? '隱藏':'顯示';
+}
+
 function getVisibleGroups(){
   return getUserGroups().filter(g=>!_adminEmails.has((g.primary.email||'').toLowerCase()));
 }
@@ -520,15 +530,29 @@ function renderGuestRecords(){
   const sum=document.getElementById('guest-summary');
   const t=new Date();
   const td=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
-  const todayCnt=recs.filter(r=>r.date===td).length;
-  if(sum) sum.textContent='共 '+recs.length+' 筆　今日 '+todayCnt+' 筆';
+  // 依瀏覽器(gid)分組：同一個瀏覽器算同一位訪客
+  const groups=new Map();
+  recs.forEach(r=>{
+    const key = r.gid || ('once_'+(r.ts||((r.date||'')+(r.time||''))));
+    if(!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(r);
+  });
+  const list=[...groups.entries()].map(([gid,arr])=>{
+    arr.sort((a,b)=>((b.date||'')+(b.time||'')).localeCompare((a.date||'')+(a.time||'')));
+    return {gid, arr, latest:arr[0]};
+  });
+  list.sort((a,b)=>((b.latest.date||'')+(b.latest.time||'')).localeCompare((a.latest.date||'')+(a.latest.time||'')));
+  const todayVisitors=list.filter(g=>g.arr.some(r=>r.date===td)).length;
+  if(sum) sum.textContent='共 '+list.length+' 位訪客　今日 '+todayVisitors+' 位';
   const clr=document.getElementById('guest-clear-btn');
   if(clr) clr.style.display=(_currentRole==='master' && recs.length)?'':'none';
-  if(!recs.length){ tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#999;padding:20px">尚無訪客試做紀錄</td></tr>'; return; }
-  tbody.innerHTML=recs.slice(0,300).map(r=>{
+  if(!list.length){ tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#999;padding:20px">尚無訪客試做紀錄</td></tr>'; return; }
+  tbody.innerHTML=list.slice(0,300).map(g=>{
+    const r=g.latest;
     const subs=(r.subjects||[]).map(s=>SUBJ_NAMES[s]||s).join('、')||'—';
     const score=(r.correct!=null&&r.total!=null)?(r.pct+'分（'+r.correct+'/'+r.total+'）'):'—';
-    return '<tr><td>'+(r.date||'—')+'</td><td>'+((r.time||'').slice(0,5))+'</td><td>'+subs+'</td><td>'+score+'</td></tr>';
+    const label='訪客 #'+String(g.gid).slice(-4);
+    return '<tr><td>'+label+'</td><td>'+g.arr.length+' 次</td><td>'+subs+'</td><td>'+score+'</td><td>'+(r.date||'—')+' '+((r.time||'').slice(0,5))+'</td></tr>';
   }).join('');
 }
 

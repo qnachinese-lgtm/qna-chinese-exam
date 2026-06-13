@@ -2534,13 +2534,19 @@ function fbAddExamRecord(record){
   _db.collection('config').doc('examHistory').collection('records').doc(id).set(record).catch(e=>console.warn('fbAddExamRecord:', e));
 }
 
+function getGuestId(){
+  let g = localStorage.getItem('tocfl_guest_id');
+  if(!g){ g = 'v'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); localStorage.setItem('tocfl_guest_id', g); }
+  return g;
+}
+
 function fbAddGuestRecord(pct, total){
   if(!_db) return;
   const now = new Date();
   const dateStr = now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0');
   const timeStr = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')+':'+now.getSeconds().toString().padStart(2,'0');
   const subs = [...new Set(st.examResults.map(r=>r.subject))];
-  const rec = { date:dateStr, time:timeStr, subjects:subs, correct:st.correct, total:total, pct:pct, ts:Date.now() };
+  const rec = { gid: getGuestId(), date:dateStr, time:timeStr, subjects:subs, correct:st.correct, total:total, pct:pct, ts:Date.now() };
   const id = 'g_'+rec.ts+'_'+Math.random().toString(36).slice(2,7);
   _db.collection('config').doc('guestHistory').collection('records').doc(id).set(rec).catch(e=>console.warn('fbAddGuestRecord:', e));
 }
