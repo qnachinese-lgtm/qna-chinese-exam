@@ -320,8 +320,17 @@ let _adminUsers = [];   // 雲端讀到的學習者（含真實文件 ID _docId�
 
 async function syncFromCloud(){
   try{
-    const usersSnap = await _db.collection('users').get();
+    let usersSnap = await _db.collection('users').get();
     _adminUsers = usersSnap.docs.map(d=>Object.assign({}, d.data(), {_docId:d.id}));
+    // 主管理員載入時，自動清掉「無密碼的重複空殼」
+    if(_currentRole==='master'){
+      const shells=[]; getUserGroups().forEach(g=>g.all.forEach(rec=>{ if(rec!==g.primary && rec._docId && !rec.pw) shells.push(rec._docId); }));
+      if(shells.length){
+        for(const id of shells){ try{ await _db.collection('users').doc(id).delete(); }catch(e){ console.warn(e); } }
+        usersSnap = await _db.collection('users').get();
+        _adminUsers = usersSnap.docs.map(d=>Object.assign({}, d.data(), {_docId:d.id}));
+      }
+    }
     localStorage.setItem(USERS_KEY, JSON.stringify(usersSnap.docs.map(d=>d.data())));
     const histSnap = await _db.collection('examHistory').get();
     if(!histSnap.empty){
@@ -390,7 +399,7 @@ function renderAdminPanel(){
     const recs = history.filter(r=>r.name===acc.name);
     const last = recs[0];
     const lastScore = last ? (last.pct+'分（'+last.date+'）') : '—';
-    const dupTag = g.all.length>1 ? ' <span style="color:#c62828;font-size:.72rem">(重複'+g.all.length+'筆)</span>' : '';
+    const dupTag = '';
     const actions = isMaster ? ('<td><div class="admin-action-cell">'+
       '<button class="admin-edit-btn" onclick="openEditModal('+i+')">編輯</button>'+
       '<button class="admin-pw-btn" onclick="openResetPwModal('+i+')">重設密碼</button>'+

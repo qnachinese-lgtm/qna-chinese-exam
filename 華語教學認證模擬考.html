@@ -1640,12 +1640,17 @@ async function submitLogin(){
     if(pw !== confirmPw){ errEl.textContent='兩次密碼不一致'; return; }
 
     let accounts = getUserAccounts();
-    if(accounts.find(a=>a.email===email)){ errEl.textContent='此 Gmail 已被使用'; return; }
-    if(accounts.find(a=>a.name===name)){ errEl.textContent='此學習者名稱已被使用'; return; }
+    // 以雲端為準檢查重複（避免跨裝置產生重複帳號）
+    let cloudUsers = null;
+    if(_db){ try{ const snap = await _db.collection('users').get(); cloudUsers = snap.docs.map(d=>d.data()); }catch(e){ cloudUsers = null; } }
+    const pool = cloudUsers || accounts;
+    if(pool.find(a=>a.email===email)){ errEl.textContent='此 Gmail 已被使用'; return; }
+    if(pool.find(a=>a.name===name)){ errEl.textContent='此學習者名稱已被使用，請換一個'; return; }
 
     const newAcc = {name, email, pw: await hashPw(pw), createdAt: new Date().toISOString(), method: 'email'};
     accounts.push(newAcc);
     localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
+    if(_db){ try{ await _db.collection('users').doc(name).set(newAcc); }catch(e){ console.warn('register save:', e); } }
 
     switchTab('login');
     document.getElementById('user-email-input-reg').value = '';
@@ -1663,23 +1668,24 @@ async function submitLogin(){
     if(!email){ errEl.textContent='請輸入 Gmail 電郵地址'; return; }
     if(!pw)  { errEl.textContent='請輸入密碼'; return; }
 
-    let accounts = getUserAccounts();
-    const matches = accounts.filter(a=>a.email===email);
-
-    // 找不到帳號或密碼錯誤都顯示同一個信息（安全考量：不洩露帳號是否存在）
+    // 登入以雲端 Firebase 為準：後台已刪除的帳號這裡查不到 → 無法登入，需重新註冊
+    let matches = [];
+    if(_db){
+      try{
+        const snap = await _db.collection('users').where('email','==',email).get();
+        matches = snap.docs.map(d=>d.data());
+        try{ const all = await _db.collection('users').get(); localStorage.setItem(USERS_KEY, JSON.stringify(all.docs.map(d=>d.data()))); }catch(_){}
+      }catch(e){
+        matches = getUserAccounts().filter(a=>a.email===email);
+      }
+    } else {
+      matches = getUserAccounts().filter(a=>a.email===email);
+    }
     if(!matches.length){ errEl.textContent='郵箱或密碼不正確'; return; }
 
-    // 比對所有同 email 的帳號（容許重複帳號其中一筆密碼正確）
     const _hashedInput = await hashPw(pw);
-    let acc = matches.find(a=>a.pw===_hashedInput || a.pw===pw);
+    const acc = matches.find(a=>a.pw===_hashedInput || a.pw===pw);
     if(!acc){ errEl.textContent='郵箱或密碼不正確'; return; }
-
-    // 舊的明文密碼自動升級為雜湊並存回雲端
-    if(acc.pw===pw && !isHashed(acc.pw)){
-      acc.pw = _hashedInput;
-      localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
-      fbSaveUsers(accounts);
-    }
 
     st.currentUser = acc.name;
     localStorage.setItem('tocfl_current_user', st.currentUser);
