@@ -466,7 +466,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
   </div>
 
   <div class="yr-filter-wrap">
-    <label>📅 年份篩選（可多選）</label>
+    <label>📅 年份篩選（可多選，請至少選一個年份）</label>
     <div class="yr-filter-row" id="yr-filter-row"></div>
   </div>
 
@@ -1383,12 +1383,16 @@ let st = { selected:[], selectedYears:[], mode:'sequential', questions:[], idx:0
 // ════════════════════════════════════════════════
 //  SETUP
 // ════════════════════════════════════════════════
+function updateStartBtn(){
+  const btn=document.getElementById('start-btn');
+  if(btn) btn.disabled = (st.selected.length===0 || st.selectedYears.length===0);
+}
 function toggleSubject(card){
   const s = card.dataset.subject;
   card.classList.toggle('selected');
   if(card.classList.contains('selected')) st.selected.push(s);
   else st.selected = st.selected.filter(x=>x!==s);
-  document.getElementById('start-btn').disabled = st.selected.length === 0;
+  updateStartBtn();
   updateCnts();
 }
 function setMode(m){
@@ -1400,23 +1404,26 @@ function setMode(m){
 // ── Year filter init ──
 (function initYrFilter(){
   const allYears = [...new Set(Object.values(QB).flat().map(q=>q.yr))].sort((a,b)=>a-b);
-  st.selectedYears = [...allYears]; // default: all
+  st.selectedYears = []; // 預設不選，由使用者自行選擇
   const row = document.getElementById('yr-filter-row');
-  // "全部" button
+  // "全部" button（再按一次可全部取消）
   const allBtn = document.createElement('button');
-  allBtn.className = 'yr-btn active'; allBtn.textContent = '全部'; allBtn.dataset.yr = 'all';
+  allBtn.className = 'yr-btn'; allBtn.textContent = '全部'; allBtn.dataset.yr = 'all';
   allBtn.onclick = () => {
-    st.selectedYears = [...allYears];
-    row.querySelectorAll('.yr-btn').forEach(b => b.classList.toggle('active', b.dataset.yr==='all' || st.selectedYears.includes(b.dataset.yr)));
-    updateCnts();
+    const allSel = st.selectedYears.length === allYears.length;
+    st.selectedYears = allSel ? [] : [...allYears];
+    row.querySelectorAll('.yr-btn').forEach(b => {
+      if(b.dataset.yr==='all') b.classList.toggle('active', st.selectedYears.length===allYears.length);
+      else b.classList.toggle('active', st.selectedYears.includes(b.dataset.yr));
+    });
+    updateCnts(); updateStartBtn();
   };
   row.appendChild(allBtn);
   allYears.forEach(yr => {
     const btn = document.createElement('button');
-    btn.className = 'yr-btn active'; btn.textContent = yr + ' 年'; btn.dataset.yr = yr;
+    btn.className = 'yr-btn'; btn.textContent = yr + ' 年'; btn.dataset.yr = yr;
     btn.onclick = () => {
       if(st.selectedYears.includes(yr)) {
-        if(st.selectedYears.length===1) return; // keep at least one
         st.selectedYears = st.selectedYears.filter(y=>y!==yr);
       } else {
         st.selectedYears.push(yr);
@@ -1426,7 +1433,7 @@ function setMode(m){
         if(b.dataset.yr==='all') b.classList.toggle('active', allSel);
         else b.classList.toggle('active', st.selectedYears.includes(b.dataset.yr));
       });
-      updateCnts();
+      updateCnts(); updateStartBtn();
     };
     row.appendChild(btn);
   });

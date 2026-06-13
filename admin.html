@@ -156,7 +156,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
       <div class="admin-section">同一個瀏覽器視為同一位訪客（匿名，不含個人身分）。清除瀏覽器資料或換裝置會被視為新的訪客。</div>
       <div id="guest-table-container" style="overflow-x:auto">
       <table class="admin-table">
-        <thead><tr><th>訪客</th><th>試做次數</th><th>最近科目</th><th>最近得分</th><th>最近時間</th></tr></thead>
+        <thead><tr><th>訪客</th><th>試做次數</th><th>做過的科目</th><th>最近得分</th><th>最近時間</th></tr></thead>
         <tbody id="guest-tbody"></tbody>
       </table>
       </div>
@@ -549,7 +549,9 @@ function renderGuestRecords(){
   if(!list.length){ tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#999;padding:20px">尚無訪客試做紀錄</td></tr>'; return; }
   tbody.innerHTML=list.slice(0,300).map(g=>{
     const r=g.latest;
-    const subs=(r.subjects||[]).map(s=>SUBJ_NAMES[s]||s).join('、')||'—';
+    const subjSet=new Set();
+    g.arr.forEach(rec=>(rec.subjects||[]).forEach(x=>subjSet.add(x)));
+    const subs=[...subjSet].map(s=>SUBJ_NAMES[s]||s).join('、')||'—';
     const score=(r.correct!=null&&r.total!=null)?(r.pct+'分（'+r.correct+'/'+r.total+'）'):'—';
     const label='訪客 #'+String(g.gid).slice(-4);
     return '<tr><td>'+label+'</td><td>'+g.arr.length+' 次</td><td>'+subs+'</td><td>'+score+'</td><td>'+(r.date||'—')+' '+((r.time||'').slice(0,5))+'</td></tr>';
