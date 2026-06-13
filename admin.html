@@ -240,18 +240,19 @@ async function getAdminAccounts(){
     let accounts = Array.isArray(data.accounts) ? data.accounts.slice() : [];
     // 相容舊資料：把舊的 emails 清單併進 accounts（沒密碼，待主管理員重設）
     if(Array.isArray(data.emails)){
-      let changed=false;
       data.emails.forEach(em=>{
         const e=(em||'').toLowerCase();
-        if(e && e!==MASTER_EMAIL && !accounts.some(a=>(a.email||'').toLowerCase()===e)){ accounts.push({email:e, pw:''}); changed=true; }
+        if(e && e!==MASTER_EMAIL && !accounts.some(a=>(a.email||'').toLowerCase()===e)){ accounts.push({email:e, pw:''}); }
       });
-      if(changed){ _db.collection('config').doc('admins').set({accounts}, {merge:true}).catch(()=>{}); }
+      // 遷移完成後永久移除舊 emails 欄位，避免之後刪除的管理員一直被還原
+      _db.collection('config').doc('admins').set({accounts, emails: firebase.firestore.FieldValue.delete()}, {merge:true}).catch(()=>{});
     }
     return accounts;
   }catch(e){ console.warn('getAdminAccounts:', e); return []; }
 }
 async function saveAdminAccounts(accounts){
-  await _db.collection('config').doc('admins').set({accounts}, {merge:true});
+  // 一併移除舊的 emails 欄位，避免被刪掉的管理員又被「還原」成無密碼空殼
+  await _db.collection('config').doc('admins').set({accounts, emails: firebase.firestore.FieldValue.delete()}, {merge:true});
 }
 async function getRole(email){
   if(!email) return null;
