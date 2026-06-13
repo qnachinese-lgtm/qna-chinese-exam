@@ -112,7 +112,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
       <button class="admin-back" onclick="adminLogout()">← 登出</button>
       <span class="admin-title">⚙️ 管理者後臺</span>
       <span id="role-badge" class="role-badge role-admin"></span>
-      <button id="add-learner-btn" class="admin-add-btn" style="margin:0" onclick="openAddModal()">＋ 新增帳號</button>
+      <button id="add-learner-btn" class="admin-add-btn" style="margin:0" onclick="openAddModal()">＋ 新增學習者帳號</button>
     </div>
     <div id="who-am-i" style="font-size:.8rem;color:#888;margin-bottom:16px"></div>
 
@@ -131,21 +131,11 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 
     <!-- 管理員白名單（僅主管理員可見） -->
     <div id="admins-section" style="border-top:2px solid #e0e0e0;padding-top:20px;display:none">
-      <div class="admin-header" style="margin-bottom:16px">
+      <div class="admin-header" style="margin-bottom:8px">
         <span class="admin-title">👤 管理員存取權限</span>
+        <button class="admin-add-btn" style="margin:0" onclick="openAdminAddModal()">＋ 新增管理員帳號</button>
       </div>
       <div class="admin-section">只有主管理員（qnachinese@gmail.com）能新增/刪除其他管理員。其他管理員只能查看學習者資料。</div>
-
-      <div style="background:#f5f5f5;border-radius:8px;padding:12px;margin-bottom:16px">
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input type="email" id="admin-email-add" placeholder="新管理員的 Email"
-            style="flex:1;min-width:180px;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem">
-          <input type="text" id="admin-pw-add" placeholder="幫他設定的密碼（至少6碼）"
-            style="flex:1;min-width:160px;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:.9rem">
-          <button class="admin-add-btn" onclick="addAdmin()" style="margin:0;padding:8px 16px">＋ 新增管理員</button>
-        </div>
-        <div style="font-size:.75rem;color:#999;margin-top:8px">輸入對方的 Email 和你幫他設定的密碼即可建立。建立後把這組帳密給他,他就能登入後台（一般管理員只能查看學習者，不能修改）。</div>
-      </div>
 
       <div style="overflow-x:auto">
       <table class="admin-table">
@@ -172,6 +162,23 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
     <div class="modal-btns">
       <button class="modal-btn-primary" onclick="saveModal()">儲存</button>
       <button class="modal-btn-cancel"  onclick="closeModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 新增管理員帳號 Modal -->
+<div id="admin-add-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center">
+  <div class="admin-modal">
+    <h3>新增管理員帳號</h3>
+    <label>管理員 Email</label>
+    <input type="email" id="newadmin-email" placeholder="對方的 Email">
+    <label>密碼（至少6碼）</label>
+    <input type="text" id="newadmin-pw" placeholder="幫他設定的密碼">
+    <div class="modal-error" id="newadmin-error"></div>
+    <div style="font-size:.75rem;color:#999;margin-top:6px">建立後把這組帳密給對方。一般管理員登入後只能查看學習者，不能修改。</div>
+    <div class="modal-btns">
+      <button class="modal-btn-primary" onclick="addAdmin()">儲存</button>
+      <button class="modal-btn-cancel"  onclick="closeAdminAddModal()">取消</button>
     </div>
   </div>
 </div>
@@ -461,10 +468,18 @@ async function renderAdminsList(){
   tbody.innerHTML = rows;
 }
 
+function openAdminAddModal(){
+  if(_currentRole!=='master') return;
+  document.getElementById('newadmin-email').value='';
+  document.getElementById('newadmin-pw').value='';
+  const er=document.getElementById('newadmin-error'); if(er) er.textContent='';
+  document.getElementById('admin-add-overlay').style.display='flex';
+}
+function closeAdminAddModal(){ document.getElementById('admin-add-overlay').style.display='none'; }
 async function addAdmin(){
   if(_currentRole!=='master'){ alert('只有主管理員能新增'); return; }
-  const input = document.getElementById('admin-email-add');
-  const pwInput = document.getElementById('admin-pw-add');
+  const input = document.getElementById('newadmin-email');
+  const pwInput = document.getElementById('newadmin-pw');
   const email = (input.value||'').trim().toLowerCase();
   const pw = (pwInput && pwInput.value) || '';
   if(!email){ alert('請輸入 Email'); return; }
@@ -483,7 +498,7 @@ async function addAdmin(){
     try{ await secApp.auth().signOut(); }catch(_){}
     try{ await secApp.delete(); }catch(_){}
     await _db.collection('config').doc('admins').set({ emails: firebase.firestore.FieldValue.arrayUnion(email) }, {merge:true});
-    input.value=''; if(pwInput) pwInput.value='';
+    closeAdminAddModal();
     renderAdminsList();
     alert(created
       ? ('✅ 已建立管理員：'+email+'\n密碼：'+pw+'\n請把這組帳密給對方,他就能登入後台（只能查看學習者）。')
