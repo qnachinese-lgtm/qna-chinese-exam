@@ -1,8 +1,32 @@
 {
-      "rewrites": [
-              {
-                        "source": "/(?!.*\\.(html|json)$)(.*)",
-                        "destination": "/404.html"
-              }
+  "rewrites": [
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/華語教學認證模擬考.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/華語教學認證模擬考.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        }
       ]
+    }
+  ],
+  "buildCommand": "echo 'Build forced at '$(date)",
+  "env": {
+    "FORCE_REBUILD": "1",
+    "REDEPLOY_TIMESTAMP": "2026-06-13T09:30:00Z"
+  }
 }

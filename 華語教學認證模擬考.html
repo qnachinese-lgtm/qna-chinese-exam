@@ -370,15 +370,15 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
     </div>
     <div class="login-error" id="login-error"></div>
     <button class="login-btn" id="login-submit-btn" onclick="submitLogin()">登入 →</button>
-    <div id="user-forgot-wrap" style="text-align:center;margin-top:8px;display:none">
+    <div id="user-forgot-wrap" style="text-align:center;margin-top:8px">
       <button type="button" style="background:none;border:none;color:#1976d2;font-size:.8rem;cursor:pointer;text-decoration:underline" onclick="toggleUserForgot()">忘記密碼？</button>
     </div>
     <div id="user-forgot-box" style="display:none;margin-top:8px;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:12px 14px;font-size:.82rem;color:#5d4037;text-align:left;line-height:1.7">
       <strong>🔑 忘記密碼</strong>
       <div id="uforg-step1" style="margin-top:8px">
         <p style="margin-bottom:6px">請輸入您的帳號名稱，驗證碼將發送到您登記的 Gmail</p>
-        <input type="text" id="uforg-name" placeholder="帳號名稱" maxlength="20"
-          style="width:100%;padding:8px 10px;border:1.5px solid #ffe082;border-radius:6px;font-size:.85rem;margin-bottom:6px;box-sizing:border-box;background:#fffde7">
+        <input type="text" id="uforg-name" placeholder="帳號名稱或 Gmail" maxlength="100"
+          style="width:100%;padding:8px 10px;border:1.5px solid #ffe082;border-radius:6px;font-size:.85rem;margin-bottom:6px;box-sizing:border-box;background:#fffde7;overflow:hidden;text-overflow:ellipsis">
         <button onclick="requestUserOTP()" style="width:100%;padding:8px;background:#f9a825;color:#fff;border:none;border-radius:6px;font-size:.85rem;cursor:pointer">發送驗證碼</button>
         <div id="uforg-msg1" style="margin-top:6px;font-size:.8rem"></div>
       </div>
@@ -399,7 +399,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
         <div id="uforg-msg3" style="margin-top:6px;font-size:.8rem"></div>
       </div>
     </div>
-    <div class="admin-login-link"><button onclick="openAdminLogin()">管理者後臺</button></div>
+    <!-- 管理者後臺已隱藏 - 通過特殊URL訪問 -->
   </div>
 </div>
 
@@ -1623,87 +1623,75 @@ function switchTab(tab){
 }
 
 async function submitLogin(){
-  try {
-    const isRegister = document.getElementById('tab-register').classList.contains('active');
-    const errEl = document.getElementById('login-error');
-    let email, pw, name, confirmPw;
+  const isRegister = document.getElementById('tab-register').classList.contains('active');
+  const errEl = document.getElementById('login-error');
+  let email, pw, name, confirmPw;
 
-    if(isRegister){
-      // 新建帳號
-      email = document.getElementById('user-email-input-reg').value.trim().toLowerCase();
-      pw = document.getElementById('user-pw-input-reg').value;
-      name = document.getElementById('user-name-input').value.trim();
-      confirmPw = document.getElementById('user-pw-confirm').value;
+  if(isRegister){
+    // 新建帳號
+    email = document.getElementById('user-email-input-reg').value.trim().toLowerCase();
+    pw = document.getElementById('user-pw-input-reg').value;
+    name = document.getElementById('user-name-input').value.trim();
+    confirmPw = document.getElementById('user-pw-confirm').value;
 
-      if(!email){ errEl.textContent='請輸入 Gmail 電郵地址'; return; }
-      if(!name){ errEl.textContent='請輸入學習者名稱'; return; }
-      if(!pw){ errEl.textContent='請輸入密碼'; return; }
-      if(pw !== confirmPw){ errEl.textContent='兩次密碼不一致'; return; }
+    if(!email){ errEl.textContent='請輸入 Gmail 電郵地址'; return; }
+    if(!name){ errEl.textContent='請輸入學習者名稱'; return; }
+    if(!pw){ errEl.textContent='請輸入密碼'; return; }
+    if(pw !== confirmPw){ errEl.textContent='兩次密碼不一致'; return; }
 
-      let accounts = getUserAccounts();
-      if(accounts.find(a=>a.email===email)){ errEl.textContent='此 Gmail 已被使用'; return; }
-      if(accounts.find(a=>a.name===name)){ errEl.textContent='此學習者名稱已被使用'; return; }
+    let accounts = getUserAccounts();
+    if(accounts.find(a=>a.email===email)){ errEl.textContent='此 Gmail 已被使用'; return; }
+    if(accounts.find(a=>a.name===name)){ errEl.textContent='此學習者名稱已被使用'; return; }
 
-      const newAcc = {name, email, pw: await hashPw(pw), createdAt: new Date().toISOString(), method: 'email'};
-      accounts.push(newAcc);
-      localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
+    const newAcc = {name, email, pw: await hashPw(pw), createdAt: new Date().toISOString(), method: 'email'};
+    accounts.push(newAcc);
+    localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
 
-      switchTab('login');
-      document.getElementById('user-email-input-reg').value = '';
-      document.getElementById('user-name-input').value = '';
-      document.getElementById('user-pw-input-reg').value = '';
-      document.getElementById('user-pw-confirm').value = '';
-      errEl.style.color = '#2e7d32';
-      errEl.textContent = '✅ 帳號建立成功，請登入';
-      return;
+    switchTab('login');
+    document.getElementById('user-email-input-reg').value = '';
+    document.getElementById('user-name-input').value = '';
+    document.getElementById('user-pw-input-reg').value = '';
+    document.getElementById('user-pw-confirm').value = '';
+    errEl.style.color = '#2e7d32';
+    errEl.textContent = '✅ 帳號建立成功，請登入';
+    return;
+  } else {
+    // 登入
+    email = document.getElementById('user-email-input').value.trim().toLowerCase();
+    pw = document.getElementById('user-pw-input').value;
+
+    if(!email){ errEl.textContent='請輸入 Gmail 電郵地址'; return; }
+    if(!pw)  { errEl.textContent='請輸入密碼'; return; }
+
+    let accounts = getUserAccounts();
+    const acc = accounts.find(a=>a.email===email);
+
+    // 找不到帳號或密碼錯誤都顯示同一個信息（安全考量：不洩露帳號是否存在）
+    if(!acc){ errEl.textContent='郵箱或密碼不正確'; return; }
+
+    let pwMatch = false;
+    if(isHashed(acc.pw)){
+      pwMatch = (acc.pw === await hashPw(pw));
     } else {
-      // 登入
-      email = document.getElementById('user-email-input').value.trim().toLowerCase();
-      pw = document.getElementById('user-pw-input').value;
-
-      if(!email){ errEl.textContent='請輸入 Gmail 電郵地址'; return; }
-      if(!pw)  { errEl.textContent='請輸入密碼'; return; }
-
-      let accounts = getUserAccounts();
-      if(!accounts || accounts.length === 0){ errEl.textContent='系統中尚無帳號，請先建立'; return; }
-
-      const acc = accounts.find(a=>a.email===email);
-      if(!acc){ errEl.textContent='找不到此郵箱，請先建立帳號'; return; }
-      if(!acc.pw){ errEl.textContent='帳號密碼未設定'; return; }
-
-      // 驗證密碼
-      const isStoredHashed = isHashed(acc.pw);
-      const hashedInputPw = await hashPw(pw);
-      const passwordMatch = isStoredHashed ? (acc.pw === hashedInputPw) : (acc.pw === pw);
-
-      if(!passwordMatch){
-        errEl.textContent='密碼錯誤';
-        return;
-      }
-
-      // 密碼正確，更新為 hashed 版本
-      if(!isStoredHashed){
-        acc.pw = hashedInputPw;
-        localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
-      }
-
-      // 登入成功
-      st.currentUser = acc.name;
-      localStorage.setItem('tocfl_current_user', st.currentUser);
-      localStorage.setItem('tocfl_user_email', email);
-      document.getElementById('login-screen').style.display='none';
-      document.getElementById('subject-screen').style.display='block';
-      document.getElementById('user-bar-name').textContent = st.currentUser;
-      document.getElementById('user-email-input').value='';
-      document.getElementById('user-pw-input').value='';
-      document.getElementById('login-error').textContent='';
-      renderProgressPanel();
-      updateWrongReviewBtn();
-      startSessionTimer();
+      pwMatch = (acc.pw === pw);
+      if(pwMatch) acc.pw = await hashPw(pw);
     }
-  } catch(err){
-    console.error('Login error:', err);
-    document.getElementById('login-error').textContent = '登入發生錯誤，請重試';
+
+    if(!pwMatch){ errEl.textContent='郵箱或密碼不正確'; return; }
+    if(pwMatch && !isHashed(acc.pw)) localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
+
+    st.currentUser = acc.name;
+    localStorage.setItem('tocfl_current_user', st.currentUser);
+    localStorage.setItem('tocfl_user_email', email);
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('subject-screen').style.display='block';
+    document.getElementById('user-bar-name').textContent = st.currentUser;
+    document.getElementById('user-email-input').value='';
+    document.getElementById('user-pw-input').value='';
+    document.getElementById('login-error').textContent='';
+    renderProgressPanel();
+    updateWrongReviewBtn();
+    startSessionTimer();
   }
 }
 // ════════════════════════════════════════════════
@@ -3092,33 +3080,7 @@ function refreshAdminList(){let t=document.getElementById('admin-tbody');if(!t)r
 function addAdmin(){if(localStorage.getItem('tocfl_current_user')!=='qnachinese@gmail.com'){alert('❌ 只有主管理員');return;}let n=prompt('名稱:');if(!n)return;let e=prompt('Email:');if(!e)return;let p=prompt('密碼(6字以上):');if(!p||p.length<6){alert('❌ 密碼至少6字');return;}let l=getAdminList();if(l.some(x=>x.email===e)){alert('❌ Email已存在');return;}l.push({name:n,email:e,password:p});saveAdminList(l);alert('✅ 已新增');}
 function editAdmin(i){if(localStorage.getItem('tocfl_current_user')!=='qnachinese@gmail.com'){alert('❌ 只有主管理員');return;}let l=getAdminList();let n=prompt('名稱:',l[i].name);if(!n)return;let p=prompt('新密碼(留空不改):');if(p&&p.length<6){alert('❌ 至少6字');return;}l[i].name=n;if(p)l[i].password=p;saveAdminList(l);alert('✅ 已更新');}
 function deleteAdmin(i){if(localStorage.getItem('tocfl_current_user')!=='qnachinese@gmail.com'){alert('❌ 只有主管理員');return;}let l=getAdminList();if(l[i].email==='qnachinese@gmail.com'){alert('❌ 無法刪除主管理員');return;}if(confirm('確定刪除?')){l.splice(i,1);saveAdminList(l);alert('✅ 已刪除');}}
-
-// ════════════════════════════════════════════
-// 📌 PAGE INITIALIZATION - 頁面初始化
-// ════════════════════════════════════════════
-window.addEventListener('DOMContentLoaded', function(){
-  // 檢查是否有已保存的用戶會話
-  const savedUser = localStorage.getItem('tocfl_current_user');
-  if(savedUser){
-    st.currentUser = savedUser;
-    const email = localStorage.getItem('tocfl_user_email');
-    if(email) st.currentUserEmail = email;
-
-    // 自動進入主屏幕
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('subject-screen').style.display = 'block';
-    if(document.getElementById('user-bar-name')){
-      document.getElementById('user-bar-name').textContent = st.currentUser;
-    }
-    renderProgressPanel();
-    startSessionTimer();
-  }
-
-  // 初始化管理員部分
-  renderAdminSection();
-
-  console.log('✅ 頁面初始化完成');
-});
+document.addEventListener('DOMContentLoaded',renderAdminSection);
 </script>
 </body>
-</html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+</html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
