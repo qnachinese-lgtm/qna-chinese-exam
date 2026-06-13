@@ -66,6 +66,9 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
   .admin-table th, .admin-table td { padding:6px 8px; }
 }
 </style>
+<!-- Firebase（雲端同步，與主程式同一個專案） -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -164,7 +167,63 @@ const USERS_KEY = 'tocfl_users';
 const ADMIN_SESSION_KEY = 'tocfl_admin_session';
 const ADMIN_KEY = 'tocfl_admin_pw';
 const ADMINS_KEY = 'tocfl_admins';
-const STORAGE_KEY = 'tocfl_history';
+const STORAGE_KEY = 'tocfl_exam_history';
+
+// ═══════════════════════════════════════════
+//  FIREBASE 雲端同步（與主程式 華語教學認證模擬考.html 一致）
+// ═══════════════════════════════════════════
+const FB_CONFIG = {
+  apiKey: "AIzaSyCSgZ9DmLuKIqqbxrVgAcUfy-QJFhzjjp8",
+  authDomain: "qna-chinese.firebaseapp.com",
+  projectId: "qna-chinese",
+  storageBucket: "qna-chinese.firebasestorage.app",
+  messagingSenderId: "645044163415",
+  appId: "1:645044163415:web:c33d1a22422de3083b6412"
+};
+let _db = null;
+function initFirebase(){
+  try {
+    if(typeof firebase === 'undefined') return;
+    if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+    _db = firebase.firestore();
+    syncFromCloud();
+  } catch(e){ console.warn('Firebase unavailable:', e); }
+}
+async function syncFromCloud(){
+  if(!_db) return;
+  try {
+    const usersSnap = await _db.collection('users').get();
+    if(!usersSnap.empty){
+      localStorage.setItem(USERS_KEY, JSON.stringify(usersSnap.docs.map(d=>d.data())));
+    }
+    const histSnap = await _db.collection('examHistory').get();
+    if(!histSnap.empty){
+      const hist = histSnap.docs.map(d=>d.data());
+      hist.sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(hist));
+    }
+    const adminSnap = await _db.collection('config').doc('admin').get();
+    if(adminSnap.exists && adminSnap.data().pw){
+      localStorage.setItem(ADMIN_KEY, adminSnap.data().pw);
+    }
+    const scr = document.getElementById('admin-screen');
+    if(scr && scr.style.display !== 'none') renderAdminPanel();
+  } catch(e){ console.warn('Cloud sync failed:', e); }
+}
+function fbSaveUsers(accounts){
+  if(!_db) return;
+  accounts.forEach(acc=>{ _db.collection('users').doc(acc.name).set(acc).catch(e=>console.warn('fbSaveUsers:', e)); });
+}
+function fbDeleteUser(name){
+  if(!_db) return;
+  _db.collection('users').doc(name).delete().catch(e=>console.warn('fbDeleteUser:', e));
+}
+function fbDeleteUserHistory(name){
+  if(!_db) return;
+  _db.collection('examHistory').where('name','==',name).get().then(snap=>{
+    snap.docs.forEach(d=>d.ref.delete());
+  }).catch(e=>console.warn('fbDeleteUserHistory:', e));
+}
 
 // ═══════════════════════════════════════════
 //  HELPER FUNCTIONS
@@ -216,6 +275,7 @@ async function adminGoogleLogin(){
   document.getElementById('admin-login-screen').style.display='none';
   document.getElementById('admin-screen').style.display='block';
   renderAdminPanel();
+  syncFromCloud();
 }
 
 async function adminLogin(){
@@ -227,9 +287,11 @@ async function adminLogin(){
     if(!pw){ errEl.textContent='請設定管理者密碼'; return; }
     const hashed = await hashPw(pw);
     localStorage.setItem(ADMIN_KEY, hashed);
+    if(_db) _db.collection('config').doc('admin').set({pw:hashed}).catch(e=>console.warn('save admin pw:', e));
     document.getElementById('admin-login-screen').style.display='none';
     document.getElementById('admin-screen').style.display='block';
     renderAdminPanel();
+    syncFromCloud();
     return;
   }
   if(!pw){ errEl.textContent='請輸入密碼'; return; }
@@ -238,6 +300,7 @@ async function adminLogin(){
   document.getElementById('admin-login-screen').style.display='none';
   document.getElementById('admin-screen').style.display='block';
   renderAdminPanel();
+  syncFromCloud();
 }
 
 function closeAdminPanel(){
@@ -267,6 +330,7 @@ function renderAdminPanel(){
   if(!tbody) return;
   if(!accounts.length){
     tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#999;padding:20px">尚無學習者帳號</td></tr>';
+    renderAdminWhitelist();
     return;
   }
   tbody.innerHTML = accounts.map((acc,i)=>{
@@ -345,6 +409,8 @@ function deleteUser(name){
   localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
   let history = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').filter(r=>r.name!==name);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+  fbDeleteUser(name);
+  fbDeleteUserHistory(name);
   renderAdminPanel();
 }
 
@@ -352,6 +418,7 @@ function resetUserHistory(name){
   if(!confirm(`確定要清除「${name}」的所有考試記錄嗎？`)) return;
   let history = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').filter(r=>r.name!==name);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+  fbDeleteUserHistory(name);
   renderAdminPanel();
 }
 
@@ -399,6 +466,7 @@ function openResetPwModal(name){
     if(!acc){ alert('帳號不存在'); return; }
     acc.pw = hashed;
     localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
+    fbSaveUsers(accounts);
     renderAdminPanel();
     const msg = document.createElement('div');
     msg.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#4a148c;color:#fff;padding:14px 22px;border-radius:10px;z-index:9999;font-size:.95rem;box-shadow:0 4px 20px rgba(0,0,0,.3);text-align:center;max-width:320px';
@@ -432,6 +500,7 @@ async function saveModal(){
     if(email !== undefined) acc.email = email || acc.email;
   }
   localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
+  fbSaveUsers(accounts);
   closeModal();
   renderAdminPanel();
 }
@@ -440,6 +509,7 @@ async function saveModal(){
 //  INIT
 // ═══════════════════════════════════════════
 window.addEventListener('load', ()=>{
+  initFirebase();
   // Check if already logged in
   const session = localStorage.getItem(ADMIN_SESSION_KEY);
   if(session){

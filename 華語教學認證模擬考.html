@@ -2474,9 +2474,8 @@ function checkExamResume(){
 // ═══════════════════════════════════════════
 function openAdminLogin(){
   document.getElementById('admin-login-screen').style.display='flex';
-  document.getElementById('aforg-section').style.display='none';
-  document.getElementById('admin-pw-input').value='';
-  document.getElementById('admin-login-err').textContent='';
+  const pwIn = document.getElementById('admin-pw-input'); if(pwIn) pwIn.value='';
+  const errEl = document.getElementById('admin-login-err'); if(errEl) errEl.textContent='';
 }
 
 function openAdminLoginFromHome(){
@@ -3047,40 +3046,5 @@ async function saveProfilePassword(){
 
 
 </script>
-
-
-<!-- 👤 管理員帳號管理 -->
-<script>
-function renderAdminSection(){
-  let section = document.querySelector('[style*="管理員存取權限"]');
-  if(!section) return;
-  let div = document.createElement('div');
-  div.style.cssText = 'margin-top:40px;border-top:2px solid #ddd;padding-top:20px';
-  div.innerHTML = `
-    <h3 style="margin-bottom:16px">👤 管理員帳號管理</h3>
-    <button onclick="addAdmin()" style="background:#2196F3;color:white;border:none;padding:10px 20px;margin-bottom:16px;cursor:pointer;font-weight:700">＋ 新增管理員</button>
-    <table style="width:100%;border-collapse:collapse">
-      <thead style="background:#2196F3;color:white">
-        <tr>
-          <th style="padding:12px;text-align:left;font-weight:700">名稱</th>
-          <th style="padding:12px;text-align:left;font-weight:700">密碼</th>
-          <th style="padding:12px;text-align:left;font-weight:700">Email</th>
-          <th style="padding:12px;text-align:left;font-weight:700">操作</th>
-        </tr>
-      </thead>
-      <tbody id="admin-tbody"></tbody>
-    </table>
-  `;
-  section.parentElement.appendChild(div);
-  refreshAdminList();
-}
-function getAdminList(){let l=localStorage.getItem('admin_list');return l?JSON.parse(l):[{name:'主管理員',email:'qnachinese@gmail.com',password:''}];}
-function saveAdminList(l){localStorage.setItem('admin_list',JSON.stringify(l));refreshAdminList();}
-function refreshAdminList(){let t=document.getElementById('admin-tbody');if(!t)return;let l=getAdminList();t.innerHTML=l.map((a,i)=>`<tr style="border-bottom:1px solid #f0f0f0"><td style="padding:12px">\${a.name}</td><td style="font-family:monospace">●●●●●●</td><td>\${a.email}</td><td><button onclick="editAdmin(\${i})" style="background:#2196F3;color:white;border:none;padding:6px 12px;margin-right:6px;cursor:pointer">編輯</button><button onclick="deleteAdmin(\${i})" style="background:#f44336;color:white;border:none;padding:6px 12px;cursor:pointer">刪除</button></td></tr>`).join('');}
-function addAdmin(){if(localStorage.getItem('tocfl_current_user')!=='qnachinese@gmail.com'){alert('❌ 只有主管理員');return;}let n=prompt('名稱:');if(!n)return;let e=prompt('Email:');if(!e)return;let p=prompt('密碼(6字以上):');if(!p||p.length<6){alert('❌ 密碼至少6字');return;}let l=getAdminList();if(l.some(x=>x.email===e)){alert('❌ Email已存在');return;}l.push({name:n,email:e,password:p});saveAdminList(l);alert('✅ 已新增');}
-function editAdmin(i){if(localStorage.getItem('tocfl_current_user')!=='qnachinese@gmail.com'){alert('❌ 只有主管理員');return;}let l=getAdminList();let n=prompt('名稱:',l[i].name);if(!n)return;let p=prompt('新密碼(留空不改):');if(p&&p.length<6){alert('❌ 至少6字');return;}l[i].name=n;if(p)l[i].password=p;saveAdminList(l);alert('✅ 已更新');}
-function deleteAdmin(i){if(localStorage.getItem('tocfl_current_user')!=='qnachinese@gmail.com'){alert('❌ 只有主管理員');return;}let l=getAdminList();if(l[i].email==='qnachinese@gmail.com'){alert('❌ 無法刪除主管理員');return;}if(confirm('確定刪除?')){l.splice(i,1);saveAdminList(l);alert('✅ 已刪除');}}
-document.addEventListener('DOMContentLoaded',renderAdminSection);
-</script>
 </body>
-</html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+</html>
