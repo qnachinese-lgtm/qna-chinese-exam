@@ -2089,8 +2089,9 @@ async function requestUserOTP(){
   }
   if(!accounts.length) accounts = JSON.parse(localStorage.getItem(USERS_KEY)||'[]');
 
-  const acc = accounts.find(a=>a.name===name);
-  if(!acc){ msgEl.style.color='#c62828'; msgEl.textContent='找不到此帳號'; return; }
+  const _q = name.toLowerCase();
+  const acc = accounts.find(a=>a.name===name || (a.email && a.email.toLowerCase()===_q));
+  if(!acc){ msgEl.style.color='#c62828'; msgEl.textContent='找不到此帳號（請輸入帳號名稱或註冊用的 Gmail）'; return; }
   if(!acc.email){ msgEl.style.color='#c62828'; msgEl.textContent='此帳號尚未設定 Gmail，請聯絡管理者新增'; return; }
 
   msgEl.style.color='#5d4037'; msgEl.textContent='發送中…';
