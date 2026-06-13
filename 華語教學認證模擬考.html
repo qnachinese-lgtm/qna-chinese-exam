@@ -1443,7 +1443,7 @@ function setMode(m){
 function updateCnts(){
   document.querySelectorAll('.subject-card').forEach(card => {
     const s = card.dataset.subject;
-    const n = QB[s].filter(q => st.selectedYears.includes(q.yr)).length;
+    const n = st.selectedYears.length ? QB[s].filter(q => st.selectedYears.includes(q.yr)).length : QB[s].length;
     card.querySelector('.cnt').textContent = n + ' 題';
   });
 }
