@@ -144,6 +144,22 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
       </table>
       </div>
     </div>
+
+    <!-- 訪客試做紀錄 -->
+    <div id="guest-section" style="border-top:2px solid #e0e0e0;padding-top:20px;margin-top:24px">
+      <div class="admin-header" style="margin-bottom:8px">
+        <span class="admin-title">📝 訪客試做紀錄</span>
+        <span id="guest-summary" style="font-size:.8rem;color:#888;margin-left:auto"></span>
+        <button id="guest-clear-btn" onclick="clearGuestRecords()" style="display:none;background:#ff7043;color:#fff;border:none;cursor:pointer;padding:8px 14px;border-radius:8px;font-weight:600;margin-left:8px">清空訪客紀錄</button>
+      </div>
+      <div class="admin-section">免註冊訪客的匿名試做紀錄（不含個人身分，僅供了解使用狀況）。</div>
+      <div style="overflow-x:auto">
+      <table class="admin-table">
+        <thead><tr><th>日期</th><th>時間</th><th>科目</th><th>得分</th></tr></thead>
+        <tbody id="guest-tbody"></tbody>
+      </table>
+      </div>
+    </div>
   </div>
 </main>
 
@@ -208,6 +224,8 @@ const _db  = firebase.firestore();
 let _currentRole = null;   // 'master' | 'admin'
 let _currentEmail = null;
 let _adminEmails = new Set([MASTER_EMAIL]);   // 管理員 email,用來從學習者名單濾掉
+const SUBJ_NAMES = {chinese:'國文',culture:'華人社會與文化',linguistics:'漢語語言學',teaching:'華語文教學'};
+let _guestRecords = [];
 
 // ═══════════════════════════════════════════
 //  授權判斷
@@ -399,6 +417,11 @@ async function syncFromCloud(){
       hist.sort((a,b)=>((b.date||'')+(b.time||'')).localeCompare((a.date||'')+(a.time||'')));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(hist));
     }catch(eh){ console.warn('讀取考試紀錄失敗:', eh); }
+    try{
+      const gSnap = await _db.collection('config').doc('guestHistory').collection('records').get();
+      _guestRecords = gSnap.docs.map(d=>d.data());
+      _guestRecords.sort((a,b)=>((b.date||'')+(b.time||'')).localeCompare((a.date||'')+(a.time||'')));
+    }catch(eg){ console.warn('讀取訪客紀錄失敗:', eg); _guestRecords=[]; }
     renderAdminPanel();
   }catch(e){ console.warn('syncFromCloud:', e); }
 }
@@ -457,7 +480,7 @@ function renderAdminPanel(){
   const tbody = document.getElementById('admin-tbody');
   if(!tbody) return;
   const cols = isMaster ? 6 : 5;
-  if(!groups.length){ tbody.innerHTML='<tr><td colspan="'+cols+'" style="text-align:center;color:#999;padding:20px">尚無學習者帳號</td></tr>'; renderAdminsList(); updateCleanupBtn(); return; }
+  if(!groups.length){ tbody.innerHTML='<tr><td colspan="'+cols+'" style="text-align:center;color:#999;padding:20px">尚無學習者帳號</td></tr>'; renderAdminsList(); updateCleanupBtn(); renderGuestRecords(); return; }
   tbody.innerHTML = groups.map((g,i)=>{
     const acc = g.primary;
     const recs = history.filter(r=>r.name===acc.name);
@@ -478,6 +501,7 @@ function renderAdminPanel(){
   }).join('');
   renderAdminsList();
   updateCleanupBtn();
+  renderGuestRecords();
 }
 
 function updateCleanupBtn(){
@@ -486,6 +510,35 @@ function updateCleanupBtn(){
   const n = countCleanable();
   if(_currentRole==='master' && n>0){ btn.style.display=''; btn.textContent='🧹 清除空殼（'+n+'）'; }
   else { btn.style.display='none'; }
+}
+
+function renderGuestRecords(){
+  const tbody=document.getElementById('guest-tbody');
+  if(!tbody) return;
+  const recs=_guestRecords||[];
+  const sum=document.getElementById('guest-summary');
+  const t=new Date();
+  const td=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+  const todayCnt=recs.filter(r=>r.date===td).length;
+  if(sum) sum.textContent='共 '+recs.length+' 筆　今日 '+todayCnt+' 筆';
+  const clr=document.getElementById('guest-clear-btn');
+  if(clr) clr.style.display=(_currentRole==='master' && recs.length)?'':'none';
+  if(!recs.length){ tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:#999;padding:20px">尚無訪客試做紀錄</td></tr>'; return; }
+  tbody.innerHTML=recs.slice(0,300).map(r=>{
+    const subs=(r.subjects||[]).map(s=>SUBJ_NAMES[s]||s).join('、')||'—';
+    const score=(r.correct!=null&&r.total!=null)?(r.pct+'分（'+r.correct+'/'+r.total+'）'):'—';
+    return '<tr><td>'+(r.date||'—')+'</td><td>'+((r.time||'').slice(0,5))+'</td><td>'+subs+'</td><td>'+score+'</td></tr>';
+  }).join('');
+}
+
+async function clearGuestRecords(){
+  if(_currentRole!=='master') return;
+  if(!confirm('確定要清空所有訪客試做紀錄嗎？此動作無法復原。')) return;
+  try{
+    const snap=await _db.collection('config').doc('guestHistory').collection('records').get();
+    for(const d of snap.docs){ try{ await d.ref.delete(); }catch(e){ console.warn(e); } }
+  }catch(e){ console.warn('clearGuestRecords:', e); }
+  _guestRecords=[]; renderGuestRecords();
 }
 
 async function cleanupDuplicates(){

@@ -1576,7 +1576,7 @@ function showResult(){
   if(st.currentUser){
     saveExamRecord(pct, total);
     const savedMsg = document.getElementById('res-saved-msg');
-    if(savedMsg){
+    if(savedMsg && !st.isGuest){
       savedMsg.style.display='inline-block';
       savedMsg.textContent='✅ 成績已記錄（' + st.currentUser + '）';
     }
@@ -2286,7 +2286,7 @@ function changeUser(){
 }
 
 function saveExamRecord(pct, total){
-  if(st.isGuest){ return; }   // 訪客模式不保存成績
+  if(st.isGuest){ fbAddGuestRecord(pct, total); return; }   // 訪客：只記錄匿名統計
   const now = new Date();
   const dateStr = now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0');
   const timeStr = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')+':'+now.getSeconds().toString().padStart(2,'0');
@@ -2503,6 +2503,17 @@ function fbAddExamRecord(record){
   if(!_db) return;
   const id = record.name+'_'+record.date+'_'+record.time.replace(/:/g,'');
   _db.collection('config').doc('examHistory').collection('records').doc(id).set(record).catch(e=>console.warn('fbAddExamRecord:', e));
+}
+
+function fbAddGuestRecord(pct, total){
+  if(!_db) return;
+  const now = new Date();
+  const dateStr = now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0');
+  const timeStr = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')+':'+now.getSeconds().toString().padStart(2,'0');
+  const subs = [...new Set(st.examResults.map(r=>r.subject))];
+  const rec = { date:dateStr, time:timeStr, subjects:subs, correct:st.correct, total:total, pct:pct, ts:Date.now() };
+  const id = 'g_'+rec.ts+'_'+Math.random().toString(36).slice(2,7);
+  _db.collection('config').doc('guestHistory').collection('records').doc(id).set(rec).catch(e=>console.warn('fbAddGuestRecord:', e));
 }
 
 function fbDeleteUserHistory(name){
