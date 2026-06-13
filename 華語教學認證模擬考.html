@@ -1664,21 +1664,22 @@ async function submitLogin(){
     if(!pw)  { errEl.textContent='請輸入密碼'; return; }
 
     let accounts = getUserAccounts();
-    const acc = accounts.find(a=>a.email===email);
+    const matches = accounts.filter(a=>a.email===email);
 
     // 找不到帳號或密碼錯誤都顯示同一個信息（安全考量：不洩露帳號是否存在）
+    if(!matches.length){ errEl.textContent='郵箱或密碼不正確'; return; }
+
+    // 比對所有同 email 的帳號（容許重複帳號其中一筆密碼正確）
+    const _hashedInput = await hashPw(pw);
+    let acc = matches.find(a=>a.pw===_hashedInput || a.pw===pw);
     if(!acc){ errEl.textContent='郵箱或密碼不正確'; return; }
 
-    let pwMatch = false;
-    if(isHashed(acc.pw)){
-      pwMatch = (acc.pw === await hashPw(pw));
-    } else {
-      pwMatch = (acc.pw === pw);
-      if(pwMatch) acc.pw = await hashPw(pw);
+    // 舊的明文密碼自動升級為雜湊並存回雲端
+    if(acc.pw===pw && !isHashed(acc.pw)){
+      acc.pw = _hashedInput;
+      localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
+      fbSaveUsers(accounts);
     }
-
-    if(!pwMatch){ errEl.textContent='郵箱或密碼不正確'; return; }
-    if(pwMatch && !isHashed(acc.pw)) localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
 
     st.currentUser = acc.name;
     localStorage.setItem('tocfl_current_user', st.currentUser);
@@ -2097,7 +2098,7 @@ async function requestUserOTP(){
   msgEl.style.color='#5d4037'; msgEl.textContent='發送中…';
   _userOTPCode   = _genOTP();
   _userOTPExpiry = Date.now()+10*60*1000;
-  _userOTPName   = name;
+  _userOTPName   = acc.name;
   _userOTPAttempts = 0; _userOTPLockUntil = 0;
   try{
     await sendOTP(acc.email, _userOTPCode);
@@ -2139,10 +2140,12 @@ async function resetUserPassword(){
   if(!pw){ msgEl.style.color='#c62828'; msgEl.textContent='請輸入新密碼'; return; }
   if(pw!==pw2){ msgEl.style.color='#c62828'; msgEl.textContent='兩次密碼不一致'; return; }
   const accounts = JSON.parse(localStorage.getItem(USERS_KEY)||'[]');
-  const acc = accounts.find(a=>a.name===_userOTPName);
-  if(!acc){ msgEl.style.color='#c62828'; msgEl.textContent='帳號錯誤'; return; }
-  acc.pw = await hashPw(pw);
+  const targets = accounts.filter(a=>a.name===_userOTPName);
+  if(!targets.length){ msgEl.style.color='#c62828'; msgEl.textContent='帳號錯誤'; return; }
+  const _hashed = await hashPw(pw);
+  targets.forEach(a=>a.pw=_hashed);
   localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
+  fbSaveUsers(accounts);
   _userOTPCode=''; _userOTPExpiry=0; _userOTPName='';
   document.getElementById('user-forgot-box').style.display='none';
   const errEl = document.getElementById('login-error');
