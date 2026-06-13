@@ -1681,11 +1681,11 @@ async function submitLogin(){
     } else {
       matches = getUserAccounts().filter(a=>a.email===email);
     }
-    if(!matches.length){ errEl.textContent='郵箱或密碼不正確'; return; }
+    if(!matches.length){ errEl.style.color='#c62828'; errEl.textContent='此帳號不存在，請點上方「新建帳號」重新註冊'; return; }
 
     const _hashedInput = await hashPw(pw);
     const acc = matches.find(a=>a.pw===_hashedInput || a.pw===pw);
-    if(!acc){ errEl.textContent='郵箱或密碼不正確'; return; }
+    if(!acc){ errEl.style.color='#c62828'; errEl.textContent='密碼不正確'; return; }
 
     st.currentUser = acc.name;
     localStorage.setItem('tocfl_current_user', st.currentUser);
