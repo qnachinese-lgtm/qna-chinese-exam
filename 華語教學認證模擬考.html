@@ -333,8 +333,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- jsPDF / XLSX 改為「用到才載入」，加速手機首次開啟 -->
 </head>
 <body>
 <header>
@@ -349,6 +348,10 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
     <div style="font-size:2.5rem;margin-bottom:12px">📚</div>
     <h2>QNA Chinese<br><span style="font-size:.75em;font-weight:700">對外華語教學認證考試平台</span></h2>
     <p>模擬考系統｜個人學習進度追蹤</p>
+    <div style="font-size:.8rem;color:#5d4037;background:#fffaf0;border:1px dashed #e0c9a0;border-radius:8px;padding:10px 12px;margin:0 0 14px;text-align:left;line-height:1.7">
+      <b>怎麼用：</b>選 1～4 個科目 → 開始模擬考 → 即時看答案與解析，自動記錄錯題與成績。<br>
+      想<b>保存成績/進度</b>請「新建帳號」；只想先試試，可用下方「免註冊試做」。
+    </div>
     <div class="login-tabs">
       <button class="login-tab active" id="tab-login" onclick="switchTab('login')">登入</button>
       <button class="login-tab" id="tab-register" onclick="switchTab('register')">新建帳號</button>
@@ -409,6 +412,8 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
         <div id="uforg-msg3" style="margin-top:6px;font-size:.8rem"></div>
       </div>
     </div>
+    <div style="display:flex;align-items:center;gap:8px;margin:14px 0 6px;color:#bbb;font-size:.78rem"><span style="flex:1;height:1px;background:#e6ddc9"></span>或<span style="flex:1;height:1px;background:#e6ddc9"></span></div>
+    <button class="login-btn" style="background:#fff;color:#8b1a1a;border:2px solid #c0392b" onclick="enterGuest()">免註冊，直接試做 →</button>
     <!-- 管理者後臺已隱藏 - 通過特殊URL訪問 -->
   </div>
 </div>
@@ -421,7 +426,6 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
     <button class="user-bar-btn" onclick="showHistory()">📊 我的記錄</button>
     <button class="user-bar-btn" onclick="showProfile()">👤 帳號</button>
     <button class="user-bar-btn" onclick="changeUser()">登出</button>
-    <button class="user-bar-btn" onclick="openAdminLoginFromHome()" style="border-color:#8b6914;color:#8b6914" title="管理者後臺">⚙️ 後臺</button>
   </div>
   <div id="progress-panel">
     <div class="prog-title">📈 最近考試紀錄</div>
@@ -1698,6 +1702,7 @@ async function submitLogin(){
     if(!acc){ errEl.style.color='#c62828'; errEl.textContent='密碼不正確'; return; }
 
     st.currentUser = acc.name;
+    st.isGuest = false;
     localStorage.setItem('tocfl_current_user', st.currentUser);
     localStorage.setItem('tocfl_user_email', email);
     document.getElementById('login-screen').style.display='none';
@@ -1828,9 +1833,6 @@ function startReviewMode(){
 //  PDF EXPORT
 // ════════════════════════════════════════════════
 function exportPDF(){
-  const { jsPDF } = window.jspdf;
-  if(!jsPDF){ alert('PDF 函式庫尚未載入，請稍後再試'); return; }
-  const doc = new jsPDF({ unit:'mm', format:'a4' });
 
   // Embed a base64 font that supports CJK — use NotoSansSC subset via CDN is not feasible inline.
   // Use Unicode-capable approach: render to canvas via HTML, then add as image
@@ -1904,7 +1906,9 @@ th{background:#f5f5f5;font-weight:700}
 // ════════════════════════════════════════════════
 //  ADMIN EXCEL EXPORT
 // ════════════════════════════════════════════════
-function exportAdminExcel(){
+function _lazyScript(src){ return new Promise((res,rej)=>{ if(document.querySelector('script[data-lazy="'+src+'"]')) return res(); const sc=document.createElement('script'); sc.src=src; sc.dataset.lazy=src; sc.onload=()=>res(); sc.onerror=()=>rej(new Error('load fail')); document.head.appendChild(sc); }); }
+async function exportAdminExcel(){
+  try{ await _lazyScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'); }catch(e){ alert('Excel 函式庫載入失敗，請檢查網路後再試'); return; }
   if(typeof XLSX==='undefined'){ alert('Excel 函式庫尚未載入，請稍後再試'); return; }
   const accounts = JSON.parse(localStorage.getItem(USERS_KEY)||'[]');
   const history  = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
@@ -2182,9 +2186,22 @@ function resetLoginError(){
   el.textContent = '';
 }
 
+function enterGuest(){
+  st.currentUser = '訪客';
+  st.isGuest = true;
+  localStorage.removeItem('tocfl_current_user');
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('subject-screen').style.display='block';
+  const nm=document.getElementById('user-bar-name'); if(nm) nm.textContent='訪客模式（成績不會保存，註冊後可保存）';
+  document.getElementById('login-error').textContent='';
+  renderProgressPanel();
+  updateWrongReviewBtn();
+  if(typeof startSessionTimer==='function') startSessionTimer();
+}
 function changeUser(){
   stopSessionTimer();
   st.currentUser = null;
+  st.isGuest = false;
   localStorage.removeItem('tocfl_current_user');
   document.getElementById('subject-screen').style.display='none';
   document.getElementById('user-email-input').value='';
@@ -2196,6 +2213,7 @@ function changeUser(){
 }
 
 function saveExamRecord(pct, total){
+  if(st.isGuest){ return; }   // 訪客模式不保存成績
   const now = new Date();
   const dateStr = now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0');
   const timeStr = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')+':'+now.getSeconds().toString().padStart(2,'0');
@@ -2220,6 +2238,7 @@ function saveExamRecord(pct, total){
 }
 
 function showHistory(){
+  if(st.isGuest){ alert('訪客模式沒有保存的記錄。請先「登出」並「新建帳號」，即可保存與查看記錄。'); return; }
   document.getElementById('subject-screen').style.display='none';
   document.getElementById('history-screen').style.display='block';
   renderHistory();
@@ -3006,6 +3025,7 @@ function renderQReview(){
 //  PROFILE (學習者專區)
 // ════════════════════════════════════════════════
 function showProfile(){
+  if(st.isGuest){ alert('訪客模式沒有個人帳號。請先「登出」並「新建帳號」。'); return; }
   const screens = ['subject-screen','history-screen','exam-screen','result-screen'];
   screens.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
   const screen = document.getElementById('profile-screen');
