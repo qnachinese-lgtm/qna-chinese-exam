@@ -482,7 +482,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
     <button class="timer-btn" onclick="setTimerMode(120,this)">2 分鐘／題</button>
   </div>
 
-  <button class="btn-review" id="btn-review" onclick="startReviewMode()" style="display:none">📌 錯題複習（<span id="wrong-count">0</span> 題）</button>
+  <button class="btn-review" id="btn-review" onclick="openReviewPicker()" style="display:none">📌 錯題複習（<span id="wrong-count">0</span> 題）</button>
   <button class="btn-primary" id="start-btn" onclick="startExam()" disabled>開始模擬考</button>
 
   <!-- Official PDF links -->
@@ -1820,9 +1820,38 @@ function updateWrongReviewBtn(){
   }
 }
 
-function startReviewMode(){
+function openReviewPicker(){
   const wrongs = getWrongQs();
   if(!wrongs.length){ alert('目前沒有錯題記錄'); return; }
+  const counts={};
+  wrongs.forEach(w=>{ counts[w.subject]=(counts[w.subject]||0)+1; });
+  const ICON={chinese:'📜',culture:'🏮',linguistics:'🔤',teaching:'🏫'};
+  const order=['chinese','culture','linguistics','teaching'];
+  const subjBtns = order.filter(s=>counts[s]).map(s=>
+    '<button onclick="startReviewMode(\''+s+'\')" style="display:flex;justify-content:space-between;align-items:center;width:100%;padding:14px 16px;background:#faf6ee;border:1.5px solid #e7dcc6;border-radius:12px;font-size:1rem;font-weight:600;color:#5a3a1a;cursor:pointer">'
+      +'<span>'+(ICON[s]||'')+' '+SUBJ_NAMES[s]+'</span>'
+      +'<span style="background:#8b1a1a;color:#fff;font-size:.8rem;padding:2px 10px;border-radius:20px">'+counts[s]+' 題</span></button>'
+  ).join('');
+  const box=document.getElementById('review-picker-box');
+  box.innerHTML =
+    '<h3 style="font-size:1.2rem;color:#8b1a1a;font-weight:800;margin:0 0 4px">📌 錯題複習</h3>'
+    +'<p style="color:#888;font-size:.9rem;margin:0 0 18px">選擇要複習的科目：</p>'
+    +'<div style="display:flex;flex-direction:column;gap:10px">'+subjBtns
+    +'<button onclick="startReviewMode(\'all\')" style="width:100%;padding:14px;background:linear-gradient(135deg,#e53935,#b71c1c);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer">📚 全部錯題（'+wrongs.length+' 題）</button>'
+    +'</div>'
+    +'<button onclick="closeReviewPicker()" style="width:100%;padding:10px;margin-top:14px;background:none;border:none;color:#888;font-size:.95rem;cursor:pointer">取消</button>';
+  document.getElementById('review-picker-overlay').style.display='flex';
+}
+
+function closeReviewPicker(){
+  const o=document.getElementById('review-picker-overlay'); if(o) o.style.display='none';
+}
+
+function startReviewMode(subject){
+  let wrongs = getWrongQs();
+  if(subject && subject!=='all'){ wrongs = wrongs.filter(w=>w.subject===subject); }
+  if(!wrongs.length){ alert('這個科目目前沒有錯題記錄'); return; }
+  closeReviewPicker();
   let qs = wrongs.map((q,i)=>({...q, localIdx:i+1}));
   if(st.mode==='random') qs = qs.sort(()=>Math.random()-.5);
   st.questions=qs; st.idx=0; st.correct=0; st.wrong=0; st.answered=false; st.examResults=[];
@@ -3041,6 +3070,14 @@ function renderQReview(){
   <div id="qreview-box" style="background:#fff;border-radius:16px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,.25)">
     <!-- content rendered by renderQReview() -->
   </div>
+</div>`);
+  }
+
+  // ── Review Subject Picker Overlay ──
+  if(!document.getElementById('review-picker-overlay')){
+    document.body.insertAdjacentHTML('beforeend', `
+<div id="review-picker-overlay" onclick="if(event.target===this)closeReviewPicker()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center;padding:16px">
+  <div id="review-picker-box" style="background:#fff;border-radius:16px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,.25)"></div>
 </div>`);
   }
 
