@@ -1378,7 +1378,7 @@ const PDF_PAGES = [
 //  STATE
 // ════════════════════════════════════════════════
 const SUBJ_NAMES = { chinese:'國文', culture:'華人社會與文化', linguistics:'漢語語言學', teaching:'華語文教學' };
-let st = { selected:[], selectedYears:[], mode:'sequential', questions:[], idx:0, answered:false, correct:0, wrong:0, stats:{}, currentUser:null, examResults:[], timerLeft:0, timerInterval:null, isReviewMode:false };
+let st = { selected:[], selectedYears:[], mode:'sequential', questions:[], idx:0, answered:false, correct:0, wrong:0, stats:{}, currentUser:null, examResults:[], answers:[], timerLeft:0, timerInterval:null, isReviewMode:false };
 
 // ════════════════════════════════════════════════
 //  SETUP
@@ -1449,7 +1449,7 @@ function startExam(){
   st.selected.forEach(sub => QB[sub].filter(q=>st.selectedYears.includes(q.yr)).forEach((q,i) => qs.push({...q, subject:sub, localIdx:i+1})));
 if(!qs.length){ alert('所選條件下沒有題目，請調整篩選條件'); return; }
   if(st.mode==='random') qs = qs.sort(()=>Math.random()-.5);
-  st.questions = qs; st.idx = 0; st.correct = 0; st.wrong = 0; st.answered = false; st.examResults = [];
+  st.questions = qs; st.idx = 0; st.correct = 0; st.wrong = 0; st.answered = false; st.examResults = []; st.answers = new Array(qs.length).fill(null);
   st.stats = {}; st.selected.forEach(s => { st.stats[s]={correct:0,total:0}; });
   st.isReviewMode = false;
   document.getElementById('subject-screen').style.display='none';
@@ -1460,12 +1460,14 @@ if(!qs.length){ alert('所選條件下沒有題目，請調整篩選條件'); re
 
 function renderQ(){
   const total = st.questions.length, idx = st.idx, q = st.questions[idx];
-  st.answered = false;
-  const pct = (idx/total)*100;
-  document.getElementById('prog-fill').style.width = pct+'%';
+  if(!st.answers) st.answers = new Array(total).fill(null);
+  const ans = st.answers[idx] || null;
+  st.answered = !!ans;
+  const answeredCount = st.answers.filter(a=>a).length;
+  document.getElementById('prog-fill').style.width = (answeredCount/total*100)+'%';
   document.getElementById('prog-label').textContent = `第 ${idx+1} 題 / 共 ${total} 題`;
   document.getElementById('subj-label').textContent = SUBJ_NAMES[q.subject];
-  document.getElementById('lv-prog').textContent = `${idx}/${total}`;
+  document.getElementById('lv-prog').textContent = `${answeredCount}/${total}`;
   document.getElementById('lv-correct').textContent = st.correct;
   document.getElementById('lv-wrong').textContent = st.wrong;
   document.getElementById('q-subj-tag').textContent = SUBJ_NAMES[q.subject];
@@ -1485,31 +1487,27 @@ function renderQ(){
     const btn=document.createElement('button');
     btn.className='opt-btn';
     btn.innerHTML=`<span class="opt-letter">${letters[i]}</span><span>${opt}</span>`;
-    btn.onclick=()=>handleAns(i);
+    if(ans){
+      btn.disabled=true;
+      if(i===q.ans && !q.free) btn.classList.add('reveal');
+      if(i===ans.chosen && !ans.correct) btn.classList.add('wrong');
+      if(i===ans.chosen && ans.correct) btn.classList.add('correct');
+    } else {
+      btn.onclick=()=>handleAns(i);
+    }
     opts.appendChild(btn);
   });
-  document.getElementById('q-exp').style.display='none';
-  document.getElementById('q-exp').className='explanation';
-  document.getElementById('btn-next').style.display='none';
-  document.getElementById('btn-prev').style.display='none';
+  if(ans){ _showExplanation(q, ans.correct); }
+  else { const e=document.getElementById('q-exp'); e.style.display='none'; e.className='explanation'; }
+  const nextBtn=document.getElementById('btn-next');
+  nextBtn.textContent = idx===total-1 ? '查看成績 →' : '下一題 →';
+  nextBtn.style.display='inline-block';
+  const prevBtn=document.getElementById('btn-prev');
+  prevBtn.style.display = idx>0 ? 'inline-block' : 'none';
 }
 
-function handleAns(chosen){
-  if(st.answered) return;
-  st.answered = true;
-  const q = st.questions[st.idx], isOK = q.free===true || chosen===q.ans;
-  st.examResults.push({qNo:st.idx+1, yr:q.yr, subject:q.subject, q:q.q, opts:[...q.opts], chosen, ans:q.ans, correct:isOK, free:q.free||false, exp:q.exp||''});
-  saveExamResume();
+function _showExplanation(q, isOK){
   const letters=['A','B','C','D'];
-  document.querySelectorAll('.opt-btn').forEach((b,i)=>{
-    b.disabled=true;
-    if(i===q.ans && !q.free) b.classList.add('reveal');
-    if(i===chosen&&!isOK) b.classList.add('wrong');
-    if(i===chosen&&isOK)  b.classList.add('correct');
-  });
-  if(!st.stats[q.subject]) st.stats[q.subject]={correct:0,total:0};
-  if(isOK){ st.correct++; st.stats[q.subject].correct++; } else st.wrong++;
-  st.stats[q.subject].total++;
   const expEl=document.getElementById('q-exp');
   const titleEl=document.getElementById('exp-title');
   const textEl=document.getElementById('exp-text');
@@ -1524,13 +1522,19 @@ function handleAns(chosen){
   }
   textEl.textContent=q.exp;
   expEl.style.display='block';
-  document.getElementById('lv-correct').textContent=st.correct;
-  document.getElementById('lv-wrong').textContent=st.wrong;
-  const nextBtn=document.getElementById('btn-next');
-  nextBtn.textContent=st.idx===st.questions.length-1?'查看成績 →':'下一題 →';
-  nextBtn.style.display='inline-block';
-  const prevBtn=document.getElementById('btn-prev');
-  prevBtn.style.display=st.idx>0?'inline-block':'none';
+}
+
+function handleAns(chosen){
+  const idx = st.idx;
+  if(!st.answers) st.answers = new Array(st.questions.length).fill(null);
+  if(st.answers[idx]) return;   // 已作答，不可更改
+  const q = st.questions[idx], isOK = q.free===true || chosen===q.ans;
+  st.answers[idx] = {qNo:idx+1, yr:q.yr, subject:q.subject, q:q.q, opts:[...q.opts], chosen, ans:q.ans, correct:isOK, free:q.free||false, exp:q.exp||''};
+  if(!st.stats[q.subject]) st.stats[q.subject]={correct:0,total:0};
+  if(isOK){ st.correct++; st.stats[q.subject].correct++; } else st.wrong++;
+  st.stats[q.subject].total++;
+  saveExamResume();
+  renderQ();
 }
 
 function nextQ(){
@@ -1555,18 +1559,34 @@ function showResult(){
   clearExamResume();
   document.getElementById('exam-screen').style.display='none';
   document.getElementById('result-screen').style.display='block';
-  if(!st.isReviewMode) saveWrongQs(st.examResults);
-  const done = st.correct+st.wrong;
+  // 依每題作答狀態重新統計（未作答以 0 分計算，但不列入錯題）
   const total = st.questions.length;
-  const pct = total>0 ? Math.round((st.correct/total)*100) : 0;
+  st.examResults = [];
+  st.stats = {};
+  let correct = 0;
+  st.questions.forEach((q,i)=>{
+    const a = (st.answers||[])[i];
+    if(!st.stats[q.subject]) st.stats[q.subject]={correct:0,total:0};
+    st.stats[q.subject].total++;
+    if(a){
+      st.examResults.push(a);
+      if(a.correct){ correct++; st.stats[q.subject].correct++; }
+    } else {
+      st.examResults.push({qNo:i+1, yr:q.yr, subject:q.subject, q:q.q, opts:[...q.opts], chosen:null, ans:q.ans, correct:false, free:q.free||false, exp:q.exp||''});
+    }
+  });
+  st.correct = correct;
+  st.wrong = total - correct;
+  const pct = total>0 ? Math.round((correct/total)*100) : 0;
+  if(!st.isReviewMode) saveWrongQs(st.examResults);
   document.getElementById('res-score').textContent=pct;
-  document.getElementById('res-label').textContent=`分（答對 ${st.correct} / ${total} 題）`;
+  document.getElementById('res-label').textContent=`分（答對 ${correct} / ${total} 題）`;
   const badge=document.getElementById('res-badge');
   badge.innerHTML = pct>=70
     ? `<span class="result-badge badge-pass">🎉 通過！（${pct}分）</span>`
     : `<span class="result-badge badge-fail">📚 繼續加油（${pct}分）</span>`;
   let html='<h3 style="font-size:.9rem;color:#888;margin-bottom:10px">各科成績</h3>';
-  st.selected.forEach(s=>{
+  ['chinese','culture','linguistics','teaching'].forEach(s=>{
     const d=st.stats[s]; if(!d||d.total===0) return;
     const sp=Math.round((d.correct/d.total)*100);
     html+=`<div class="bk-item"><span>${SUBJ_NAMES[s]}</span><span class="bk-score">${d.correct}/${d.total}（${sp}%）</span></div>`;
@@ -1793,7 +1813,7 @@ function getWrongQs(){
 
 function saveWrongQs(results){
   if(!st.currentUser || !results.length) return;
-  const wrongNew = results.filter(r=>!r.correct && !r.free);
+  const wrongNew = results.filter(r=>r.chosen!=null && !r.correct && !r.free);
   if(!wrongNew.length) return;
   const all = JSON.parse(localStorage.getItem(WRONG_KEY)||'{}');
   const existing = all[st.currentUser] || [];
@@ -1854,7 +1874,7 @@ function startReviewMode(subject){
   closeReviewPicker();
   let qs = wrongs.map((q,i)=>({...q, localIdx:i+1}));
   if(st.mode==='random') qs = qs.sort(()=>Math.random()-.5);
-  st.questions=qs; st.idx=0; st.correct=0; st.wrong=0; st.answered=false; st.examResults=[];
+  st.questions=qs; st.idx=0; st.correct=0; st.wrong=0; st.answered=false; st.examResults=[]; st.answers=new Array(qs.length).fill(null);
   st.stats={}; qs.forEach(q=>{ if(!st.stats[q.subject]) st.stats[q.subject]={correct:0,total:0}; }); st.isReviewMode=true;
   document.getElementById('subject-screen').style.display='none';
   document.getElementById('exam-screen').style.display='block';
@@ -2288,9 +2308,20 @@ function resetLoginError(){
   el.textContent = '';
 }
 
+function clearGuestLocalData(){
+  // 訪客登出/重新進入時，清掉這台裝置上的作答紀錄（錯題、續考進度）
+  try{
+    const all = JSON.parse(localStorage.getItem(WRONG_KEY)||'{}');
+    if(all && all['訪客']){ delete all['訪客']; localStorage.setItem(WRONG_KEY, JSON.stringify(all)); }
+  }catch(e){}
+  clearExamResume();
+  st.examResults=[]; st.answers=[]; st.correct=0; st.wrong=0; st.stats={}; st.idx=0;
+}
+
 function enterGuest(){
   st.currentUser = '訪客';
   st.isGuest = true;
+  clearGuestLocalData();
   localStorage.removeItem('tocfl_current_user');
   document.getElementById('login-screen').style.display='none';
   document.getElementById('subject-screen').style.display='block';
@@ -2302,6 +2333,7 @@ function enterGuest(){
 }
 function changeUser(){
   stopSessionTimer();
+  if(st.isGuest){ clearGuestLocalData(); }
   st.currentUser = null;
   st.isGuest = false;
   localStorage.removeItem('tocfl_current_user');
@@ -2578,7 +2610,7 @@ function saveExamResume(){
     selected: st.selected,
     selectedYears: st.selectedYears,
     mode: st.mode,
-    examResults: st.examResults,
+    answers: st.answers,
     stats: st.stats,
     currentUser: st.currentUser,
     savedAt: Date.now()
@@ -2599,8 +2631,10 @@ function checkExamResume(){
     if(saved.currentUser !== st.currentUser) return;
     // Stale after 24h
     if(Date.now() - saved.savedAt > 86400000){ clearExamResume(); return; }
-    const remaining = saved.questions.length - saved.idx - 1;
-    const msg = `上次考試中途中斷（已答 ${saved.idx + saved.examResults.length} 題，剩 ${Math.max(0,saved.questions.length - saved.examResults.length)} 題未答）。\n要繼續上次的考試嗎？`;
+    const answersArr = Array.isArray(saved.answers) ? saved.answers
+      : (Array.isArray(saved.examResults) ? (function(){ const arr=new Array(saved.questions.length).fill(null); saved.examResults.forEach(r=>{ if(r&&r.qNo) arr[r.qNo-1]=r; }); return arr; })() : new Array(saved.questions.length).fill(null));
+    const answeredN = answersArr.filter(a=>a).length;
+    const msg = `上次考試中途中斷（已答 ${answeredN} 題，剩 ${Math.max(0, saved.questions.length - answeredN)} 題未答）。\n要繼續上次的考試嗎？`;
     if(confirm(msg)){
       // Restore state
       st.questions    = saved.questions;
@@ -2610,8 +2644,9 @@ function checkExamResume(){
       st.selected     = saved.selected;
       st.selectedYears= saved.selectedYears;
       st.mode         = saved.mode;
-      st.examResults  = saved.examResults;
-      st.stats        = saved.stats;
+      st.answers      = answersArr;
+      st.examResults  = [];
+      st.stats        = saved.stats || {};
       st.isReviewMode = false;
       st.answered     = false;
       document.getElementById('subject-screen').style.display='none';
