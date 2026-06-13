@@ -196,6 +196,7 @@ const _db  = firebase.firestore();
 
 let _currentRole = null;   // 'master' | 'admin'
 let _currentEmail = null;
+let _adminEmails = new Set([MASTER_EMAIL]);   // 管理員 email,用來從學習者名單濾掉
 
 // ═══════════════════════════════════════════
 //  授權判斷
@@ -389,7 +390,7 @@ function renderAdminPanel(){
   if(head){
     head.innerHTML = '<th>名稱</th><th>密碼</th><th>Gmail</th><th>考試次數</th><th>最近成績</th>' + (isMaster?'<th>操作</th>':'');
   }
-  const groups = getUserGroups();
+  const groups = getUserGroups().filter(g=>!_adminEmails.has((g.primary.email||'').toLowerCase()));
   const history  = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
   const tbody = document.getElementById('admin-tbody');
   if(!tbody) return;
@@ -448,6 +449,7 @@ async function renderAdminsList(){
     const snap = await _db.collection('admins').get();
     snap.docs.forEach(d=>{
       const email = d.id;
+      _adminEmails.add((email||'').toLowerCase());
       if(email===MASTER_EMAIL) return;
       rows += '<tr><td>'+email+'</td><td><span class="role-badge role-admin">管理員</span></td>'+
         '<td style="text-align:center"><button class="admin-delete-btn" onclick="removeAdmin(\''+email+'\')">移除</button></td></tr>';
