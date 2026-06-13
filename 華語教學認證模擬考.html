@@ -1507,6 +1507,7 @@ function handleAns(chosen){
     if(i===chosen&&!isOK) b.classList.add('wrong');
     if(i===chosen&&isOK)  b.classList.add('correct');
   });
+  if(!st.stats[q.subject]) st.stats[q.subject]={correct:0,total:0};
   if(isOK){ st.correct++; st.stats[q.subject].correct++; } else st.wrong++;
   st.stats[q.subject].total++;
   const expEl=document.getElementById('q-exp');
@@ -1825,7 +1826,7 @@ function startReviewMode(){
   let qs = wrongs.map((q,i)=>({...q, localIdx:i+1}));
   if(st.mode==='random') qs = qs.sort(()=>Math.random()-.5);
   st.questions=qs; st.idx=0; st.correct=0; st.wrong=0; st.answered=false; st.examResults=[];
-  st.stats={}; st.isReviewMode=true;
+  st.stats={}; qs.forEach(q=>{ if(!st.stats[q.subject]) st.stats[q.subject]={correct:0,total:0}; }); st.isReviewMode=true;
   document.getElementById('subject-screen').style.display='none';
   document.getElementById('exam-screen').style.display='block';
   startExamTimer();
