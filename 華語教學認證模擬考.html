@@ -558,7 +558,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
     <div class="breakdown" id="res-breakdown"></div>
     <div style="margin-top:12px"><span id="res-saved-msg" class="save-badge" style="display:none"></span></div>
     <div style="margin:8px 0">
-      <button class="btn-pdf" onclick="exportPDF()">📄 匯出成績單 PDF</button>
+      <button class="btn-pdf" onclick="exportPDF()">📥 下載成績單 (PDF)</button>
     </div>
     <div class="result-actions">
       <button class="btn-retry" onclick="retryExam()">🔄 重新測驗</button>
@@ -1963,7 +1963,7 @@ function startReviewMode(subject){
 // ════════════════════════════════════════════════
 //  PDF EXPORT
 // ════════════════════════════════════════════════
-function exportPDF(){
+async function exportPDF(){
 
   // Embed a base64 font that supports CJK — use NotoSansSC subset via CDN is not feasible inline.
   // Use Unicode-capable approach: render to canvas via HTML, then add as image
@@ -2094,12 +2094,39 @@ function exportPDF(){
 </div>
 </body></html>`;
 
-  const w = window.open('','_blank','width=900,height=720');
-  if(!w){ alert('請允許彈出視窗，才能列印或儲存成績單 PDF'); return; }
-  w.document.write(html);
-  w.document.close();
-  w.focus();
-  setTimeout(()=>{ try{ w.print(); }catch(e){} }, 500);
+  // 用隱藏 iframe 渲染成績單，再轉成 PDF 直接下載（不跳列印視窗）；失敗則退回列印
+  const btn=document.querySelector('.btn-pdf'); const btnTxt=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='產生中…'; }
+  const restoreBtn=()=>{ if(btn){ btn.disabled=false; btn.textContent=btnTxt; } };
+  const fallbackPrint=()=>{ const w=window.open('','_blank'); if(!w){ alert('請允許彈出視窗以下載／列印成績單'); return; } w.document.write(html); w.document.close(); w.focus(); setTimeout(()=>{ try{w.print();}catch(e){} },500); };
+  try{
+    await _lazyScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    await _lazyScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  }catch(e){ restoreBtn(); fallbackPrint(); return; }
+  if(typeof html2canvas==='undefined' || !(window.jspdf && window.jspdf.jsPDF)){ restoreBtn(); fallbackPrint(); return; }
+  const ifr=document.createElement('iframe');
+  ifr.style.cssText='position:fixed;left:-9999px;top:0;width:820px;height:100px;border:0;background:#fff';
+  document.body.appendChild(ifr);
+  const idoc=ifr.contentDocument||ifr.contentWindow.document;
+  idoc.open(); idoc.write(html); idoc.close();
+  try{ if(idoc.fonts && idoc.fonts.ready) await idoc.fonts.ready; }catch(e){}
+  await new Promise(r=>setTimeout(r,450));
+  const target=idoc.querySelector('.sheet')||idoc.body;
+  try{
+    const canvas=await html2canvas(target,{scale:2,backgroundColor:'#ffffff',useCORS:true,windowWidth:820,width:target.scrollWidth,height:target.scrollHeight});
+    const img=canvas.toDataURL('image/jpeg',0.92);
+    const { jsPDF }=window.jspdf;
+    const pdf=new jsPDF('p','mm','a4');
+    const pageW=210, pageH=297;
+    const imgW=pageW, imgH=canvas.height*pageW/canvas.width;
+    let heightLeft=imgH, pos=0;
+    pdf.addImage(img,'JPEG',0,pos,imgW,imgH);
+    heightLeft-=pageH;
+    while(heightLeft>0){ pos-=pageH; pdf.addPage(); pdf.addImage(img,'JPEG',0,pos,imgW,imgH); heightLeft-=pageH; }
+    pdf.save(docTitle+'.pdf');
+  }catch(e){ fallbackPrint(); }
+  if(ifr.parentNode) ifr.parentNode.removeChild(ifr);
+  restoreBtn();
 }
 
 
