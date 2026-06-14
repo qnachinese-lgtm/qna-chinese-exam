@@ -2117,39 +2117,45 @@ async function exportPDF(){
     await new Promise(r=>setTimeout(r,150));
     const canvas=await html2canvas(target,{scale:2,backgroundColor:'#ffffff',useCORS:true,windowWidth:820,width:target.scrollWidth,height:target.scrollHeight});
     const { jsPDF }=window.jspdf;
-    const pdf=new jsPDF('p','mm','a4');
-    const sheetW=target.offsetWidth || target.scrollWidth;
-    const sc=canvas.width/sheetW;            // canvas px per CSS px
-    const pageCssH=sheetW*297/210;           // 每頁可容納的 CSS 高度
-    const totalCss=target.scrollHeight;
-    // 收集可換頁的位置（各列／區塊的底緣，CSS px，相對 sheet 頂端）
-    const sheetTop=target.getBoundingClientRect().top;
-    const atoms=idoc.querySelectorAll('.hd,.meta,.hero,.sec-title,.subj,thead tr,tbody tr,.legend,.ft');
-    let cuts=[0];
-    atoms.forEach(el=>{ const bt=el.getBoundingClientRect().bottom - sheetTop; if(bt>0) cuts.push(bt); });
-    cuts.push(totalCss);
-    cuts=Array.from(new Set(cuts.map(v=>Math.round(v)))).sort((a,b)=>a-b).filter(v=>v>=0 && v<=totalCss);
-    // 貪婪分頁：每頁盡量塞滿，但只在列與列的間隙換頁
-    const pages=[]; let start=0, guard=0;
-    while(start<totalCss-1 && guard++<300){
-      let end=start+pageCssH;
-      if(end>=totalCss){ end=totalCss; }
-      else { let best=start; for(const c of cuts){ if(c>start+8 && c<=end) best=c; } end=(best>start)?best:end; }
-      pages.push([start,end]); start=end;
+    const imgWmm=210;
+    const fullHmm=canvas.height*imgWmm/canvas.width;
+    if(fullHmm<=5000){
+      // 單一連續頁面：高度剛好等於內容 → 無分頁切痕、無頁間空白
+      const pdf=new jsPDF({orientation:'p',unit:'mm',format:[imgWmm, fullHmm]});
+      pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,imgWmm,fullHmm);
+      pdf.save(docTitle+'.pdf');
+    } else {
+      // 內容超長才退回 A4 多頁，且只在列與列間隙換頁
+      const pdf=new jsPDF('p','mm','a4');
+      const sheetW=target.offsetWidth || target.scrollWidth;
+      const sc=canvas.width/sheetW;
+      const pageCssH=sheetW*297/210;
+      const totalCss=target.scrollHeight;
+      const sheetTop=target.getBoundingClientRect().top;
+      const atoms=idoc.querySelectorAll('.hd,.meta,.hero,.sec-title,.subj,thead tr,tbody tr,.legend,.ft');
+      let cuts=[0];
+      atoms.forEach(el=>{ const bt=el.getBoundingClientRect().bottom - sheetTop; if(bt>0) cuts.push(bt); });
+      cuts.push(totalCss);
+      cuts=Array.from(new Set(cuts.map(v=>Math.round(v)))).sort((a,b)=>a-b).filter(v=>v>=0 && v<=totalCss);
+      const pages=[]; let start=0, guard=0;
+      while(start<totalCss-1 && guard++<300){
+        let end=start+pageCssH;
+        if(end>=totalCss){ end=totalCss; }
+        else { let best=start; for(const c of cuts){ if(c>start+8 && c<=end) best=c; } end=(best>start)?best:end; }
+        pages.push([start,end]); start=end;
+      }
+      if(!pages.length) pages.push([0,totalCss]);
+      const tmp=document.createElement('canvas'); const tctx=tmp.getContext('2d');
+      for(let i=0;i<pages.length;i++){
+        const sPx=Math.round(pages[i][0]*sc), ePx=Math.round(pages[i][1]*sc), hPx=Math.max(1,ePx-sPx);
+        tmp.width=canvas.width; tmp.height=hPx;
+        tctx.fillStyle='#ffffff'; tctx.fillRect(0,0,tmp.width,tmp.height);
+        tctx.drawImage(canvas,0,sPx,canvas.width,hPx,0,0,canvas.width,hPx);
+        if(i>0) pdf.addPage();
+        pdf.addImage(tmp.toDataURL('image/jpeg',0.92),'JPEG',0,0,210,hPx*210/canvas.width);
+      }
+      pdf.save(docTitle+'.pdf');
     }
-    if(!pages.length) pages.push([0,totalCss]);
-    const tmp=document.createElement('canvas'); const tctx=tmp.getContext('2d');
-    for(let i=0;i<pages.length;i++){
-      const sPx=Math.round(pages[i][0]*sc), ePx=Math.round(pages[i][1]*sc), hPx=Math.max(1,ePx-sPx);
-      tmp.width=canvas.width; tmp.height=hPx;
-      tctx.fillStyle='#ffffff'; tctx.fillRect(0,0,tmp.width,tmp.height);
-      tctx.drawImage(canvas,0,sPx,canvas.width,hPx,0,0,canvas.width,hPx);
-      const imgP=tmp.toDataURL('image/jpeg',0.92);
-      const imgH=hPx*210/canvas.width;
-      if(i>0) pdf.addPage();
-      pdf.addImage(imgP,'JPEG',0,0,210,imgH);
-    }
-    pdf.save(docTitle+'.pdf');
   }catch(e){ fallbackPrint(); }
   if(ifr.parentNode) ifr.parentNode.removeChild(ifr);
   restoreBtn();
