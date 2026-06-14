@@ -69,13 +69,13 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 .progress-fill { height:7px; border-radius:6px; background:linear-gradient(90deg,#c0392b,#e74c3c); transition:width .4s; }
 .progress-text { display:flex; justify-content:space-between; font-size:.8rem; color:#999; margin-bottom:18px; }
 
-.question-card { background:#fff; border-radius:16px; padding:26px; box-shadow:0 2px 12px rgba(0,0,0,.08); margin-bottom:18px; }
+.question-card { background:#fff; border-radius:16px; padding:26px; box-shadow:0 2px 12px rgba(0,0,0,.08); margin-bottom:18px; min-height:360px; }
 .q-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
 .subj-tag { background:#8b1a1a; color:#fff; font-size:.7rem; padding:3px 10px; border-radius:20px; letter-spacing:1px; white-space:nowrap; }
 .yr-tag   { font-size:.72rem; color:#bbb; padding:3px 8px; border:1px solid #e0e0e0; border-radius:10px; }
 .q-num  { font-size:.83rem; color:#bbb; margin-left:auto; }
 
-.q-text { font-size:1.02rem; line-height:1.85; color:#1a1a1a; margin-bottom:18px; }
+.q-text { font-size:1.02rem; line-height:1.85; color:#1a1a1a; margin-bottom:18px;min-height:2.6em; }
 .q-passage { background:#fdf8f0; border-left:3px solid #c0392b; padding:10px 14px; border-radius:0 8px 8px 0; margin-bottom:14px; font-size:.92rem; line-height:1.9; color:#333; }
 
 .options { display:flex; flex-direction:column; gap:9px; }
@@ -1572,8 +1572,13 @@ function handleAns(chosen){
   renderQ();
 }
 
+function _scrollExamTop(){
+  const el=document.getElementById('exam-screen');
+  if(el && el.scrollIntoView){ el.scrollIntoView({block:'start'}); }
+  else { window.scrollTo(0,0); }
+}
 function nextQ(){
-  if(st.idx<st.questions.length-1){ st.idx++; renderQ(); }
+  if(st.idx<st.questions.length-1){ st.idx++; renderQ(); _scrollExamTop(); }
 }
 function finishExam(){
   const total = st.questions.length;
@@ -1586,7 +1591,7 @@ function finishExam(){
 
 function prevQ(){
   if(st.idx<=0) return;
-  st.idx--; renderQ();
+  st.idx--; renderQ(); _scrollExamTop();
 }
 
 function toggleQNav(){
@@ -1612,8 +1617,7 @@ function renderQNav(){
 }
 function gotoQ(i){
   if(i<0||i>=st.questions.length) return;
-  st.idx=i; renderQ();
-  try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){ window.scrollTo(0,0); }
+  st.idx=i; renderQ(); _scrollExamTop();
 }
 
 function confirmExit(){
