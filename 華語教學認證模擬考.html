@@ -455,6 +455,21 @@ body.dark a { color:#9ec5ff; }
     </div>
     <div class="login-error" id="login-error"></div>
     <button class="login-btn" id="login-submit-btn" onclick="submitLogin()">登入 →</button>
+    <div id="otp-login-wrap" style="margin-top:8px;text-align:center">
+      <button type="button" onclick="showOtpLogin()" style="background:none;border:none;color:#357abd;font-size:.82rem;cursor:pointer;text-decoration:underline">📧 用 Email 驗證碼登入（免密碼）</button>
+      <div id="otp-login-box" style="display:none;margin-top:8px;background:#f0f7ff;border:1px solid #bcdcff;border-radius:8px;padding:12px;text-align:left">
+        <div id="otp-login-step1">
+          <input type="email" id="otp-login-email" placeholder="註冊用的 Email" style="width:100%;margin-bottom:8px">
+          <button class="login-btn" onclick="otpLoginSend()" style="padding:8px;font-size:.85rem">發送驗證碼</button>
+          <div id="otp-login-msg1" style="font-size:.8rem;margin-top:6px"></div>
+        </div>
+        <div id="otp-login-step2" style="display:none">
+          <input type="text" id="otp-login-code" placeholder="6 位數驗證碼" inputmode="numeric" style="width:100%;margin-bottom:8px">
+          <button class="login-btn" onclick="otpLoginVerify()" style="padding:8px;font-size:.85rem;background:#2e7d32">登入</button>
+          <div id="otp-login-msg2" style="font-size:.8rem;margin-top:6px"></div>
+        </div>
+      </div>
+    </div>
     <div id="user-forgot-wrap" style="text-align:center;margin-top:8px">
       <button type="button" style="background:none;border:none;color:#1976d2;font-size:.8rem;cursor:pointer;text-decoration:underline" onclick="toggleUserForgot()">忘記密碼？</button>
     </div>
@@ -1794,6 +1809,45 @@ function getUserAccounts(){
   return JSON.parse(localStorage.getItem(USERS_KEY)||'[]');
 }
 
+// ── Email 驗證碼登入(免密碼,跨裝置) ──
+let _otpLoginCode='', _otpLoginExpiry=0, _otpLoginName='', _otpLoginAttempts=0;
+function showOtpLogin(){ const b=document.getElementById('otp-login-box'); if(b) b.style.display=(b.style.display==='none'?'block':'none'); }
+async function otpLoginSend(){
+  const email=(document.getElementById('otp-login-email').value||'').trim().toLowerCase();
+  const msg=document.getElementById('otp-login-msg1'); msg.style.color='#c62828';
+  if(!email){ msg.textContent='請輸入 Email'; return; }
+  let acc=null;
+  if(_db){ try{ const snap=await _db.collection('users').where('email','==',email).get(); if(!snap.empty) acc=snap.docs[0].data(); }catch(e){} }
+  if(!acc){ const local=JSON.parse(localStorage.getItem(USERS_KEY)||'[]'); acc=local.find(a=>(a.email||'').toLowerCase()===email); }
+  if(!acc){ msg.textContent='此 Email 尚未註冊,請先「新建帳號」'; return; }
+  msg.style.color='#5d4037'; msg.textContent='發送中…';
+  _otpLoginCode=_genOTP(); _otpLoginExpiry=Date.now()+10*60*1000; _otpLoginName=acc.name; _otpLoginAttempts=0;
+  try{
+    await sendOTP(email,_otpLoginCode);
+    msg.style.color='#2e7d32'; msg.textContent='✅ 驗證碼已寄至 '+email;
+    document.getElementById('otp-login-step1').style.display='none';
+    document.getElementById('otp-login-step2').style.display='block';
+  }catch(e){ msg.style.color='#c62828'; msg.textContent='發送失敗,請稍後再試'; }
+}
+async function otpLoginVerify(){
+  const code=(document.getElementById('otp-login-code').value||'').trim();
+  const msg=document.getElementById('otp-login-msg2'); msg.style.color='#c62828';
+  if(!code){ msg.textContent='請輸入驗證碼'; return; }
+  if(Date.now()>_otpLoginExpiry){ msg.textContent='驗證碼已過期,請重新發送'; return; }
+  if(code!==_otpLoginCode){ _otpLoginAttempts++; if(_otpLoginAttempts>=5){ _otpLoginCode=''; msg.textContent='錯誤次數過多,請重新發送'; return; } msg.textContent='驗證碼錯誤,剩 '+(5-_otpLoginAttempts)+' 次'; return; }
+  _otpLoginCode='';
+  st.currentUser=_otpLoginName; st.isGuest=false;
+  localStorage.setItem('tocfl_current_user', _otpLoginName);
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('subject-screen').style.display='block';
+  const nm=document.getElementById('user-bar-name'); if(nm) nm.textContent=_otpLoginName;
+  try{ if(typeof syncFromCloud==='function') await syncFromCloud(); }catch(e){}
+  if(typeof renderProgressPanel==='function') renderProgressPanel();
+  if(typeof updateWrongReviewBtn==='function') updateWrongReviewBtn();
+  if(typeof startSessionTimer==='function') startSessionTimer();
+  if(typeof checkExamResume==='function') checkExamResume();
+}
+
 function switchTab(tab){
   document.getElementById('tab-login').classList.toggle('active', tab==='login');
   const forgotWrap = document.getElementById('user-forgot-wrap');
@@ -1804,6 +1858,8 @@ function switchTab(tab){
   document.getElementById('login-fields').style.display = tab==='login'?'block':'none';
   document.getElementById('pw-confirm-wrap').style.display = tab==='register'?'block':'none';
   document.getElementById('login-submit-btn').textContent = tab==='register'?'建立帳號 →':'登入 →';
+  const _ow=document.getElementById('otp-login-wrap'); if(_ow) _ow.style.display = tab==='login'?'block':'none';
+  const _ob=document.getElementById('otp-login-box'); if(_ob) _ob.style.display='none';
   document.getElementById('login-error').textContent='';
 }
 
@@ -1971,6 +2027,7 @@ function saveWrongQs(results){
   });
   all[st.currentUser] = existing;
   localStorage.setItem(WRONG_KEY, JSON.stringify(all));
+  if(!st.isGuest) fbSaveWrongQs(st.currentUser, existing);
   updateWrongReviewBtn();
 }
 
@@ -2693,6 +2750,18 @@ async function syncFromCloud(){
     if(!usersSnap.empty){
       const users = usersSnap.docs.map(d=>d.data());
       localStorage.setItem(USERS_KEY, JSON.stringify(users));
+      // 跨裝置:把這位學習者雲端的錯題合併回本機
+      if(st.currentUser && !st.isGuest){
+        const me = users.find(u=>u.name===st.currentUser);
+        if(me && Array.isArray(me.wrongQs)){
+          const all = JSON.parse(localStorage.getItem(WRONG_KEY)||'{}');
+          const merged = (all[st.currentUser]||[]).slice();
+          me.wrongQs.forEach(cq=>{ if(cq && cq.q && !merged.find(e=>e.q===cq.q)) merged.push(cq); });
+          all[st.currentUser]=merged;
+          localStorage.setItem(WRONG_KEY, JSON.stringify(all));
+          if(typeof updateWrongReviewBtn==='function') updateWrongReviewBtn();
+        }
+      }
     }
     // Sync exam history
     const histSnap = await _db.collection('config').doc('examHistory').collection('records').get();
@@ -2718,6 +2787,11 @@ function fbSaveUsers(accounts){
   accounts.forEach(acc=>{
     _db.collection('users').doc(acc.name).set(acc).catch(e=>console.warn('fbSaveUsers:', e));
   });
+}
+
+function fbSaveWrongQs(name, arr){
+  if(!_db || !name) return;
+  _db.collection('users').doc(name).set({wrongQs: arr}, {merge:true}).catch(e=>console.warn('fbSaveWrongQs:', e));
 }
 
 function fbAddExamRecord(record){
