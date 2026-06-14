@@ -11,6 +11,8 @@
 <meta name="description" content="對外華語教學能力認證考試（華語教師證照）線上模擬練習平台：國文、華人社會與文化、漢語語言學、華語文教學四科題庫，可依年份練習、即時批改、錯題複習、成績追蹤。">
 <meta name="author" content="QNA Chinese">
 <meta name="theme-color" content="#8b1a1a">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='88'&gt;📚&lt;/text&gt;&lt;/svg&gt;">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="QNA Chinese">
@@ -201,6 +203,38 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 .user-bar { display:flex; align-items:center; gap:8px; background:#f0f7ff; border-radius:8px; padding:8px 14px; margin-bottom:16px; font-size:.88rem; }
 .user-bar-name { font-weight:600; color:#357abd; flex:1; }
 .user-bar-btn { background:none; border:1px solid #357abd; color:#357abd; border-radius:6px; padding:3px 10px; font-size:.8rem; cursor:pointer; }
+/* ── 設定面板 / 深色模式 / 字級 ── */
+#settings-fab { position:fixed; top:10px; right:10px; z-index:400; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.92); border:1px solid #d9cdb5; box-shadow:0 2px 8px rgba(0,0,0,.22); font-size:1.15rem; line-height:1; cursor:pointer; }
+#settings-panel { position:fixed; top:56px; right:10px; z-index:400; background:#fff; border:1px solid #e6ddc9; border-radius:12px; box-shadow:0 8px 28px rgba(0,0,0,.22); padding:14px 16px; display:none; width:228px; }
+#settings-panel h4 { margin:0 0 12px; font-size:.95rem; color:#8b1a1a; font-weight:700; }
+.set-row { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; font-size:.85rem; color:#444; }
+.set-row:last-child { margin-bottom:0; }
+.set-seg { display:flex; gap:4px; }
+.set-seg button { padding:5px 10px; border:1px solid #ccc; background:#fff; border-radius:6px; cursor:pointer; font-size:.78rem; color:#555; }
+.set-seg button.active { background:#8b1a1a; color:#fff; border-color:#8b1a1a; }
+.set-toggle { width:48px; height:26px; border-radius:13px; background:#ccc; position:relative; cursor:pointer; border:none; flex:0 0 auto; transition:background .15s; }
+.set-toggle.on { background:#2e7d32; }
+.set-toggle::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left .15s; }
+.set-toggle.on::after { left:25px; }
+
+body.dark { background:#15171a; color:#e6e6e6; }
+body.dark .user-bar { background:#1f2937; }
+body.dark .user-bar-name { color:#9ec5ff; }
+body.dark .login-box, body.dark .question-card, body.dark .result-card, body.dark .prog-card, body.dark .hist-record, body.dark .hist-analysis-card, body.dark .pdf-section, body.dark #qreview-box, body.dark .admin-modal, body.dark #settings-panel { background:#23262b; color:#e6e6e6; box-shadow:0 2px 12px rgba(0,0,0,.5); }
+body.dark .subject-card { background:#23262b; color:#e6e6e6; border-color:#3a3f47; }
+body.dark .subject-card .cnt { color:#bbb; }
+body.dark .opt-btn { background:#2a2e34; color:#ededed; border-color:#3a3f47; }
+body.dark .opt-btn:hover { background:#333840; }
+body.dark .q-text, body.dark .q-passage, body.dark .hist-name, body.dark .wa-title { color:#ededed; }
+body.dark .explanation { background:#2a2e34; }
+body.dark input, body.dark select, body.dark textarea { background:#2a2e34; color:#e6e6e6; border-color:#3a3f47; }
+body.dark .score-live, body.dark .progress-text, body.dark .nav-row { background:#15171a; color:#cfcfcf; }
+body.dark .nav-row { border-top-color:#3a3f47; }
+body.dark table, body.dark th, body.dark td { color:#e6e6e6; border-color:#3a3f47; }
+body.dark .btn-prev { background:#23262b; color:#cdd6e0; border-color:#5b6675; }
+body.dark .wa-bar, body.dark .bar { background:#3a3f47; }
+body.dark #settings-fab { background:#23262b; border-color:#3a3f47; }
+body.dark a { color:#9ec5ff; }
 .history-btn { background:#f5f5f5; border:1px solid #ddd; border-radius:8px; padding:8px 18px; font-size:.85rem; cursor:pointer; color:#555; margin-top:8px; }
 .history-btn:hover { background:#e8e8e8; }
 #history-screen { padding:20px 0; }
@@ -363,6 +397,17 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 <!-- jsPDF / XLSX 改為「用到才載入」，加速手機首次開啟 -->
 </head>
 <body>
+<button id="settings-fab" onclick="toggleSettings()" aria-label="顯示設定" title="顯示設定">⚙️</button>
+<div id="settings-panel">
+  <h4>顯示設定</h4>
+  <div class="set-row"><span>🌙 深色模式</span><button id="set-dark" class="set-toggle" onclick="toggleDark()" aria-label="深色模式開關"></button></div>
+  <div class="set-row"><span>🔠 字級</span><div class="set-seg" id="set-fontseg">
+    <button data-fs="std" onclick="setFontSize('std')">標準</button>
+    <button data-fs="lg" onclick="setFontSize('lg')">大</button>
+    <button data-fs="xl" onclick="setFontSize('xl')">特大</button>
+  </div></div>
+</div>
+<script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg')document.documentElement.style.fontSize='112.5%';else if(_fs==='xl')document.documentElement.style.fontSize='125%';}catch(e){}</script>
 <header>
   <h1>對外華語教學能力認證考試</h1>
   <p>教育部 · 模擬練習系統 · 考古題題庫</p>
@@ -1411,6 +1456,21 @@ const PDF_PAGES = [
 // ════════════════════════════════════════════════
 const SUBJ_NAMES = { chinese:'國文', culture:'華人社會與文化', linguistics:'漢語語言學', teaching:'華語文教學' };
 let st = { selected:[], selectedYears:[], mode:'sequential', questions:[], idx:0, answered:false, correct:0, wrong:0, stats:{}, currentUser:null, examResults:[], answers:[], timerLeft:0, timerInterval:null, isReviewMode:false };
+// ── 顯示設定:深色模式 / 字級 ──
+function applyPrefs(){
+  try{
+    const dark = localStorage.getItem('tocfl_dark')==='1';
+    document.body.classList.toggle('dark', dark);
+    const fs = localStorage.getItem('tocfl_fontsize')||'std';
+    document.documentElement.style.fontSize = fs==='lg'?'112.5%':(fs==='xl'?'125%':'');
+    const dt=document.getElementById('set-dark'); if(dt) dt.classList.toggle('on', dark);
+    document.querySelectorAll('#set-fontseg button').forEach(b=>b.classList.toggle('active', b.dataset.fs===fs));
+  }catch(e){}
+}
+function toggleSettings(){ const p=document.getElementById('settings-panel'); if(p) p.style.display = (p.style.display==='block'?'none':'block'); }
+function toggleDark(){ const cur=localStorage.getItem('tocfl_dark')==='1'; localStorage.setItem('tocfl_dark', cur?'0':'1'); applyPrefs(); }
+function setFontSize(fs){ localStorage.setItem('tocfl_fontsize', fs); applyPrefs(); }
+document.addEventListener('click', (e)=>{ const p=document.getElementById('settings-panel'); const fab=document.getElementById('settings-fab'); if(p&&p.style.display==='block'&&!p.contains(e.target)&&e.target!==fab&&!fab.contains(e.target)) p.style.display='none'; });
 
 // ════════════════════════════════════════════════
 //  SETUP
@@ -2540,6 +2600,8 @@ function renderHistory(){
 // Check for returning user on page load
 window.addEventListener('load', ()=>{
   initFirebase();
+  applyPrefs();
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js').catch(()=>{}); }
   const savedUser = localStorage.getItem('tocfl_current_user');
   if(savedUser){
     const accounts = JSON.parse(localStorage.getItem(USERS_KEY)||'[]');
