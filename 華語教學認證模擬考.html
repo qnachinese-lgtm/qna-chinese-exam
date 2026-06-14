@@ -97,11 +97,14 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 .exp-title.wt { color:#e74c3c; }
 .exp-text { font-size:.88rem; line-height:1.85; color:#333; }
 
-.nav-row { display:flex; justify-content:flex-end; align-items:center; gap:10px; position:sticky; bottom:0; background:#f5f0e8; padding:12px 4px; border-top:1px solid #e6ddcb; box-shadow:0 -2px 8px rgba(0,0,0,.06); z-index:50; }
+.nav-row { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:10px; position:sticky; bottom:0; background:#f5f0e8; padding:12px 4px; border-top:1px solid #e6ddcb; box-shadow:0 -2px 8px rgba(0,0,0,.06); z-index:50; }
 .btn-next { background:#2c3e50; color:#fff; border:none; border-radius:8px; padding:10px 26px; font-size:.88rem; cursor:pointer; transition:background .18s; display:none; }
 .btn-next:hover { background:#1a252f; }
-.btn-prev { background:#fff; color:#2c3e50; border:2px solid #2c3e50; border-radius:8px; padding:10px 26px; font-size:.88rem; cursor:pointer; transition:all .18s; display:none; margin-right:auto; }
+.btn-next:disabled { background:#b0b8c0; cursor:default; }
+.btn-prev { background:#fff; color:#2c3e50; border:2px solid #2c3e50; border-radius:8px; padding:10px 26px; font-size:.88rem; cursor:pointer; transition:all .18s; display:none; }
 .btn-prev:hover { background:#f0f0f0; }
+.btn-submit { background:#8b1a1a; color:#fff; border:none; border-radius:8px; padding:10px 26px; font-size:.88rem; font-weight:700; cursor:pointer; transition:background .18s; display:none; }
+.btn-submit:hover { background:#6d1414; }
 #q-nav-wrap { margin:10px 0; }
 #q-nav-toggle { background:#fff; border:1.5px solid #c9a227; color:#8b1a1a; border-radius:8px; padding:7px 14px; font-size:.85rem; font-weight:700; cursor:pointer; }
 #q-nav-panel { margin-top:8px; background:#fff; border:1px solid #e6ddcb; border-radius:10px; padding:12px; }
@@ -173,9 +176,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
   .admin-table th, .admin-table td { padding:7px 8px; }
   .result-card { padding:20px 12px; }
   .score-live { font-size:.8rem; gap:6px; flex-wrap:wrap; }
-  .nav-row { text-align:center; }
-  .btn-next { width:100%; }
-  .btn-prev { width:auto; margin-right:auto; }
+  .btn-prev, .btn-next, .btn-submit { padding:9px 14px; font-size:.85rem; }
   .user-bar { flex-wrap:wrap; gap:6px; }
   .hist-record { padding:12px; }
   .result-actions { flex-direction:column; align-items:stretch; }
@@ -541,6 +542,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
   </div>
   <div class="nav-row">
     <button class="btn-prev" id="btn-prev" onclick="prevQ()">← 上一題</button>
+    <button class="btn-submit" id="btn-submit" onclick="finishExam()">交卷</button>
     <button class="btn-next" id="btn-next" onclick="nextQ()">下一題 →</button>
   </div>
 </div>
@@ -1528,10 +1530,13 @@ function renderQ(){
   if(ans){ _showExplanation(q, ans.correct); }
   else { const e=document.getElementById('q-exp'); e.style.display='none'; e.className='explanation'; }
   const nextBtn=document.getElementById('btn-next');
-  nextBtn.textContent = idx===total-1 ? '查看成績 →' : '下一題 →';
+  nextBtn.textContent = '下一題 →';
   nextBtn.style.display='inline-block';
+  nextBtn.disabled = (idx===total-1);
   const prevBtn=document.getElementById('btn-prev');
   prevBtn.style.display = idx>0 ? 'inline-block' : 'none';
+  const submitBtn=document.getElementById('btn-submit');
+  if(submitBtn) submitBtn.style.display='inline-block';
   const navPanel=document.getElementById('q-nav-panel');
   if(navPanel && navPanel.style.display!=='none') renderQNav();
 }
@@ -1568,14 +1573,15 @@ function handleAns(chosen){
 }
 
 function nextQ(){
-  if(st.idx===st.questions.length-1){ finishExam(); return; }
-  st.idx++; renderQ();
+  if(st.idx<st.questions.length-1){ st.idx++; renderQ(); }
 }
 function finishExam(){
   const total = st.questions.length;
   const unanswered = total - (st.answers||[]).filter(a=>a).length;
-  if(unanswered>0 && !confirm('還有 '+unanswered+' 題未作答（未作答以 0 分計算）。\n確定要交卷查看成績嗎？')) return;
-  showResult();
+  const msg = unanswered>0
+    ? '還有 '+unanswered+' 題未作答（未作答以 0 分計算）。\n確定要交卷查看成績嗎？'
+    : '確定要交卷查看成績嗎？';
+  if(confirm(msg)) showResult();
 }
 
 function prevQ(){
