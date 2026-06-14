@@ -1545,8 +1545,14 @@ function handleAns(chosen){
 }
 
 function nextQ(){
-  if(st.idx===st.questions.length-1){ showResult(); return; }
+  if(st.idx===st.questions.length-1){ finishExam(); return; }
   st.idx++; renderQ();
+}
+function finishExam(){
+  const total = st.questions.length;
+  const unanswered = total - (st.answers||[]).filter(a=>a).length;
+  if(unanswered>0 && !confirm('還有 '+unanswered+' 題未作答（未作答以 0 分計算）。\n確定要交卷查看成績嗎？')) return;
+  showResult();
 }
 
 function prevQ(){
@@ -1555,7 +1561,12 @@ function prevQ(){
 }
 
 function confirmExit(){
-  if(confirm('確定要結束測驗嗎？未作答的題目以 0 分計算，成績依總題數計算。')) showResult();
+  const total = st.questions.length;
+  const unanswered = total - (st.answers||[]).filter(a=>a).length;
+  const msg = unanswered>0
+    ? '確定要結束測驗嗎？還有 '+unanswered+' 題未作答（以 0 分計算），成績依總題數計算。'
+    : '確定要結束測驗並查看成績嗎？';
+  if(confirm(msg)) showResult();
 }
 
 // ════════════════════════════════════════════════

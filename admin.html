@@ -227,6 +227,7 @@ let _currentEmail = null;
 let _adminEmails = new Set([MASTER_EMAIL]);   // 管理員 email,用來從學習者名單濾掉
 const SUBJ_NAMES = {chinese:'國文',culture:'華人社會與文化',linguistics:'漢語語言學',teaching:'華語文教學'};
 let _guestRecords = [];
+function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 // ═══════════════════════════════════════════
 //  授權判斷
@@ -496,7 +497,7 @@ function renderAdminPanel(){
     const acc = g.primary;
     const recs = history.filter(r=>r.name===acc.name);
     const last = recs[0];
-    const lastScore = last ? (last.pct+'分（'+last.date+'）') : '—';
+    const lastScore = last ? (esc(last.pct)+'分（'+esc(last.date)+'）') : '—';
     const dupTag = '';
     const actions = isMaster ? ('<td><div class="admin-action-cell">'+
       '<button class="admin-edit-btn" onclick="openEditModal('+i+')">編輯</button>'+
@@ -504,9 +505,9 @@ function renderAdminPanel(){
       '<button class="admin-reset-btn" onclick="resetUserHistory('+i+')">清除記錄</button>'+
       '<button class="admin-delete-btn" onclick="deleteUser('+i+')">刪除</button>'+
       '</div></td>') : '';
-    return '<tr><td>'+acc.name+dupTag+'</td>'+
+    return '<tr><td>'+esc(acc.name)+dupTag+'</td>'+
       '<td class="pw-cell"><span style="color:#aaa;font-family:sans-serif;font-size:.8rem">🔒 已加密</span></td>'+
-      '<td>'+(acc.email||'—')+'</td>'+
+      '<td>'+(acc.email?esc(acc.email):'—')+'</td>'+
       '<td>'+recs.length+' 次</td>'+
       '<td>'+lastScore+'</td>'+ actions +'</tr>';
   }).join('');
@@ -594,7 +595,7 @@ async function renderAdminsList(){
       _adminEmails.add(email.toLowerCase());
       if(email.toLowerCase()===MASTER_EMAIL) return;
       const noPw = acc.pw ? '' : ' <span style="color:#c62828;font-size:.72rem">(未設密碼)</span>';
-      rows += '<tr><td>'+(acc.name?acc.name+'（'+email+'）':email)+noPw+'</td><td><span class="role-badge role-admin">管理員</span></td>'+
+      rows += '<tr><td>'+(acc.name?esc(acc.name)+'（'+esc(email)+'）':esc(email))+noPw+'</td><td><span class="role-badge role-admin">管理員</span></td>'+
         '<td><div class="admin-action-cell">'+
           '<button class="admin-edit-btn" onclick="openAdminEditModal(\''+email+'\')">編輯</button>'+
           '<button class="admin-pw-btn" onclick="resetAdminPw(\''+email+'\')">重設密碼</button>'+
