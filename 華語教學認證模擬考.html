@@ -240,6 +240,16 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 .prog-card-score.pass { color:#2e7d32; }
 .prog-card-score.fail { color:#c62828; }
 .prog-card-detail { font-size:.72rem; color:#888; }
+.hist-analysis-card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,.07); margin-bottom:16px; }
+.wa-title { font-size:.9rem; font-weight:700; color:#8b1a1a; margin-bottom:8px; }
+.wa-empty { font-size:.8rem; color:#999; }
+.wa-weak { font-size:.85rem; background:#fdf3f2; border:1px solid #f0c9c4; color:#8b1a1a; border-radius:8px; padding:8px 10px; margin-bottom:10px; }
+.wa-row { display:flex; align-items:center; gap:8px; margin-bottom:7px; font-size:.8rem; }
+.wa-name { width:96px; flex:0 0 auto; color:#555; }
+.wa-bar { flex:1; height:9px; background:#eee4d2; border-radius:6px; overflow:hidden; }
+.wa-fill { height:100%; border-radius:6px; }
+.wa-pct { width:38px; text-align:right; font-weight:700; }
+.wa-cnt { width:48px; text-align:right; color:#999; font-size:.72rem; }
 .prog-empty { color:#aaa; font-size:.85rem; padding:8px 0; }
 .prog-trend { font-size:.78rem; margin-top:6px; color:#666; }
 
@@ -2444,12 +2454,56 @@ function clearHistory(){
 }
 
 let _histQSets = [];
+function buildHistAnalysis(recs){
+  if(!recs || !recs.length) return '';
+  const subjNames={chinese:'國文',culture:'華人社會與文化',linguistics:'漢語語言學',teaching:'華語文教學'};
+  // 各科彙總(跨所有紀錄)
+  const agg={};
+  recs.forEach(r=>{ const stt=r.stats||{}; Object.keys(stt).forEach(s=>{ if(!agg[s]) agg[s]={c:0,t:0}; agg[s].c+=(stt[s].correct||0); agg[s].t+=(stt[s].total||0); }); });
+  const subjStats=Object.keys(agg).filter(s=>agg[s].t>0).map(s=>({s,pct:Math.round(agg[s].c/agg[s].t*100),c:agg[s].c,t:agg[s].t}));
+  subjStats.sort((a,b)=>a.pct-b.pct);
+  let weakHtml='';
+  if(subjStats.length){
+    const w=subjStats[0];
+    weakHtml='<div class="wa-weak">最需加強：<b>'+subjNames[w.s]+'</b>（正確率 '+w.pct+'%）</div>';
+    weakHtml+=subjStats.map(o=>{
+      const col=o.pct>=70?'#2e7d32':(o.pct>=50?'#b8860b':'#c0392b');
+      return '<div class="wa-row"><span class="wa-name">'+(subjNames[o.s]||o.s)+'</span><div class="wa-bar"><div class="wa-fill" style="width:'+o.pct+'%;background:'+col+'"></div></div><span class="wa-pct" style="color:'+col+'">'+o.pct+'%</span><span class="wa-cnt">'+o.c+'/'+o.t+'</span></div>';
+    }).join('');
+  }
+  // 進步曲線(時間由舊到新)
+  const chron=recs.slice().reverse();
+  const pts=chron.slice(-12).map(r=>r.pct);
+  let curveHtml='';
+  if(pts.length>=2){
+    const W=320,H=96,pad=20,n=pts.length;
+    const X=i=>pad+(W-2*pad)*(i/(n-1));
+    const Y=v=>H-pad-(H-2*pad)*(Math.max(0,Math.min(100,v))/100);
+    const line=pts.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)).join(' ');
+    const dots=pts.map((v,i)=>'<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="3" fill="#8b1a1a"/>').join('');
+    const py=Y(70).toFixed(1);
+    curveHtml='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;max-width:360px;height:auto">'
+      +'<line x1="'+pad+'" y1="'+py+'" x2="'+(W-pad)+'" y2="'+py+'" stroke="#ccc" stroke-dasharray="4 3"/>'
+      +'<text x="'+(W-pad)+'" y="'+(py-4)+'" text-anchor="end" font-size="9" fill="#999">通過 70</text>'
+      +'<path d="'+line+'" fill="none" stroke="#8b1a1a" stroke-width="2" stroke-linejoin="round"/>'+dots+'</svg>';
+  }
+  let html='<div class="hist-analysis-card">';
+  html+='<div class="wa-title">📈 進步曲線（近 '+Math.min(pts.length,12)+' 次）</div>';
+  html+=curveHtml||'<div class="wa-empty">至少需 2 次紀錄才會顯示曲線</div>';
+  html+='<div class="wa-title" style="margin-top:16px">🎯 各科正確率（弱項在前）</div>';
+  html+=weakHtml||'<div class="wa-empty">尚無資料</div>';
+  html+='</div>';
+  return html;
+}
 function renderHistory(){
   _histQSets = [];
   const history = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
   const filterSubj = document.getElementById('hist-filter-subj').value;
-  let records = history.filter(r=>r.name===st.currentUser);
+  const allUserRecords = history.filter(r=>r.name===st.currentUser);
+  let records = allUserRecords.slice();
   if(filterSubj) records = records.filter(r=>r.subjects.includes(filterSubj));
+  const anaEl = document.getElementById('hist-analysis');
+  if(anaEl) anaEl.innerHTML = buildHistAnalysis(allUserRecords);
 
   const listEl = document.getElementById('history-list');
   if(records.length===0){
@@ -2786,6 +2840,7 @@ function renderQReview(){
       <option value="teaching">華語文教學</option>
     </select>
   </div>
+  <div id="hist-analysis"></div>
   <div id="history-list"></div>
 </div>`);
   }
