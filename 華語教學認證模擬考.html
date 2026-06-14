@@ -389,6 +389,8 @@ body.dark a { color:#9ec5ff; }
 .btn-review:disabled { background:#ccc; cursor:default; }
 /* ── PDF / Excel buttons ── */
 .btn-pdf  { padding:10px 18px; background:#e53935; color:#fff; border:none; border-radius:9px; font-size:.9rem; font-weight:600; cursor:pointer; margin:4px; }
+.btn-share { padding:10px 18px; background:#1d9bf0; color:#fff; border:none; border-radius:9px; font-size:.9rem; font-weight:600; cursor:pointer; margin:4px; }
+.btn-share:disabled { background:#9ec9e8; cursor:default; }
 .btn-xlsx { padding:10px 18px; background:#2e7d32; color:#fff; border:none; border-radius:9px; font-size:.9rem; font-weight:600; cursor:pointer; margin:4px; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -628,6 +630,7 @@ body.dark a { color:#9ec5ff; }
     <div style="margin-top:12px"><span id="res-saved-msg" class="save-badge" style="display:none"></span></div>
     <div style="margin:8px 0">
       <button class="btn-pdf" onclick="exportPDF()">📥 下載成績單 (PDF)</button>
+      <button class="btn-share" onclick="shareResult()">📤 分享成績</button>
     </div>
     <div class="result-actions">
       <button class="btn-retry" onclick="retryExam()">🔄 重新測驗</button>
@@ -1560,7 +1563,12 @@ function updateCnts(){
 // ════════════════════════════════════════════════
 function startExam(){
   let qs = [];
-  st.selected.forEach(sub => QB[sub].filter(q=>st.selectedYears.includes(q.yr)).forEach((q,i) => qs.push({...q, subject:sub, localIdx:i+1})));
+  const _guestLimit = st.isGuest ? 10 : Infinity;
+  st.selected.forEach(sub => {
+    let pool = QB[sub].filter(q=>st.selectedYears.includes(q.yr));
+    if(st.isGuest && pool.length>_guestLimit) pool = pool.slice().sort(()=>Math.random()-.5).slice(0,_guestLimit);
+    pool.forEach((q,i) => qs.push({...q, subject:sub, localIdx:i+1}));
+  });
 if(!qs.length){ alert('所選條件下沒有題目，請調整篩選條件'); return; }
   if(st.mode==='random') qs = qs.sort(()=>Math.random()-.5);
   st.questions = qs; st.idx = 0; st.correct = 0; st.wrong = 0; st.answered = false; st.examResults = []; st.answers = new Array(qs.length).fill(null);
@@ -1763,6 +1771,42 @@ function showResult(){
       savedMsg.textContent='✅ 成績已記錄（' + st.currentUser + '）';
     }
   }
+}
+
+async function shareResult(){
+  const url='https://qna-exam-platform.vercel.app/';
+  const total=st.questions.length;
+  const pct=total>0?Math.round((st.correct/total)*100):0;
+  const subjs=[...new Set(st.examResults.map(r=>r.subject))].map(s=>SUBJ_NAMES[s]||s).join('、')||'模擬考';
+  const pass=pct>=70;
+  const text='我在 QNA Chinese 對外華語教學認證模擬考【'+subjs+'】拿了 '+pct+' 分'+(pass?' 🎉':' 💪')+'！一起來練習 👉 '+url;
+  const sbtn=document.querySelector('.btn-share'); const solabel=sbtn?sbtn.textContent:''; if(sbtn){ sbtn.disabled=true; sbtn.textContent='產生中…'; }
+  let file=null;
+  try{
+    await _lazyScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    const card=document.createElement('div');
+    card.style.cssText="position:fixed;left:-9999px;top:0;width:600px;height:315px;background:linear-gradient(135deg,#8b1a1a,#6d1414);color:#fff;font-family:'Microsoft JhengHei','PingFang TC',sans-serif;padding:34px;box-sizing:border-box;overflow:hidden";
+    card.innerHTML="<div style='font-size:15px;letter-spacing:3px;opacity:.85;font-weight:600'>QNA CHINESE</div>"
+      +"<div style='font-size:23px;font-weight:800;margin:8px 0 2px'>對外華語教學認證 模擬考</div>"
+      +"<div style='font-size:14px;opacity:.85;margin-bottom:14px'>"+subjs+"</div>"
+      +"<div style='font-size:74px;font-weight:900;line-height:1'>"+pct+"<span style='font-size:26px'> 分</span></div>"
+      +"<div style='display:inline-block;margin-top:12px;padding:7px 20px;border-radius:30px;font-size:16px;font-weight:800;background:"+(pass?'#e8f5e9':'#fff3e0')+";color:"+(pass?'#1b7a3d':'#8b1a1a')+"'>"+(pass?'🎉 通過':'💪 繼續加油')+"　答對 "+st.correct+"/"+total+"</div>"
+      +"<div style='position:absolute;bottom:20px;right:34px;font-size:13px;opacity:.9'>qna-exam-platform.vercel.app</div>"
+      +"<div style='position:absolute;bottom:20px;left:34px;font-size:30px'>📚</div>";
+    document.body.appendChild(card);
+    const canvas=await html2canvas(card,{scale:2,backgroundColor:null});
+    document.body.removeChild(card);
+    const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
+    if(blob) file=new File([blob],'qna-score.png',{type:'image/png'});
+  }catch(e){ file=null; }
+  if(sbtn){ sbtn.disabled=false; sbtn.textContent=solabel; }
+  try{
+    if(file && navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], text:text, title:'QNA Chinese 模擬考成績'}); return; }
+    if(navigator.share){ await navigator.share({title:'QNA Chinese 模擬考成績', text:text, url:url}); return; }
+  }catch(e){ if(e && e.name==='AbortError') return; }
+  if(file){ try{ const a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download='qna-score.png'; a.click(); }catch(e){} }
+  try{ await navigator.clipboard.writeText(text); alert('已複製分享文字'+(file?'，並下載成績卡圖片':'')+'！可貼到 LINE／Facebook 分享。'); }
+  catch(e){ alert(text); }
 }
 
 function retryExam(){ document.getElementById('result-screen').style.display='none'; startExam(); }
@@ -2503,7 +2547,7 @@ function enterGuest(){
   localStorage.removeItem('tocfl_current_user');
   document.getElementById('login-screen').style.display='none';
   document.getElementById('subject-screen').style.display='block';
-  const nm=document.getElementById('user-bar-name'); if(nm) nm.textContent='訪客模式（成績不會保存，註冊後可保存）';
+  const nm=document.getElementById('user-bar-name'); if(nm) nm.textContent='訪客模式（每科約 10 題試做、成績不保存；註冊後可做全部並保存）';
   document.getElementById('login-error').textContent='';
   renderProgressPanel();
   updateWrongReviewBtn();
