@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 主管理員（唯一用 Firebase 帳號登入的人）
+    function isMaster() {
+      return request.auth != null
+        && request.auth.token.email == 'qnachinese@gmail.com';
+    }
+
+    // 學習者帳號：登入/註冊目前未登入 Firebase，需要可讀、可建立、可更新；
+    // 但只有主管理員能「刪除」帳號（避免有人惡意一次刪光）。
+    match /users/{doc} {
+      allow read, create, update: if true;
+      allow delete: if isMaster();
+    }
+
+    // 考試紀錄（學習者作答後寫入、後台讀取）；只有主管理員能刪除。
+    match /config/examHistory/records/{doc} {
+      allow read, create, update: if true;
+      allow delete: if isMaster();
+    }
+
+    // 訪客試做紀錄（學習者寫入、後台讀取/清空）；只有主管理員能刪除。
+    match /config/guestHistory/records/{doc} {
+      allow read, create, update: if true;
+      allow delete: if isMaster();
+    }
+
+    // 管理員名單：一般管理員登入時需要讀取來比對，故保留可讀；
+    // 但「新增/修改/刪除管理員」只有主管理員能做。
+    match /config/admins {
+      allow read: if true;
+      allow write: if isMaster();
+    }
+
+    // 舊版管理員密碼與驗證碼（已停用）：完全鎖死，只有主管理員可存取。
+    match /config/admin {
+      allow read, write: if isMaster();
+    }
+    match /config/admin_otp {
+      allow read, write: if isMaster();
+    }
+
+    // 其他未列出的路徑一律拒絕（預設安全）
+  }
+}

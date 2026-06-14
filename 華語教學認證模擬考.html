@@ -102,6 +102,19 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 .btn-next:hover { background:#1a252f; }
 .btn-prev { background:#fff; color:#2c3e50; border:2px solid #2c3e50; border-radius:8px; padding:10px 26px; font-size:.88rem; cursor:pointer; transition:all .18s; display:none; margin-right:auto; }
 .btn-prev:hover { background:#f0f0f0; }
+#q-nav-wrap { margin:10px 0; }
+#q-nav-toggle { background:#fff; border:1.5px solid #c9a227; color:#8b1a1a; border-radius:8px; padding:7px 14px; font-size:.85rem; font-weight:700; cursor:pointer; }
+#q-nav-panel { margin-top:8px; background:#fff; border:1px solid #e6ddcb; border-radius:10px; padding:12px; }
+.q-nav-legend { font-size:.78rem; color:#666; margin-bottom:10px; display:flex; flex-wrap:wrap; gap:4px 14px; align-items:center; }
+.q-nav-legend .lg { display:inline-block; width:14px; height:14px; border-radius:4px; vertical-align:middle; margin-right:4px; border:1.5px solid #bbb; }
+.lg-cur { box-shadow:0 0 0 2px #2c3e50; border-color:#2c3e50 !important; }
+.lg-ok { background:#e8f5e9; border-color:#2e7d32 !important; }
+.lg-no { background:#fdecea; border-color:#c0392b !important; }
+#q-nav-grid { display:flex; flex-wrap:wrap; gap:6px; max-height:240px; overflow-y:auto; }
+.qnav-cell { width:38px; height:38px; border-radius:8px; border:1.5px solid #bbb; background:#fff; color:#555; font-size:.82rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
+.qnav-cell.ok { background:#e8f5e9; border-color:#2e7d32; color:#2e7d32; }
+.qnav-cell.no { background:#fdecea; border-color:#c0392b; color:#c0392b; }
+.qnav-cell.cur { box-shadow:0 0 0 2px #2c3e50; border-color:#2c3e50; }
 
 /* ── Result screen ── */
 #result-screen { display:none; text-align:center; }
@@ -503,6 +516,14 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
   </div>
   <div class="progress-wrap"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
   <div class="progress-text"><span id="prog-label">第 1 題</span><span id="subj-label"></span></div>
+
+  <div id="q-nav-wrap">
+    <button id="q-nav-toggle" onclick="toggleQNav()">📋 題目一覽</button>
+    <div id="q-nav-panel" style="display:none">
+      <div class="q-nav-legend"><span class="lg lg-cur"></span>目前　<span class="lg lg-ok"></span>答對　<span class="lg lg-no"></span>答錯　<span class="lg"></span>未作答　·　點數字可跳到該題</div>
+      <div id="q-nav-grid"></div>
+    </div>
+  </div>
 
   <div class="question-card">
     <div class="q-header">
@@ -1511,6 +1532,8 @@ function renderQ(){
   nextBtn.style.display='inline-block';
   const prevBtn=document.getElementById('btn-prev');
   prevBtn.style.display = idx>0 ? 'inline-block' : 'none';
+  const navPanel=document.getElementById('q-nav-panel');
+  if(navPanel && navPanel.style.display!=='none') renderQNav();
 }
 
 function _showExplanation(q, isOK){
@@ -1558,6 +1581,33 @@ function finishExam(){
 function prevQ(){
   if(st.idx<=0) return;
   st.idx--; renderQ();
+}
+
+function toggleQNav(){
+  const p=document.getElementById('q-nav-panel');
+  if(!p) return;
+  const open = p.style.display==='none';
+  p.style.display = open ? 'block' : 'none';
+  const t=document.getElementById('q-nav-toggle');
+  if(t) t.textContent = open ? '📋 題目一覽 ▲' : '📋 題目一覽';
+  if(open) renderQNav();
+}
+function renderQNav(){
+  const grid=document.getElementById('q-nav-grid');
+  if(!grid) return;
+  const ans=st.answers||[];
+  grid.innerHTML = st.questions.map((q,i)=>{
+    const a=ans[i];
+    let cls='qnav-cell';
+    if(a){ cls += a.correct ? ' ok' : ' no'; }
+    if(i===st.idx) cls += ' cur';
+    return '<button class="'+cls+'" onclick="gotoQ('+i+')">'+(i+1)+'</button>';
+  }).join('');
+}
+function gotoQ(i){
+  if(i<0||i>=st.questions.length) return;
+  st.idx=i; renderQ();
+  try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){ window.scrollTo(0,0); }
 }
 
 function confirmExit(){
