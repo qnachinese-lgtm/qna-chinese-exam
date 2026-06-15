@@ -1671,8 +1671,24 @@ function handleAns(chosen){
   st.stats[q.subject].total++;
   saveExamResume();
   renderQ();
+  requestAnimationFrame(_revealExplanation);
 }
 
+function _revealExplanation(){
+  const exp=document.getElementById('q-exp');
+  if(!exp || exp.style.display==='none') return;
+  const bar=document.querySelector('.nav-row');
+  const barH=(bar?bar.offsetHeight:64)+14;
+  const r=exp.getBoundingClientRect();
+  const visible=window.innerHeight-barH;   // 固定列上方的可視高度
+  if(r.height>=visible){
+    // 解析較長:把頂端捲到畫面上方,從頭看起
+    window.scrollBy({top:r.top-70, behavior:'smooth'});
+  } else {
+    const over=r.bottom-visible;            // 解析底端被固定列擋住的量
+    if(over>0) window.scrollBy({top:over, behavior:'smooth'});
+  }
+}
 function _scrollExamTop(){
   const el=document.getElementById('exam-screen');
   if(el && el.scrollIntoView){ el.scrollIntoView({block:'start'}); }
