@@ -1671,7 +1671,7 @@ function handleAns(chosen){
   st.stats[q.subject].total++;
   saveExamResume();
   renderQ();
-  requestAnimationFrame(_revealExplanation);
+  setTimeout(_revealExplanation, 120);
 }
 
 function _revealExplanation(){
