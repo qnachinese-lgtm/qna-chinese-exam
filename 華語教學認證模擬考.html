@@ -1686,9 +1686,7 @@ function _revealExplanation(){
   let target;
   if(cr.height<=visible){
     // 整張題卡放得下:捲到卡片底端(含解析與下緣留白)完整露出
-    const over = cr.bottom - visible;
-    if(over<=0) return;                       // 已完整可見,不動
-    target = window.scrollY + over;
+    target = window.scrollY + (cr.bottom - visible);
   } else {
     // 題卡比畫面高:從解析頂端開始看
     const er=exp.getBoundingClientRect();
@@ -1696,9 +1694,7 @@ function _revealExplanation(){
   }
   const maxY = document.documentElement.scrollHeight - window.innerHeight;
   target = Math.max(0, Math.min(target, maxY));
-  try{ window.scrollTo({top:target, behavior:'smooth'}); }catch(e){}
-  // 即時保底(部分環境不支援平滑捲動)
-  setTimeout(function(){ if(Math.abs(window.scrollY-target)>4) window.scrollTo(0, target); }, 360);
+  if(Math.abs(window.scrollY-target)>2) window.scrollTo(0, target);   // 即時捲動,最可靠
 }
 function _scrollExamTop(){
   const el=document.getElementById('exam-screen');
