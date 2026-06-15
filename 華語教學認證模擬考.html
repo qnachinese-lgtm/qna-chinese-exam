@@ -1679,15 +1679,21 @@ function _revealExplanation(){
   if(!exp || exp.style.display==='none') return;
   const bar=document.querySelector('.nav-row');
   const barH=(bar?bar.offsetHeight:64)+14;
-  const r=exp.getBoundingClientRect();
   const visible=window.innerHeight-barH;   // 固定列上方的可視高度
+  const r=exp.getBoundingClientRect();
+  let target;
   if(r.height>=visible){
-    // 解析較長:把頂端捲到畫面上方,從頭看起
-    window.scrollBy({top:r.top-70, behavior:'smooth'});
+    target = window.scrollY + r.top - 70;        // 解析較長:頂端對齊上方
   } else {
-    const over=r.bottom-visible;            // 解析底端被固定列擋住的量
-    if(over>0) window.scrollBy({top:over, behavior:'smooth'});
+    const over = r.bottom - visible;             // 解析底端被固定列擋住的量
+    if(over<=0) return;                           // 已完整可見,不動
+    target = window.scrollY + over;
   }
+  const maxY = document.documentElement.scrollHeight - window.innerHeight;
+  target = Math.max(0, Math.min(target, maxY));
+  try{ window.scrollTo({top:target, behavior:'smooth'}); }catch(e){}
+  // 即時保底(部分環境不支援平滑捲動)
+  setTimeout(function(){ if(Math.abs(window.scrollY-target)>4) window.scrollTo(0, target); }, 360);
 }
 function _scrollExamTop(){
   const el=document.getElementById('exam-screen');
