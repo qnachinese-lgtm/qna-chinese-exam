@@ -1671,7 +1671,8 @@ function handleAns(chosen){
   st.stats[q.subject].total++;
   saveExamResume();
   renderQ();
-  setTimeout(_revealExplanation, 120);
+  setTimeout(_revealExplanation, 130);
+  setTimeout(_revealExplanation, 480);   // 版面/字體載入後再校正一次
 }
 
 function _revealExplanation(){
