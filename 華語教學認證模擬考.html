@@ -2633,7 +2633,7 @@ async function submitGuestRegister(){
   const pool=cloudUsers||accounts;
   if(pool.find(a=>a.email===email)){ m.textContent='此 Gmail 已被使用（可改用登出→登入）'; return; }
   if(pool.find(a=>a.name===name)){ m.textContent='此帳號名稱已被使用，請換一個'; return; }
-  const newAcc={name, email, pw: await hashPw(pw), createdAt:new Date().toISOString(), method:'email'};
+  const newAcc={name, email, pw: await hashPw(pw), createdAt:new Date().toISOString(), method:'email', viaGuest:true, guestConvertedAt:new Date().toISOString()};
   accounts.push(newAcc);
   localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
   if(_db){ try{ await _db.collection('users').doc(name).set(newAcc); }catch(e){ console.warn('guest register save:', e); } }

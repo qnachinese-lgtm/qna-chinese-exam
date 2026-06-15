@@ -493,19 +493,37 @@ function renderAdminPanel(){
   if(!tbody) return;
   const cols = isMaster ? 6 : 5;
   if(!groups.length){ tbody.innerHTML='<tr><td colspan="'+cols+'" style="text-align:center;color:#999;padding:20px">尚無學習者帳號</td></tr>'; renderAdminsList(); updateCleanupBtn(); renderGuestRecords(); return; }
+  const _subjNames = {chinese:'國文', linguistics:'漢語語言學', teaching:'華語文教學', culture:'華人社會與文化'};
+  const _subjOrder = ['chinese','linguistics','teaching','culture'];
+  function _scoresBySubject(recs){
+    const seen={};   // recs 已新到舊;每科只保留最近一次
+    recs.forEach(r=>{
+      if(r.stats){
+        Object.keys(r.stats).forEach(sub=>{
+          const o=r.stats[sub];
+          if(seen[sub]||!o||!o.total) return;
+          seen[sub]={pct:Math.round(o.correct/o.total*100), date:r.date};
+        });
+      } else if(Array.isArray(r.subjects)){
+        r.subjects.forEach(sub=>{ if(!seen[sub]) seen[sub]={pct:r.pct, date:r.date}; });
+      }
+    });
+    const keys=Object.keys(seen).sort((a,b)=>_subjOrder.indexOf(a)-_subjOrder.indexOf(b));
+    if(!keys.length) return '—';
+    return keys.map(k=>'<div style="white-space:nowrap;line-height:1.5">'+esc(_subjNames[k]||k)+'：<b>'+seen[k].pct+'</b> 分 <span style="color:#999;font-size:.72rem">'+esc(seen[k].date||'')+'</span></div>').join('');
+  }
   tbody.innerHTML = groups.map((g,i)=>{
     const acc = g.primary;
     const recs = history.filter(r=>r.name===acc.name);
-    const last = recs[0];
-    const lastScore = last ? (esc(last.pct)+'分（'+esc(last.date)+'）') : '—';
-    const dupTag = '';
+    const lastScore = recs.length ? _scoresBySubject(recs) : '—';
+    const guestTag = acc.viaGuest ? ' <span style="background:#e8f0fe;color:#1a56c4;font-size:.68rem;padding:1px 6px;border-radius:6px;border:1px solid #b9cdf5;white-space:nowrap">訪客建立</span>' : '';
     const actions = isMaster ? ('<td><div class="admin-action-cell">'+
       '<button class="admin-edit-btn" onclick="openEditModal('+i+')">編輯</button>'+
       '<button class="admin-pw-btn" onclick="openResetPwModal('+i+')">重設密碼</button>'+
       '<button class="admin-reset-btn" onclick="resetUserHistory('+i+')">清除記錄</button>'+
       '<button class="admin-delete-btn" onclick="deleteUser('+i+')">刪除</button>'+
       '</div></td>') : '';
-    return '<tr><td>'+esc(acc.name)+dupTag+'</td>'+
+    return '<tr><td>'+esc(acc.name)+guestTag+'</td>'+
       '<td class="pw-cell"><span style="color:#aaa;font-family:sans-serif;font-size:.8rem">🔒 已加密</span></td>'+
       '<td>'+(acc.email?esc(acc.email):'—')+'</td>'+
       '<td>'+recs.length+' 次</td>'+
