@@ -60,7 +60,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 .pdf-link .yr { font-weight:700; color:#2c2c2c; }
 
 /* ── Exam screen ── */
-#exam-screen { display:none; padding-bottom:84px; }
+#exam-screen { display:none; padding-bottom:110px; }
 .score-live { background:#fff; border-radius:10px; padding:10px 16px; margin-bottom:18px; display:flex; gap:20px; font-size:.84rem; box-shadow:0 1px 4px rgba(0,0,0,.08); flex-wrap:wrap; }
 .score-live span { color:#888; }
 .score-live b { color:#2c2c2c; }
@@ -1677,17 +1677,21 @@ function handleAns(chosen){
 function _revealExplanation(){
   const exp=document.getElementById('q-exp');
   if(!exp || exp.style.display==='none') return;
+  const card=document.querySelector('.question-card') || exp;
   const bar=document.querySelector('.nav-row');
-  const barH=(bar?bar.offsetHeight:64)+14;
-  const visible=window.innerHeight-barH;   // 固定列上方的可視高度
-  const r=exp.getBoundingClientRect();
+  const barH=(bar?bar.offsetHeight:64)+16;   // 固定列高度 + 底部留白
+  const visible=window.innerHeight-barH;     // 固定列上方的可視高度
+  const cr=card.getBoundingClientRect();
   let target;
-  if(r.height>=visible){
-    target = window.scrollY + r.top - 70;        // 解析較長:頂端對齊上方
-  } else {
-    const over = r.bottom - visible;             // 解析底端被固定列擋住的量
-    if(over<=0) return;                           // 已完整可見,不動
+  if(cr.height<=visible){
+    // 整張題卡放得下:捲到卡片底端(含解析與下緣留白)完整露出
+    const over = cr.bottom - visible;
+    if(over<=0) return;                       // 已完整可見,不動
     target = window.scrollY + over;
+  } else {
+    // 題卡比畫面高:從解析頂端開始看
+    const er=exp.getBoundingClientRect();
+    target = window.scrollY + er.top - 80;
   }
   const maxY = document.documentElement.scrollHeight - window.innerHeight;
   target = Math.max(0, Math.min(target, maxY));
