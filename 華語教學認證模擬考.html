@@ -516,6 +516,7 @@ body.dark a { color:#9ec5ff; }
     <span class="user-bar-name" id="user-bar-name"></span>
     <button class="user-bar-btn" onclick="showHistory()">📊 我的記錄</button>
     <button class="user-bar-btn" onclick="showProfile()">👤 帳號</button>
+    <button class="user-bar-btn" id="btn-guest-register" onclick="openGuestRegister()" style="display:none;background:#c0392b;color:#fff;border-color:#c0392b">✍️ 註冊並保存進度</button>
     <button class="user-bar-btn" onclick="changeUser()">登出</button>
   </div>
   <div id="progress-panel">
@@ -1833,6 +1834,7 @@ function goHome(){
 //  PROGRESS TRACKING
 // ═══════════════════════════════════════════
 const STORAGE_KEY = 'tocfl_exam_history';
+const GUEST_PENDING_KEY = 'tocfl_guest_pending';
 
 const USERS_KEY = 'tocfl_users';
 const ADMINS_KEY = 'tocfl_admins';
@@ -2544,6 +2546,7 @@ function clearGuestLocalData(){
     const all = JSON.parse(localStorage.getItem(WRONG_KEY)||'{}');
     if(all && all['訪客']){ delete all['訪客']; localStorage.setItem(WRONG_KEY, JSON.stringify(all)); }
   }catch(e){}
+  try{ localStorage.removeItem(GUEST_PENDING_KEY); }catch(e){}
   clearExamResume();
   st.examResults=[]; st.answers=[]; st.correct=0; st.wrong=0; st.stats={}; st.idx=0;
 }
@@ -2576,8 +2579,83 @@ function changeUser(){
   const fw=document.getElementById('user-forgot-wrap'); if(fw) fw.style.display='block';
 }
 
+// ── 訪客就地註冊（不需登出；保留剛剛的作答） ──
+function openGuestRegister(){
+  if(!st.isGuest) return;
+  const ov=document.getElementById('guest-reg-overlay'); if(!ov) return;
+  ['greg-name','greg-email','greg-pw','greg-pw2'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  const m=document.getElementById('greg-msg'); if(m){ m.style.color='#c62828'; m.textContent=''; }
+  let np=0,nw=0;
+  try{ np=(JSON.parse(localStorage.getItem(GUEST_PENDING_KEY)||'[]')).length; }catch(e){}
+  try{ const w=JSON.parse(localStorage.getItem(WRONG_KEY)||'{}'); nw=(w['訪客']||[]).length; }catch(e){}
+  const info=document.getElementById('greg-info');
+  if(info) info.textContent='註冊後將保存：'+np+' 筆測驗紀錄、'+nw+' 題錯題。';
+  ov.style.display='flex';
+}
+function closeGuestRegister(){ const ov=document.getElementById('guest-reg-overlay'); if(ov) ov.style.display='none'; }
+
+async function submitGuestRegister(){
+  const m=document.getElementById('greg-msg'); if(m) m.style.color='#c62828';
+  const name=document.getElementById('greg-name').value.trim();
+  const email=document.getElementById('greg-email').value.trim().toLowerCase();
+  const pw=document.getElementById('greg-pw').value;
+  const pw2=document.getElementById('greg-pw2').value;
+  if(!email){ m.textContent='請輸入 Gmail 電郵地址'; return; }
+  if(!name){ m.textContent='請輸入帳號名稱'; return; }
+  if(!pw){ m.textContent='請輸入密碼'; return; }
+  if(pw!==pw2){ m.textContent='兩次密碼不一致'; return; }
+  let accounts=getUserAccounts();
+  let cloudUsers=null;
+  if(_db){ try{ const snap=await _db.collection('users').get(); cloudUsers=snap.docs.map(d=>d.data()); }catch(e){ cloudUsers=null; } }
+  const pool=cloudUsers||accounts;
+  if(pool.find(a=>a.email===email)){ m.textContent='此 Gmail 已被使用（可改用登出→登入）'; return; }
+  if(pool.find(a=>a.name===name)){ m.textContent='此帳號名稱已被使用，請換一個'; return; }
+  const newAcc={name, email, pw: await hashPw(pw), createdAt:new Date().toISOString(), method:'email'};
+  accounts.push(newAcc);
+  localStorage.setItem(USERS_KEY, JSON.stringify(accounts));
+  if(_db){ try{ await _db.collection('users').doc(name).set(newAcc); }catch(e){ console.warn('guest register save:', e); } }
+
+  if(typeof stopSessionTimer==='function') stopSessionTimer();
+  st.currentUser=name; st.isGuest=false;
+  localStorage.setItem('tocfl_current_user', name);
+  localStorage.setItem('tocfl_user_email', email);
+
+  let movedRecs=0;
+  try{
+    const pend=JSON.parse(localStorage.getItem(GUEST_PENDING_KEY)||'[]');
+    if(pend.length){
+      const history=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+      pend.slice().reverse().forEach(r=>{ r.name=name; history.unshift(r); fbAddExamRecord(r); });
+      if(history.length>200) history.splice(200);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+      movedRecs=pend.length;
+    }
+    localStorage.removeItem(GUEST_PENDING_KEY);
+  }catch(e){}
+
+  let movedWrong=0;
+  try{
+    const all=JSON.parse(localStorage.getItem(WRONG_KEY)||'{}');
+    const gw=all['訪客']||[];
+    if(gw.length){
+      const mine=all[name]||[];
+      gw.forEach(cq=>{ if(cq && cq.q && !mine.find(e=>e.q===cq.q)) mine.push(cq); });
+      all[name]=mine; movedWrong=gw.length;
+    }
+    delete all['訪客'];
+    localStorage.setItem(WRONG_KEY, JSON.stringify(all));
+    if(all[name] && all[name].length) fbSaveWrongQs(name, all[name]);
+  }catch(e){}
+
+  const nm=document.getElementById('user-bar-name'); if(nm) nm.textContent=name;
+  const grb=document.getElementById('btn-guest-register'); if(grb) grb.style.display='none';
+  closeGuestRegister();
+  renderProgressPanel();
+  updateWrongReviewBtn();
+  alert('✅ 帳號建立成功，已自動登入！\n已為你保存 '+movedRecs+' 筆測驗紀錄、'+movedWrong+' 題錯題。');
+}
+
 function saveExamRecord(pct, total){
-  if(st.isGuest){ fbAddGuestRecord(pct, total); return; }   // 訪客：只記錄匿名統計
   const now = new Date();
   const dateStr = now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0');
   const timeStr = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')+':'+now.getSeconds().toString().padStart(2,'0');
@@ -2593,6 +2671,15 @@ function saveExamRecord(pct, total){
     stats: JSON.parse(JSON.stringify(st.stats)),
     questions: st.examResults.map(r=>({...r}))
   };
+  if(st.isGuest){
+    fbAddGuestRecord(pct, total);   // 後台匿名統計
+    try{   // 暫存本次測驗，供「註冊並保存」搬到新帳號
+      const pend = JSON.parse(localStorage.getItem(GUEST_PENDING_KEY)||'[]');
+      pend.unshift(record); if(pend.length>50) pend.splice(50);
+      localStorage.setItem(GUEST_PENDING_KEY, JSON.stringify(pend));
+    }catch(e){}
+    return;
+  }
   const history = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
   history.unshift(record);
   // Keep max 200 records
@@ -2602,7 +2689,7 @@ function saveExamRecord(pct, total){
 }
 
 function showHistory(){
-  if(st.isGuest){ alert('訪客模式沒有保存的記錄。請先「登出」並「新建帳號」，即可保存與查看記錄。'); return; }
+  if(st.isGuest){ alert('訪客模式不保存記錄。請點右上角紅色「✍️ 註冊並保存進度」，即可建立帳號並保存這次的作答。'); return; }
   document.getElementById('subject-screen').style.display='none';
   document.getElementById('history-screen').style.display='block';
   renderHistory();
@@ -2738,6 +2825,7 @@ function renderProgressPanel(){
   const panel = document.getElementById('progress-panel');
   const cards = document.getElementById('prog-cards');
   if(!panel||!cards||!st.currentUser) return;
+  const _grb=document.getElementById('btn-guest-register'); if(_grb) _grb.style.display = st.isGuest?'inline-block':'none';
   const history = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
   const mine = history.filter(r=>r.name===st.currentUser).slice(0,3);
   const subjNames = {chinese:'國文',culture:'華人社會與文化',linguistics:'漢語語言學',teaching:'華語文教學'};
@@ -3051,6 +3139,27 @@ function renderQReview(){
 </div>`);
   }
 
+  // ── Guest Register Overlay ──
+  if(!document.getElementById('guest-reg-overlay')){
+    document.body.insertAdjacentHTML('beforeend', `
+<div id="guest-reg-overlay" onclick="if(event.target===this)closeGuestRegister()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:16px;max-width:380px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    <div style="font-size:1.1rem;font-weight:700;color:#8b1a1a;margin-bottom:6px">✍️ 註冊並保存進度</div>
+    <div style="font-size:.8rem;color:#666;margin-bottom:4px">建立帳號後可做全部題目，並保存這次訪客作答；之後用 Gmail＋密碼登入。</div>
+    <div id="greg-info" style="font-size:.82rem;color:#2e7d32;margin-bottom:12px"></div>
+    <input type="text" id="greg-name" placeholder="帳號名稱" maxlength="40" style="width:100%;margin-bottom:8px;padding:9px;border:1px solid #ccc;border-radius:8px;box-sizing:border-box">
+    <input type="email" id="greg-email" placeholder="Gmail 電郵地址" style="width:100%;margin-bottom:8px;padding:9px;border:1px solid #ccc;border-radius:8px;box-sizing:border-box">
+    <input type="password" id="greg-pw" placeholder="密碼" style="width:100%;margin-bottom:8px;padding:9px;border:1px solid #ccc;border-radius:8px;box-sizing:border-box">
+    <input type="password" id="greg-pw2" placeholder="再次輸入密碼" style="width:100%;margin-bottom:8px;padding:9px;border:1px solid #ccc;border-radius:8px;box-sizing:border-box">
+    <div id="greg-msg" style="font-size:.82rem;color:#c62828;min-height:18px;margin-bottom:8px"></div>
+    <div style="display:flex;gap:10px">
+      <button onclick="closeGuestRegister()" style="flex:1;background:#fff;color:#555;border:1px solid #bbb;border-radius:8px;padding:10px;cursor:pointer">取消</button>
+      <button onclick="submitGuestRegister()" style="flex:2;background:#c0392b;color:#fff;border:none;border-radius:8px;padding:10px;font-weight:700;cursor:pointer">建立並保存 →</button>
+    </div>
+  </div>
+</div>`);
+  }
+
   // ── Profile Screen ──
   if(!document.getElementById('profile-screen')){
     main.insertAdjacentHTML('beforeend', `
@@ -3116,7 +3225,7 @@ function renderQReview(){
 //  PROFILE (學習者專區)
 // ════════════════════════════════════════════════
 function showProfile(){
-  if(st.isGuest){ alert('訪客模式沒有個人帳號。請先「登出」並「新建帳號」。'); return; }
+  if(st.isGuest){ alert('訪客模式沒有個人帳號。請點右上角紅色「✍️ 註冊並保存進度」即可建立帳號。'); return; }
   const screens = ['subject-screen','history-screen','exam-screen','result-screen'];
   screens.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
   const screen = document.getElementById('profile-screen');
