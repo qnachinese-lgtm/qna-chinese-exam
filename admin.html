@@ -73,6 +73,15 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
   .admin-table { font-size:.75rem; }
   .admin-table th, .admin-table td { padding:6px 8px; }
 }
+.qb-ctrl { padding:8px 10px; border:1px solid #ccc; border-radius:8px; font-size:.85rem; background:#fff; }
+.qb-edit-link { background:#4a90d9; color:#fff; border:none; border-radius:6px; padding:4px 12px; cursor:pointer; font-size:.8rem; }
+.qb-edit-link:hover { opacity:.88; }
+.qb-modal { background:#fff; border-radius:16px; padding:24px; width:780px; max-width:94vw; max-height:90vh; overflow-y:auto; text-align:left; }
+.qb-modal h3 { margin:0 0 16px; font-size:1.05rem; }
+.qb-modal label { display:block; font-size:.82rem; color:#555; margin:12px 0 4px; font-weight:600; }
+.qb-modal input, .qb-modal textarea, .qb-modal select { width:100%; box-sizing:border-box; padding:9px 11px; border:2px solid #e0e0e0; border-radius:8px; font-size:.9rem; outline:none; font-family:inherit; }
+.qb-modal textarea { resize:vertical; line-height:1.7; }
+.qb-modal input:focus, .qb-modal textarea:focus, .qb-modal select:focus { border-color:#4a90d9; }
 </style>
 <!-- Firebase（真驗證：Auth + Firestore） -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -161,6 +170,30 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
       </table>
       </div>
     </div>
+    <!-- 題庫管理（僅主管理員） -->
+    <div id="qb-section" style="border-top:2px solid #e0e0e0;padding-top:20px;margin-top:24px;display:none">
+      <div class="admin-header" style="margin-bottom:8px">
+        <span class="admin-title">📖 題庫管理</span>
+        <span id="qb-status" style="font-size:.8rem;color:#888;margin-left:auto"></span>
+        <button id="qb-toggle-btn" class="admin-back" onclick="toggleQBPanel()" style="background:#4a90e2;color:#fff;border:none;cursor:pointer;padding:8px 16px;border-radius:8px;margin-left:8px">隱藏</button>
+      </div>
+      <div class="admin-section">直接在這裡新增、修改、刪除題目；存檔後考試頁面會自動同步。題目或選項要畫底線，請用 &lt;u&gt;文字&lt;/u&gt;。</div>
+      <div id="qb-panel">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0">
+          <select id="qb-subject" class="qb-ctrl" onchange="renderQBList()">
+            <option value="chinese">國文</option>
+            <option value="linguistics">漢語語言學</option>
+            <option value="teaching">華語文教學</option>
+            <option value="culture">華人社會與文化</option>
+          </select>
+          <select id="qb-year" class="qb-ctrl" onchange="renderQBList()"><option value="">全部年份</option></select>
+          <input id="qb-search" class="qb-ctrl" placeholder="🔍 搜尋題目關鍵字" oninput="renderQBList()" style="flex:1;min-width:160px">
+          <button class="admin-add-btn" style="margin:0" onclick="openQBEdit(-1)">＋ 新增題目</button>
+          <button class="admin-back" onclick="importQBFromCode()" style="background:#7e57c2;color:#fff;border:none;cursor:pointer;padding:8px 14px;border-radius:8px">⬆️ 從程式碼匯入/重置</button>
+        </div>
+        <div id="qb-list" style="overflow-x:auto"></div>
+      </div>
+    </div>
   </div>
 </main>
 
@@ -198,6 +231,33 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
     <div class="modal-btns">
       <button class="modal-btn-primary" onclick="addAdmin()">儲存</button>
       <button class="modal-btn-cancel"  onclick="closeAdminAddModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 題目編輯 Modal -->
+<div id="qb-edit-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center">
+  <div class="qb-modal">
+    <h3 id="qb-edit-title">編輯題目</h3>
+    <input type="hidden" id="qb-edit-idx">
+    <label>年份</label>
+    <input type="text" id="qb-f-yr" placeholder="例如 2025">
+    <label>題目（可用 &lt;u&gt;...&lt;/u&gt; 畫底線）</label>
+    <textarea id="qb-f-q" rows="3"></textarea>
+    <label>選項 A</label><textarea id="qb-f-o0" rows="2"></textarea>
+    <label>選項 B</label><textarea id="qb-f-o1" rows="2"></textarea>
+    <label>選項 C</label><textarea id="qb-f-o2" rows="2"></textarea>
+    <label>選項 D</label><textarea id="qb-f-o3" rows="2"></textarea>
+    <label>正確答案</label>
+    <select id="qb-f-ans"><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select>
+    <label style="margin-top:14px"><input type="checkbox" id="qb-f-free" style="width:auto;display:inline-block;margin-right:6px;vertical-align:middle">送分題（不論作答一律給分）</label>
+    <label>解析（建議格式：第一行「對的答案：…」，其後每行「錯的選項：…」）</label>
+    <textarea id="qb-f-exp" rows="8"></textarea>
+    <div class="modal-error" id="qb-edit-error"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
+      <button class="modal-btn-cancel" style="flex:0 0 auto;padding:10px 18px" onclick="closeQBEdit()">取消</button>
+      <button id="qb-delete-btn" style="flex:0 0 auto;background:#e74c3c;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-weight:600;cursor:pointer;display:none" onclick="deleteQBItem()">刪除</button>
+      <button class="modal-btn-primary" style="flex:0 0 auto;padding:10px 22px" onclick="saveQBItem()">儲存</button>
     </div>
   </div>
 </div>
@@ -359,6 +419,122 @@ async function sendReset(){
 // ═══════════════════════════════════════════
 //  登入狀態變化（決定顯示哪個畫面）
 // ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+//  題庫管理（僅主管理員）
+// ═══════════════════════════════════════════
+const QB_ORDER = ['chinese','linguistics','teaching','culture'];
+let _qb = {chinese:[],linguistics:[],teaching:[],culture:[]};
+function qbCount(){ return QB_ORDER.reduce((n,k)=>n+(_qb[k]?_qb[k].length:0),0); }
+function curQBSubject(){ return document.getElementById('qb-subject').value; }
+
+async function loadQBAdmin(){
+  const stEl=document.getElementById('qb-status');
+  if(stEl) stEl.textContent='讀取中…';
+  try{
+    const snap=await _db.collection('questionbank').get();
+    _qb={chinese:[],linguistics:[],teaching:[],culture:[]};
+    let any=false;
+    snap.docs.forEach(d=>{ if(_qb.hasOwnProperty(d.id)){ const it=(d.data()||{}).items; if(Array.isArray(it)){ _qb[d.id]=it; if(it.length) any=true; } } });
+    if(stEl) stEl.textContent = any ? ('雲端題庫共 '+qbCount()+' 題') : '雲端尚無題庫，請先按「從程式碼匯入/重置」建立';
+    renderQBList();
+  }catch(e){ console.warn('loadQBAdmin',e); if(stEl) stEl.textContent='讀取題庫失敗：'+(e.message||e); }
+}
+
+function toggleQBPanel(){
+  const p=document.getElementById('qb-panel'); const b=document.getElementById('qb-toggle-btn');
+  const hidden=p.style.display==='none'; p.style.display=hidden?'block':'none'; b.textContent=hidden?'隱藏':'顯示';
+}
+
+function renderQBList(){
+  const sub=curQBSubject(); const arr=_qb[sub]||[];
+  const ySel=document.getElementById('qb-year');
+  const years=[...new Set(arr.map(q=>String(q.yr)))].sort();
+  const curY=ySel.value;
+  ySel.innerHTML='<option value="">全部年份</option>'+years.map(y=>'<option value="'+esc(y)+'">'+esc(y)+'</option>').join('');
+  if(years.includes(curY)) ySel.value=curY;
+  const yf=ySel.value;
+  const kw=(document.getElementById('qb-search').value||'').trim();
+  const rows=arr.map((q,i)=>({q:q,i:i})).filter(o=>(!yf||String(o.q.yr)===yf)&&(!kw||((o.q.q||'')+(o.q.opts||[]).join('')).indexOf(kw)>=0));
+  let html='<table class="admin-table"><thead><tr><th style="width:48px">#</th><th style="width:64px">年份</th><th>題目</th><th style="width:56px">答案</th><th style="width:70px"></th></tr></thead><tbody>';
+  if(!rows.length){ html+='<tr><td colspan="5" style="text-align:center;color:#999;padding:18px">沒有符合的題目</td></tr>'; }
+  rows.forEach(o=>{
+    const stem=esc(String(o.q.q||'').replace(/<\/?u>/g,'')).slice(0,46);
+    const ansLbl=o.q.free?'送分':(['A','B','C','D'][o.q.ans]||'?');
+    html+='<tr><td>'+(o.i+1)+'</td><td>'+esc(o.q.yr)+'</td><td>'+stem+'…</td><td>'+ansLbl+'</td><td><button class="qb-edit-link" onclick="openQBEdit('+o.i+')">編輯</button></td></tr>';
+  });
+  html+='</tbody></table>';
+  document.getElementById('qb-list').innerHTML=html;
+}
+
+function openQBEdit(idx){
+  const sub=curQBSubject(); const arr=_qb[sub]||[];
+  const isNew = idx<0 || idx>=arr.length;
+  const q = isNew ? {yr:(document.getElementById('qb-year').value||''),q:'',opts:['','','',''],ans:0,exp:'',free:false} : arr[idx];
+  document.getElementById('qb-edit-idx').value=idx;
+  document.getElementById('qb-edit-title').textContent=(isNew?'新增題目':'編輯題目')+'（'+SUBJ_NAMES[sub]+(isNew?'':('・第 '+(idx+1)+' 題'))+'）';
+  document.getElementById('qb-f-yr').value=q.yr||'';
+  document.getElementById('qb-f-q').value=q.q||'';
+  for(let k=0;k<4;k++) document.getElementById('qb-f-o'+k).value=(q.opts&&q.opts[k])||'';
+  document.getElementById('qb-f-ans').value=String(q.ans||0);
+  document.getElementById('qb-f-free').checked=!!q.free;
+  document.getElementById('qb-f-exp').value=q.exp||'';
+  document.getElementById('qb-delete-btn').style.display=isNew?'none':'inline-block';
+  document.getElementById('qb-edit-error').textContent='';
+  document.getElementById('qb-edit-overlay').style.display='flex';
+}
+function closeQBEdit(){ document.getElementById('qb-edit-overlay').style.display='none'; }
+
+async function saveQBItem(){
+  const sub=curQBSubject(); const idx=parseInt(document.getElementById('qb-edit-idx').value,10);
+  const yr=document.getElementById('qb-f-yr').value.trim();
+  const qtext=document.getElementById('qb-f-q').value.trim();
+  const opts=[0,1,2,3].map(k=>document.getElementById('qb-f-o'+k).value.trim());
+  const ans=parseInt(document.getElementById('qb-f-ans').value,10);
+  const free=document.getElementById('qb-f-free').checked;
+  const exp=document.getElementById('qb-f-exp').value.trim();
+  const errEl=document.getElementById('qb-edit-error');
+  if(!yr||!qtext||opts.some(o=>!o)){ errEl.style.color='#c62828'; errEl.textContent='年份、題目、四個選項都必須填寫'; return; }
+  const item={yr:yr,q:qtext,opts:opts,ans:ans,exp:exp}; if(free) item.free=true;
+  const isNew = idx<0 || idx>=(_qb[sub]||[]).length;
+  if(isNew) _qb[sub].push(item); else _qb[sub][idx]=item;
+  errEl.style.color='#888'; errEl.textContent='儲存中…';
+  try{
+    await _db.collection('questionbank').doc(sub).set({items:_qb[sub], updatedAt:Date.now()});
+    closeQBEdit(); renderQBList();
+    const stEl=document.getElementById('qb-status'); if(stEl) stEl.textContent='已儲存 ✓ 雲端題庫共 '+qbCount()+' 題';
+  }catch(e){ errEl.style.color='#c62828'; errEl.textContent='儲存失敗：'+(e.message||e); if(isNew) _qb[sub].pop(); }
+}
+
+async function deleteQBItem(){
+  const sub=curQBSubject(); const idx=parseInt(document.getElementById('qb-edit-idx').value,10);
+  if(idx<0||idx>=(_qb[sub]||[]).length) return;
+  if(!confirm('確定要刪除這一題嗎？此動作無法復原。')) return;
+  const removed=_qb[sub].splice(idx,1);
+  try{
+    await _db.collection('questionbank').doc(sub).set({items:_qb[sub], updatedAt:Date.now()});
+    closeQBEdit(); renderQBList();
+    const stEl=document.getElementById('qb-status'); if(stEl) stEl.textContent='已刪除 ✓ 雲端題庫共 '+qbCount()+' 題';
+  }catch(e){ _qb[sub].splice(idx,0,removed[0]); alert('刪除失敗：'+(e.message||e)); }
+}
+
+async function importQBFromCode(){
+  if(!confirm('這會用「考試頁面內建的題庫」覆蓋雲端題庫。\n\n• 第一次建立題庫：請按「確定」。\n• 若雲端已有你後來修改過的題目：按確定會被內建版本覆蓋。\n\n要繼續嗎？')) return;
+  const stEl=document.getElementById('qb-status'); stEl.textContent='匯入中…';
+  try{
+    const res=await fetch('華語教學認證模擬考.html?ts='+Date.now(),{cache:'no-store'});
+    const html=await res.text();
+    const m=html.match(/\/\*__QB_START__\*\/([\s\S]*?)\/\*__QB_END__\*\//);
+    if(!m) throw new Error('找不到題庫標記，請確認考試頁已更新部署');
+    const QBdata=new Function(m[1]+'; return QB;')();
+    for(const sub of QB_ORDER){
+      const items=QBdata[sub]||[];
+      await _db.collection('questionbank').doc(sub).set({items:items, updatedAt:Date.now()});
+    }
+    stEl.textContent='匯入完成 ✓';
+    await loadQBAdmin();
+  }catch(e){ console.warn(e); stEl.textContent='匯入失敗：'+(e.message||e); }
+}
+
 function enterPanel(email, role, name){
   _currentRole = role; _currentEmail = (email||'').toLowerCase();
   showScreen('panel');
@@ -368,6 +544,8 @@ function enterPanel(email, role, name){
   badge.className = 'role-badge ' + (role==='master'?'role-master':'role-admin');
   document.getElementById('add-learner-btn').style.display = role==='master' ? '' : 'none';
   document.getElementById('admins-section').style.display  = role==='master' ? 'block' : 'none';
+  document.getElementById('qb-section').style.display = role==='master' ? 'block' : 'none';
+  if(role==='master') loadQBAdmin();
   syncFromCloud();
   renderAdminPanel();
 }

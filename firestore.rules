@@ -42,6 +42,13 @@ service cloud.firestore {
       allow read, write: if isMaster();
     }
 
+    // 題庫：考試頁面（未登入的學習者）需要可讀；
+    // 只有主管理員能新增 / 修改 / 刪除題目。
+    match /questionbank/{doc} {
+      allow read: if true;
+      allow write: if isMaster();
+    }
+
     // 其他未列出的路徑一律拒絕（預設安全）
   }
 }

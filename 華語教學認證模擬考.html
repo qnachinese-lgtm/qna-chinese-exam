@@ -659,6 +659,7 @@ body.dark a { color:#9ec5ff; }
 // ════════════════════════════════════════════════
 //  QUESTION BANK
 // ════════════════════════════════════════════════
+/*__QB_START__*/
 const QB = {
 
 // ── 國文 (2024，20題) ─────────────────────────────────
@@ -1466,6 +1467,7 @@ culture: [
 ],
 
 };
+/*__QB_END__*/
 
 // ════════════════════════════════════════════════
 //  PDF LINKS
@@ -1537,13 +1539,16 @@ function setMode(m){
 }
 
 // ── Year filter init ──
-(function initYrFilter(){
-  const allYears = [...new Set(Object.values(QB).flat().map(q=>q.yr))].sort((a,b)=>a-b);
-  st.selectedYears = []; // 預設不選，由使用者自行選擇
+function buildYrFilter(){
   const row = document.getElementById('yr-filter-row');
-  // "全部" button（再按一次可全部取消）
+  if(!row) return;
+  const allYears = [...new Set(Object.values(QB).flat().map(q=>q.yr))].sort((a,b)=>a-b);
+  if(!Array.isArray(st.selectedYears)) st.selectedYears = [];
+  st.selectedYears = st.selectedYears.filter(y=>allYears.includes(y));
+  row.innerHTML = '';
   const allBtn = document.createElement('button');
   allBtn.className = 'yr-btn'; allBtn.textContent = '全部'; allBtn.dataset.yr = 'all';
+  allBtn.classList.toggle('active', allYears.length>0 && st.selectedYears.length===allYears.length);
   allBtn.onclick = () => {
     const allSel = st.selectedYears.length === allYears.length;
     st.selectedYears = allSel ? [] : [...allYears];
@@ -1557,12 +1562,10 @@ function setMode(m){
   allYears.forEach(yr => {
     const btn = document.createElement('button');
     btn.className = 'yr-btn'; btn.textContent = yr + ' 年'; btn.dataset.yr = yr;
+    btn.classList.toggle('active', st.selectedYears.includes(yr));
     btn.onclick = () => {
-      if(st.selectedYears.includes(yr)) {
-        st.selectedYears = st.selectedYears.filter(y=>y!==yr);
-      } else {
-        st.selectedYears.push(yr);
-      }
+      if(st.selectedYears.includes(yr)) st.selectedYears = st.selectedYears.filter(y=>y!==yr);
+      else st.selectedYears.push(yr);
       const allSel = st.selectedYears.length === allYears.length;
       row.querySelectorAll('.yr-btn').forEach(b => {
         if(b.dataset.yr==='all') b.classList.toggle('active', allSel);
@@ -1573,7 +1576,8 @@ function setMode(m){
     row.appendChild(btn);
   });
   updateCnts();
-})();
+}
+buildYrFilter();
 
 function updateCnts(){
   document.querySelectorAll('.subject-card').forEach(card => {
@@ -2935,10 +2939,25 @@ const FB_CONFIG = {
 
 let _db = null;
 
+async function loadQBFromCloud(){
+  if(!_db) return;
+  try{
+    const snap = await _db.collection('questionbank').get();
+    if(snap.empty) return;
+    let changed=false;
+    snap.docs.forEach(d=>{
+      const items=(d.data()||{}).items;
+      if(Array.isArray(items) && items.length && Object.prototype.hasOwnProperty.call(QB, d.id)){ QB[d.id]=items; changed=true; }
+    });
+    if(changed && typeof buildYrFilter==='function') buildYrFilter();
+  }catch(e){ console.warn('loadQBFromCloud:', e); }
+}
+
 function initFirebase(){
   try {
     if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
     _db = firebase.firestore();
+    loadQBFromCloud();
     syncFromCloud();
   } catch(e){ console.warn('Firebase unavailable:', e); }
 }
