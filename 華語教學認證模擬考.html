@@ -99,6 +99,10 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 .exp-title.ct { color:#27ae60; }
 .exp-title.wt { color:#e74c3c; }
 .exp-text { font-size:.88rem; line-height:1.8; color:#333; white-space:pre-line; text-align:left; }
+.exp-detail-btn { margin-top:10px; background:none; border:1px solid #c0392b; color:#c0392b; border-radius:14px; padding:4px 16px; font-size:.82rem; font-weight:600; cursor:pointer; }
+.exp-detail-btn:hover { background:#fdecea; }
+.exp-detail { margin-top:10px; font-size:.88rem; line-height:1.8; color:#333; white-space:pre-line; text-align:left; border-top:1px dashed #e3b9b3; padding-top:10px; }
+body.dark .exp-detail, body.dark .exp-text { color:#ededed; }
 
 .nav-row { position:fixed; left:0; right:0; bottom:0; background:#f5f0e8; padding:12px 0; border-top:1px solid #e6ddcb; box-shadow:0 -2px 8px rgba(0,0,0,.08); z-index:50; }
 .nav-inner { max-width:880px; margin:0 auto; padding:0 16px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
@@ -617,6 +621,8 @@ body.dark a { color:#9ec5ff; }
     <div class="explanation" id="q-exp">
       <div class="exp-title" id="exp-title"></div>
       <div class="exp-text"  id="exp-text"></div>
+      <button class="exp-detail-btn" id="exp-detail-btn" type="button" onclick="toggleExpDetail()">🔍 詳細分析 ▼</button>
+      <div class="exp-detail" id="exp-detail" style="display:none"></div>
     </div>
   </div>
   <div class="nav-row">
@@ -1653,6 +1659,12 @@ function renderQ(){
   if(navPanel && navPanel.style.display!=='none') renderQNav();
 }
 
+function toggleExpDetail(){
+  var d=document.getElementById('exp-detail'), b=document.getElementById('exp-detail-btn');
+  if(!d||!b) return;
+  if(d.style.display==='none'){ d.style.display='block'; b.textContent='🔼 收合詳細分析'; if(typeof _revealExplanation==='function'){ setTimeout(_revealExplanation,60); setTimeout(_revealExplanation,260); } }
+  else { d.style.display='none'; b.textContent='🔍 詳細分析 ▼'; }
+}
 function uH(s){ s=String(s==null?'':s); return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/&lt;u&gt;/g,'<u>').replace(/&lt;\/u&gt;/g,'</u>'); }
 function _showExplanation(q, isOK){
   const letters=['A','B','C','D'];
@@ -1668,7 +1680,21 @@ function _showExplanation(q, isOK){
     titleEl.className='exp-title wt';
     titleEl.textContent=`❌ 答錯了！正確答案是 ${letters[q.ans]}：${String(q.opts[q.ans]).replace(/<\/?u>/g,'')}`;
   }
-  textEl.textContent=q.exp;
+  const _exp=q.exp||'';
+  const _btn=document.getElementById('exp-detail-btn');
+  const _det=document.getElementById('exp-detail');
+  const _i=_exp.indexOf('\n錯的選項：');
+  if(_i>=0){
+    textEl.textContent=_exp.slice(0,_i);
+    _det.textContent=_exp.slice(_i+1);
+    _det.style.display='none';
+    _btn.style.display='inline-block';
+    _btn.textContent='🔍 詳細分析 ▼';
+  } else {
+    textEl.textContent=_exp;
+    _det.style.display='none'; _det.textContent='';
+    _btn.style.display='none';
+  }
   expEl.style.display='block';
 }
 
