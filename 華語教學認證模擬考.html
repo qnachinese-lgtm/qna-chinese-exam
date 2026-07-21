@@ -422,6 +422,8 @@ body.dark a { color:#9ec5ff; }
     <button data-fs="lg" onclick="setFontSize('lg')">大</button>
     <button data-fs="xl" onclick="setFontSize('xl')">特大</button>
   </div></div>
+  <div class="set-row"><span>📌 首頁顯示錯題複習</span><button id="set-showreview" class="set-toggle" onclick="toggleShowReview()" aria-label="首頁顯示錯題複習開關"></button></div>
+  <div class="set-row" id="set-review-access" style="display:none"><span>📌 查看之前的錯題</span><button onclick="toggleSettings();openReviewPicker()" style="background:#8b1a1a;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:.8rem;cursor:pointer">查看</button></div>
 </div>
 <script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg')document.documentElement.style.fontSize='112.5%';else if(_fs==='xl')document.documentElement.style.fontSize='125%';}catch(e){}</script>
 <header>
@@ -2116,11 +2118,15 @@ function applyPrefs(){
     document.documentElement.style.fontSize = fs==='lg'?'112.5%':(fs==='xl'?'125%':'');
     const dt=document.getElementById('set-dark'); if(dt) dt.classList.toggle('on', dark);
     document.querySelectorAll('#set-fontseg button').forEach(b=>b.classList.toggle('active', b.dataset.fs===fs));
+    const showReview = localStorage.getItem('tocfl_showreview')!=='0';   // 預設顯示
+    const sr=document.getElementById('set-showreview'); if(sr) sr.classList.toggle('on', showReview);
+    const acc=document.getElementById('set-review-access'); if(acc) acc.style.display = showReview?'none':'flex';
   }catch(e){}
 }
 function toggleSettings(){ const p=document.getElementById('settings-panel'); if(p) p.style.display = (p.style.display==='block'?'none':'block'); }
 function toggleDark(){ const cur=localStorage.getItem('tocfl_dark')==='1'; localStorage.setItem('tocfl_dark', cur?'0':'1'); applyPrefs(); }
 function setFontSize(fs){ localStorage.setItem('tocfl_fontsize', fs); applyPrefs(); }
+function toggleShowReview(){ const on=localStorage.getItem('tocfl_showreview')!=='0'; localStorage.setItem('tocfl_showreview', on?'0':'1'); applyPrefs(); if(typeof updateWrongReviewBtn==='function') updateWrongReviewBtn(); }
 document.addEventListener('click', (e)=>{ const p=document.getElementById('settings-panel'); const fab=document.getElementById('settings-fab'); if(p&&p.style.display==='block'&&!p.contains(e.target)&&e.target!==fab&&!fab.contains(e.target)) p.style.display='none'; });
 
 // ════════════════════════════════════════════════
@@ -2806,7 +2812,8 @@ function updateWrongReviewBtn(){
   const cnt = document.getElementById('wrong-count');
   if(!btn) return;
   const wrongs = getWrongQs();
-  if(wrongs.length){
+  const showReview = localStorage.getItem('tocfl_showreview')!=='0';   // 首頁是否顯示錯題複習
+  if(wrongs.length && showReview){
     btn.style.display='block';
     if(cnt) cnt.textContent = wrongs.length;
   } else {
