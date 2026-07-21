@@ -255,9 +255,11 @@ body.dark a { color:#9ec5ff; }
 .hist-title { font-size:1.2rem; font-weight:700; flex:1; }
 .hist-empty { text-align:center; color:#999; padding:40px 0; }
 .hist-record { background:#fff; border-radius:12px; padding:16px; margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,.07); }
-.hist-record-top { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.hist-record-top { display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
 .hist-date { font-size:.8rem; color:#888; }
 .hist-name { font-weight:600; color:#333; font-size:.9rem; }
+.hist-del { margin-left:auto; background:none; border:1px solid #e0b4b4; color:#c62828; border-radius:7px; padding:3px 9px; font-size:.85rem; cursor:pointer; line-height:1.2; }
+.hist-del:hover { background:#fdecea; border-color:#c62828; }
 .hist-subj { font-size:.8rem; background:#e8f0fe; color:#4a90d9; border-radius:4px; padding:2px 8px; }
 .hist-score-row { display:flex; align-items:center; gap:12px; }
 .hist-score-big { font-size:1.4rem; font-weight:700; }
@@ -3423,6 +3425,15 @@ function clearHistory(){
   fbDeleteUserHistory(st.currentUser);
   renderHistory();
 }
+// 刪除單筆考試記錄（學習者可自行刪除自己的紀錄）
+function deleteHistoryRecord(date, time, pct){
+  if(!window.confirm('確定要刪除這筆記錄嗎？\n（'+date+' '+time+'　'+pct+'分）\n此操作無法復原。')) return;
+  const allHistory = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+  const remaining = allHistory.filter(r=>!(r.name===st.currentUser && r.date===date && r.time===time));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(remaining));
+  fbDeleteExamRecord(st.currentUser, date, time);   // 同步刪除雲端
+  renderHistory();
+}
 
 let _histQSets = [];
 function buildHistAnalysis(recs){
@@ -3495,6 +3506,7 @@ function renderHistory(){
         <span class="hist-name">👤 ${r.name}</span>
         <span class="hist-date">${r.date} ${r.time}</span>
         ${subjTags}
+        <button class="hist-del" title="刪除這筆記錄" onclick="deleteHistoryRecord('${r.date}','${r.time}',${r.pct})">🗑</button>
       </div>
       <div style="font-size:.78rem;color:#888;margin-bottom:8px">年份：${yrText}</div>
       <div class="hist-score-row">
@@ -3669,6 +3681,11 @@ function fbAddExamRecord(record){
   const id = record.name+'_'+record.date+'_'+record.time.replace(/:/g,'');
   _db.collection('config').doc('examHistory').collection('records').doc(id).set(record).catch(e=>console.warn('fbAddExamRecord:', e));
 }
+function fbDeleteExamRecord(name, date, time){
+  if(!_db) return Promise.resolve();
+  const id = name+'_'+date+'_'+time.replace(/:/g,'');
+  return _db.collection('config').doc('examHistory').collection('records').doc(id).delete().catch(e=>console.warn('fbDeleteExamRecord:', e));
+}
 
 function getGuestId(){
   let g = localStorage.getItem('tocfl_guest_id');
@@ -3838,7 +3855,7 @@ function renderQReview(){
   <div class="hist-header">
     <button class="hist-back" onclick="closeHistory()">← 返回</button>
     <span class="hist-title">📊 我的學習記錄</span>
-    <button style="background:none;border:1px solid #e57373;color:#c62828;border-radius:8px;padding:6px 14px;font-size:.82rem;cursor:pointer" onclick="clearHistory()">清除記錄</button>
+    <button style="background:none;border:1px solid #e57373;color:#c62828;border-radius:8px;padding:6px 14px;font-size:.82rem;cursor:pointer" onclick="clearHistory()">🗑 清除全部</button>
   </div>
   <div class="hist-filter">
     <select id="hist-filter-subj" onchange="renderHistory()">

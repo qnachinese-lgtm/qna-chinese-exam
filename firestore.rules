@@ -15,10 +15,11 @@ service cloud.firestore {
       allow delete: if isMaster();
     }
 
-    // 考試紀錄（學習者作答後寫入、後台讀取）；只有主管理員能刪除。
+    // 考試紀錄（學習者作答後寫入、後台讀取）；
+    // 學習者需能自行刪除自己的紀錄，因無帳號驗證，比照 create/update 開放刪除
+    // （信任模型與 create/update 一致；App 介面只讓學習者刪自己的紀錄）。
     match /config/examHistory/records/{doc} {
-      allow read, create, update: if true;
-      allow delete: if isMaster();
+      allow read, create, update, delete: if true;
     }
 
     // 訪客試做紀錄（學習者寫入、後台讀取/清空）；只有主管理員能刪除。
