@@ -92,6 +92,9 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 .opt-btn.reveal   { border-color:#27ae60; background:#f0fff4; }
 .opt-btn.reveal .opt-letter { color:#27ae60; }
 .opt-btn:disabled { cursor:default; }
+.opt-btn.picked   { border-color:#2c6fb0; background:#eef5fc; }
+.opt-btn.picked .opt-letter { color:#2c6fb0; }
+body.dark .opt-btn.picked { background:#22303d; border-color:#3d7bbf; }
 
 .explanation { margin-top:14px; padding:15px; border-radius:10px; border-left:4px solid #27ae60; background:#f8fff8; display:none; }
 .explanation.wrong-exp { border-left-color:#e74c3c; background:#fff8f8; }
@@ -127,6 +130,7 @@ body.dark .exp-detail, body.dark .exp-text { color:#ededed; }
 .qnav-cell { width:38px; height:38px; border-radius:8px; border:1.5px solid #bbb; background:#fff; color:#555; font-size:.82rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; }
 .qnav-cell.ok { background:#e8f5e9; border-color:#2e7d32; color:#2e7d32; }
 .qnav-cell.no { background:#fdecea; border-color:#c0392b; color:#c0392b; }
+.qnav-cell.done { background:#eef5fc; border-color:#2c6fb0; color:#2c6fb0; }
 .qnav-cell.cur { box-shadow:0 0 0 2px #2c3e50; border-color:#2c3e50; }
 
 /* ── Result screen ── */
@@ -569,6 +573,14 @@ body.dark a { color:#9ec5ff; }
     <button class="mode-btn" id="mode-rand" onclick="setMode('random')">隨機出題</button>
   </div>
 
+  <div class="yr-filter-wrap" style="margin-bottom:10px">
+    <label>📝 作答方式</label>
+    <div class="mode-row" style="margin-bottom:0">
+      <button class="mode-btn active" id="reveal-instant" onclick="setReveal('instant')">⚡ 一題一答（即時看解析）</button>
+      <button class="mode-btn" id="reveal-end" onclick="setReveal('end')">📋 全部做完再看答案</button>
+    </div>
+  </div>
+
   <div class="timer-row">
     <label>⏱ 計時模式：</label>
     <button class="timer-btn active" onclick="setTimerMode(0,this)">不計時</button>
@@ -590,8 +602,8 @@ body.dark a { color:#9ec5ff; }
 <div id="exam-screen">
   <div class="score-live">
     <span>進度：<b id="lv-prog">0/0</b></span>
-    <span class="sc-correct">答對：<b id="lv-correct">0</b></span>
-    <span class="sc-wrong">答錯：<b id="lv-wrong">0</b></span>
+    <span class="sc-correct" id="lv-correct-wrap">答對：<b id="lv-correct">0</b></span>
+    <span class="sc-wrong" id="lv-wrong-wrap">答錯：<b id="lv-wrong">0</b></span>
     <span id="lv-timer" style="display:none"></span>
     <span style="margin-left:auto;color:#c0392b;cursor:pointer;font-size:.8rem;" onclick="confirmExit()">✕ 結束測驗</span>
   </div>
@@ -643,6 +655,9 @@ body.dark a { color:#9ec5ff; }
     <div id="res-badge"></div>
     <div class="breakdown" id="res-breakdown"></div>
     <div style="margin-top:12px"><span id="res-saved-msg" class="save-badge" style="display:none"></span></div>
+    <div style="margin:12px 0 8px">
+      <button class="btn-primary" style="width:auto;padding:11px 26px" onclick="reviewAnswers()">📝 逐題看答案與解析</button>
+    </div>
     <div style="margin:8px 0">
       <button class="btn-pdf" onclick="exportPDF()">📥 下載成績單 (PDF)</button>
       <button class="btn-share" onclick="shareResult()">📤 分享成績</button>
@@ -2089,7 +2104,7 @@ const PDF_PAGES = [
 //  STATE
 // ════════════════════════════════════════════════
 const SUBJ_NAMES = { chinese:'國文', culture:'華人社會與文化', linguistics:'漢語語言學', teaching:'華語文教學' };
-let st = { selected:[], selectedYears:[], mode:'sequential', questions:[], idx:0, answered:false, correct:0, wrong:0, stats:{}, currentUser:null, examResults:[], answers:[], timerLeft:0, timerInterval:null, isReviewMode:false };
+let st = { selected:[], selectedYears:[], mode:'sequential', revealMode:'instant', reviewing:false, questions:[], idx:0, answered:false, correct:0, wrong:0, stats:{}, currentUser:null, examResults:[], answers:[], timerLeft:0, timerInterval:null, isReviewMode:false };
 // ── 顯示設定:深色模式 / 字級 ──
 function applyPrefs(){
   try{
@@ -2125,6 +2140,12 @@ function setMode(m){
   st.mode = m;
   document.getElementById('mode-seq').classList.toggle('active', m==='sequential');
   document.getElementById('mode-rand').classList.toggle('active', m==='random');
+}
+function setReveal(m){
+  st.revealMode = m;
+  var i=document.getElementById('reveal-instant'), e=document.getElementById('reveal-end');
+  if(i) i.classList.toggle('active', m==='instant');
+  if(e) e.classList.toggle('active', m==='end');
 }
 
 // ── Year filter init ──
@@ -2192,6 +2213,7 @@ if(!qs.length){ alert('所選條件下沒有題目，請調整篩選條件'); re
   st.questions = qs; st.idx = 0; st.correct = 0; st.wrong = 0; st.answered = false; st.examResults = []; st.answers = new Array(qs.length).fill(null);
   st.stats = {}; st.selected.forEach(s => { st.stats[s]={correct:0,total:0}; });
   st.isReviewMode = false;
+  st.reviewing = false;
   document.getElementById('subject-screen').style.display='none';
   document.getElementById('exam-screen').style.display='block';
   startExamTimer();
@@ -2223,22 +2245,31 @@ function renderQ(){
   const opts = document.getElementById('q-opts');
   opts.innerHTML='';
   const letters=['A','B','C','D'];
+  // 是否揭曉答案：一題一答模式（作答後即揭曉），或交卷後的逐題檢討
+  const revealNow = st.reviewing || st.revealMode!=='end';
   q.opts.forEach((opt,i)=>{
     const btn=document.createElement('button');
     btn.className='opt-btn';
     btn.innerHTML=`<span class="opt-letter">${letters[i]}</span><span>${uH(opt)}</span>`;
-    if(ans){
+    if(ans && revealNow){
       btn.disabled=true;
       if(i===q.ans && !q.free) btn.classList.add('reveal');
       if(i===ans.chosen && !ans.correct) btn.classList.add('wrong');
       if(i===ans.chosen && ans.correct) btn.classList.add('correct');
     } else {
+      // 未作答，或「全部做完再看答案」模式作答中（可改選、不揭曉對錯）
+      if(ans && i===ans.chosen) btn.classList.add('picked');
       btn.onclick=()=>handleAns(i);
     }
     opts.appendChild(btn);
   });
-  if(ans){ _showExplanation(q, ans.correct); }
+  if(ans && revealNow){ _showExplanation(q, ans.correct); }
   else { const e=document.getElementById('q-exp'); e.style.display='none'; e.className='explanation'; }
+  // 「全部做完再看答案」模式作答中：隱藏即時對錯統計
+  const _cw=document.getElementById('lv-correct-wrap'), _ww=document.getElementById('lv-wrong-wrap');
+  const _hideStats = (st.revealMode==='end' && !st.reviewing);
+  if(_cw) _cw.style.display=_hideStats?'none':'';
+  if(_ww) _ww.style.display=_hideStats?'none':'';
   const nextBtn=document.getElementById('btn-next');
   nextBtn.textContent = '下一題 →';
   nextBtn.style.display='inline-block';
@@ -2247,7 +2278,11 @@ function renderQ(){
   prevBtn.style.display='inline-block';
   prevBtn.style.visibility = idx>0 ? 'visible' : 'hidden';
   const submitBtn=document.getElementById('btn-submit');
-  if(submitBtn) submitBtn.style.display='inline-block';
+  if(submitBtn){
+    submitBtn.style.display='inline-block';
+    if(st.reviewing){ submitBtn.textContent='← 回成績'; submitBtn.onclick=backToResult; }
+    else { submitBtn.textContent='交卷'; submitBtn.onclick=finishExam; }
+  }
   const navPanel=document.getElementById('q-nav-panel');
   if(navPanel && navPanel.style.display!=='none') renderQNav();
 }
@@ -2293,9 +2328,18 @@ function _showExplanation(q, isOK){
 
 function handleAns(chosen){
   const idx = st.idx;
+  if(st.reviewing) return;   // 檢討模式不可作答
   if(!st.answers) st.answers = new Array(st.questions.length).fill(null);
-  if(st.answers[idx]) return;   // 已作答，不可更改
   const q = st.questions[idx], isOK = q.free===true || chosen===q.ans;
+  // 「全部做完再看答案」模式：只記錄選項、可改選、不揭曉對錯，交卷後才看答案
+  if(st.revealMode==='end'){
+    st.answers[idx] = {qNo:idx+1, yr:q.yr, subject:q.subject, q:q.q, opts:[...q.opts], chosen, ans:q.ans, correct:isOK, free:q.free||false, exp:q.exp||''};
+    saveExamResume();
+    renderQ();
+    return;
+  }
+  // 「一題一答」模式：作答後即揭曉，鎖定不可更改
+  if(st.answers[idx]) return;   // 已作答，不可更改
   st.answers[idx] = {qNo:idx+1, yr:q.yr, subject:q.subject, q:q.q, opts:[...q.opts], chosen, ans:q.ans, correct:isOK, free:q.free||false, exp:q.exp||''};
   if(!st.stats[q.subject]) st.stats[q.subject]={correct:0,total:0};
   if(isOK){ st.correct++; st.stats[q.subject].correct++; } else st.wrong++;
@@ -2362,10 +2406,11 @@ function renderQNav(){
   const grid=document.getElementById('q-nav-grid');
   if(!grid) return;
   const ans=st.answers||[];
+  const revealNow = st.reviewing || st.revealMode!=='end';
   grid.innerHTML = st.questions.map((q,i)=>{
     const a=ans[i];
     let cls='qnav-cell';
-    if(a){ cls += a.correct ? ' ok' : ' no'; }
+    if(a){ cls += revealNow ? (a.correct ? ' ok' : ' no') : ' done'; }
     if(i===st.idx) cls += ' cur';
     return '<button class="'+cls+'" onclick="gotoQ('+i+')">'+(i+1)+'</button>';
   }).join('');
@@ -2473,6 +2518,21 @@ async function shareResult(){
 }
 
 function retryExam(){ document.getElementById('result-screen').style.display='none'; startExam(); }
+// 交卷後逐題檢討（看正確答案與解析）
+function reviewAnswers(){
+  st.reviewing = true;
+  st.idx = 0;
+  document.getElementById('result-screen').style.display='none';
+  document.getElementById('exam-screen').style.display='block';
+  renderQ();
+  _scrollExamTop();
+}
+function backToResult(){
+  st.reviewing = false;
+  document.getElementById('exam-screen').style.display='none';
+  document.getElementById('result-screen').style.display='block';
+  window.scrollTo(0,0);
+}
 function goHome(){
   stopExamTimer();
   clearExamResume();
@@ -2788,6 +2848,7 @@ function startReviewMode(subject){
   if(st.mode==='random') qs = qs.sort(()=>Math.random()-.5);
   st.questions=qs; st.idx=0; st.correct=0; st.wrong=0; st.answered=false; st.examResults=[]; st.answers=new Array(qs.length).fill(null);
   st.stats={}; qs.forEach(q=>{ if(!st.stats[q.subject]) st.stats[q.subject]={correct:0,total:0}; }); st.isReviewMode=true;
+  st.revealMode='instant'; st.reviewing=false;   // 錯題複習一律即時看解析
   document.getElementById('subject-screen').style.display='none';
   document.getElementById('exam-screen').style.display='block';
   startExamTimer();
@@ -3649,6 +3710,7 @@ function saveExamResume(){
     selected: st.selected,
     selectedYears: st.selectedYears,
     mode: st.mode,
+    revealMode: st.revealMode,
     answers: st.answers,
     stats: st.stats,
     currentUser: st.currentUser,
@@ -3683,10 +3745,12 @@ function checkExamResume(){
       st.selected     = saved.selected;
       st.selectedYears= saved.selectedYears;
       st.mode         = saved.mode;
+      st.revealMode   = saved.revealMode || 'instant';
       st.answers      = answersArr;
       st.examResults  = [];
       st.stats        = saved.stats || {};
       st.isReviewMode = false;
+      st.reviewing    = false;
       st.answered     = false;
       document.getElementById('subject-screen').style.display='none';
       document.getElementById('exam-screen').style.display='block';
