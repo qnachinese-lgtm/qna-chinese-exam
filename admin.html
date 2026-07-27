@@ -40,6 +40,31 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 #admin-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; align-items:center; justify-content:center; }
 .admin-modal { background:#fff; border-radius:16px; padding:28px 24px; width:320px; max-width:90vw; }
 .admin-modal h3 { margin:0 0 20px; font-size:1.05rem; }
+/* ── 儀表板 ── */
+.dash-cards { display:flex; flex-wrap:wrap; gap:12px; }
+.dash-card { flex:1 1 130px; min-width:130px; background:#fff; border:1px solid #e8e8ee; border-radius:12px; padding:14px 16px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+.dash-val { font-size:1.5rem; font-weight:800; color:#2c3e50; line-height:1.1; word-break:break-word; }
+.dash-label { font-size:.8rem; color:#888; margin-top:4px; }
+.dash-sub { font-size:.72rem; color:#aaa; margin-top:2px; }
+.dash-bars { margin-top:14px; background:#fff; border:1px solid #e8e8ee; border-radius:12px; padding:14px 16px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+.dash-bar-row { display:flex; align-items:center; gap:10px; margin:7px 0; font-size:.82rem; }
+.dash-bar-name { flex:0 0 130px; color:#444; }
+.dash-bar { flex:1; height:12px; background:#eee; border-radius:6px; overflow:hidden; }
+.dash-bar-fill { height:100%; border-radius:6px; }
+.dash-bar-pct { flex:0 0 42px; text-align:right; font-weight:700; }
+.dash-bar-cnt { flex:0 0 66px; text-align:right; color:#999; font-size:.75rem; }
+/* ── 學生詳情 ── */
+.stu-link { background:none; border:none; color:#2c6fb0; font:inherit; font-weight:600; cursor:pointer; padding:0; text-decoration:underline; }
+.stu-link:hover { color:#1a4a80; }
+.stu-modal { background:#fff; border-radius:16px; padding:24px; width:640px; max-width:94vw; max-height:90vh; overflow-y:auto; box-shadow:0 8px 40px rgba(0,0,0,.25); }
+.stu-sec-title { font-size:.9rem; font-weight:700; color:#8b1a1a; margin:20px 0 8px; }
+.stu-pills { display:flex; flex-wrap:wrap; gap:6px; }
+.stu-pill { font-size:.75rem; padding:3px 9px; border-radius:20px; color:#fff; font-weight:700; }
+.stu-rec-table { width:100%; border-collapse:collapse; font-size:.8rem; }
+.stu-rec-table th { background:#f2f4f8; color:#555; padding:7px 10px; text-align:left; font-weight:600; }
+.stu-rec-table td { padding:7px 10px; border-bottom:1px solid #f0f0f0; }
+.stu-wrong-item { font-size:.82rem; padding:7px 0; border-bottom:1px dashed #eee; line-height:1.5; }
+.stu-wrong-tag { display:inline-block; background:#fdecea; color:#c0392b; font-size:.7rem; padding:1px 7px; border-radius:6px; margin-right:6px; white-space:nowrap; }
 .admin-modal label { display:block; font-size:.82rem; color:#666; margin-bottom:4px; margin-top:12px; }
 .admin-modal input { width:100%; box-sizing:border-box; padding:10px 12px; border:2px solid #e0e0e0; border-radius:8px; font-size:.95rem; outline:none; }
 .admin-modal input:focus { border-color:#4a90d9; }
@@ -124,6 +149,12 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
       <button id="add-learner-btn" class="admin-add-btn" style="margin:0" onclick="openAddModal()">＋ 新增學習者帳號</button>
     </div>
     <div id="who-am-i" style="font-size:.8rem;color:#888;margin-bottom:16px"></div>
+
+    <!-- 總覽儀表板 -->
+    <div class="admin-header" style="margin-bottom:12px">
+      <span class="admin-title">📊 總覽</span>
+    </div>
+    <div id="dashboard" style="margin-bottom:28px"></div>
 
     <!-- 學習者名單 -->
     <div class="admin-header" style="margin-bottom:16px">
@@ -262,12 +293,19 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
   </div>
 </div>
 
+<!-- 學生詳情 Modal -->
+<div id="student-detail-overlay" onclick="if(event.target===this)closeStudentDetail()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center;padding:16px">
+  <div class="stu-modal" id="student-detail-box"><!-- rendered by openStudentDetail() --></div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════
 //  設定
 // ═══════════════════════════════════════════
 const USERS_KEY   = 'tocfl_users';
 const STORAGE_KEY = 'tocfl_exam_history';
+const SUBJ_NAMES_ADMIN = {chinese:'國文', linguistics:'漢語語言學', teaching:'華語文教學', culture:'華人社會與文化'};
+const SUBJ_ORDER_ADMIN = ['chinese','linguistics','teaching','culture'];
 const MASTER_EMAIL = 'qnachinese@gmail.com';   // 主管理員（永遠有權限、唯一能管理其他管理員）
 
 const FB_CONFIG = {
@@ -659,8 +697,126 @@ function toggleGuestTable(){
 function getVisibleGroups(){
   return getUserGroups().filter(g=>!_adminEmails.has((g.primary.email||'').toLowerCase()));
 }
+// 跨紀錄彙總各科正確率
+function _aggScores(recs){
+  const agg={};
+  recs.forEach(r=>{
+    if(r.stats){
+      Object.keys(r.stats).forEach(s=>{ const o=r.stats[s]; if(!o) return; if(!agg[s])agg[s]={c:0,t:0}; agg[s].c+=(o.correct||0); agg[s].t+=(o.total||0); });
+    } else if(Array.isArray(r.subjects)){
+      r.subjects.forEach(s=>{ if(!agg[s])agg[s]={c:0,t:0}; agg[s].c+=(r.correct||0); agg[s].t+=(r.total||0); });
+    }
+  });
+  Object.keys(agg).forEach(s=>{ agg[s].pct = agg[s].t? Math.round(agg[s].c/agg[s].t*100):0; });
+  return agg;
+}
+function _ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function _pctColor(p){ return p>=70?'#2e7d32':(p>=50?'#b8860b':'#c0392b'); }
+
+// 總覽儀表板
+function renderDashboard(){
+  const el=document.getElementById('dashboard'); if(!el) return;
+  const groups=getVisibleGroups();
+  const history=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+  const names=new Set(groups.map(g=>g.primary.name));
+  const recs=history.filter(r=>names.has(r.name));
+  const today=_ymd(new Date());
+  const wa=new Date(); wa.setDate(wa.getDate()-6); const weekAgo=_ymd(wa);
+  const todayN=recs.filter(r=>r.date===today).length;
+  const weekN=recs.filter(r=>(r.date||'')>=weekAgo).length;
+  const avg=recs.length? Math.round(recs.reduce((s,r)=>s+(r.pct||0),0)/recs.length):0;
+  const cnt={}; recs.forEach(r=>{cnt[r.name]=(cnt[r.name]||0)+1;});
+  let topName='—',topCnt=0; Object.keys(cnt).forEach(n=>{ if(cnt[n]>topCnt){topCnt=cnt[n];topName=n;} });
+  const agg=_aggScores(recs);
+  const subjArr=SUBJ_ORDER_ADMIN.filter(s=>agg[s]&&agg[s].t>0).map(s=>({s,pct:agg[s].pct,c:agg[s].c,t:agg[s].t}));
+  let weak='—'; if(subjArr.length){ const w=subjArr.slice().sort((a,b)=>a.pct-b.pct)[0]; weak=SUBJ_NAMES_ADMIN[w.s]+'（'+w.pct+'%）'; }
+  const card=(label,val,sub)=>'<div class="dash-card"><div class="dash-val">'+val+'</div><div class="dash-label">'+label+'</div>'+(sub?'<div class="dash-sub">'+sub+'</div>':'')+'</div>';
+  let html='<div class="dash-cards">'
+    +card('學生總數', groups.length, '')
+    +card('今日作答', todayN+' 次', '近7天 '+weekN+' 次')
+    +card('全體平均', avg+' 分', '共 '+recs.length+' 次作答')
+    +card('最活躍學生', esc(topName), topCnt?topCnt+' 次':'')
+    +card('最需加強', weak, '')
+    +'</div>';
+  if(subjArr.length){
+    html+='<div class="dash-bars"><div style="font-size:.8rem;color:#888;margin-bottom:8px">各科全體平均正確率</div>';
+    subjArr.forEach(o=>{ const col=_pctColor(o.pct);
+      html+='<div class="dash-bar-row"><span class="dash-bar-name">'+SUBJ_NAMES_ADMIN[o.s]+'</span><div class="dash-bar"><div class="dash-bar-fill" style="width:'+o.pct+'%;background:'+col+'"></div></div><span class="dash-bar-pct" style="color:'+col+'">'+o.pct+'%</span><span class="dash-bar-cnt">'+o.c+'/'+o.t+'</span></div>';
+    });
+    html+='</div>';
+  }
+  el.innerHTML=html;
+}
+
+// 點學生看詳情
+function openStudentDetail(i){
+  const groups=getVisibleGroups(); const g=groups[i]; if(!g) return;
+  const acc=g.primary; const name=acc.name;
+  const history=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+  const recs=history.filter(r=>r.name===name);   // 已新到舊
+  const agg=_aggScores(recs);
+  const subjArr=SUBJ_ORDER_ADMIN.filter(s=>agg[s]&&agg[s].t>0).map(s=>({s,pct:agg[s].pct,c:agg[s].c,t:agg[s].t}));
+  const chron=recs.slice().reverse(); const pts=chron.slice(-12);
+  // 最常錯的題
+  const wm={};
+  recs.forEach(r=>{ (r.questions||[]).forEach(q=>{ if(q&&q.correct===false&&!q.free){ const k=(q.subject||'')+'|'+(q.yr||'')+'|'+(q.q||''); if(!wm[k])wm[k]={n:0,subject:q.subject,yr:q.yr,q:q.q}; wm[k].n++; } }); });
+  const topWrong=Object.values(wm).sort((a,b)=>b.n-a.n).slice(0,8);
+
+  let h='<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">'
+    +'<span style="font-size:1.15rem;font-weight:800;color:#2c3e50">👤 '+esc(name)+'</span>'
+    +'<button onclick="closeStudentDetail()" style="margin-left:auto;background:none;border:none;font-size:1.3rem;cursor:pointer;color:#999;line-height:1">✕</button></div>'
+    +'<div style="font-size:.8rem;color:#888;margin-bottom:6px">'+(acc.email?esc(acc.email)+'　':'')+'考試次數：<b>'+recs.length+'</b> 次</div>';
+
+  if(!recs.length){
+    h+='<div style="color:#999;padding:20px 0;text-align:center">這位學習者尚無作答紀錄</div>';
+    document.getElementById('student-detail-box').innerHTML=h;
+    document.getElementById('student-detail-overlay').style.display='flex';
+    return;
+  }
+
+  // 各科平均
+  if(subjArr.length){
+    h+='<div class="stu-sec-title">各科平均正確率</div><div class="dash-bars" style="margin-top:0">';
+    subjArr.forEach(o=>{ const col=_pctColor(o.pct);
+      h+='<div class="dash-bar-row"><span class="dash-bar-name">'+SUBJ_NAMES_ADMIN[o.s]+'</span><div class="dash-bar"><div class="dash-bar-fill" style="width:'+o.pct+'%;background:'+col+'"></div></div><span class="dash-bar-pct" style="color:'+col+'">'+o.pct+'%</span><span class="dash-bar-cnt">'+o.c+'/'+o.t+'</span></div>';
+    });
+    h+='</div>';
+  }
+
+  // 進步軌跡
+  if(pts.length){
+    h+='<div class="stu-sec-title">進步軌跡（最近 '+pts.length+' 次，舊 → 新）</div><div class="stu-pills">';
+    pts.forEach(r=>{ const col=_pctColor(r.pct||0); h+='<span class="stu-pill" title="'+esc(r.date||'')+'" style="background:'+col+'">'+(r.pct||0)+'</span>'; });
+    h+='</div>';
+  }
+
+  // 每次作答
+  h+='<div class="stu-sec-title">每次作答紀錄</div><table class="stu-rec-table"><thead><tr><th>日期時間</th><th>科目</th><th>年份</th><th>成績</th></tr></thead><tbody>';
+  recs.forEach(r=>{ const col=_pctColor(r.pct||0);
+    const subs=(r.subjects||[]).map(s=>SUBJ_NAMES_ADMIN[s]||s).join('、');
+    const yrs=(r.years||[]).join('、');
+    h+='<tr><td style="white-space:nowrap">'+esc(r.date||'')+'<br><span style="color:#aaa;font-size:.72rem">'+esc(r.time||'')+'</span></td>'
+      +'<td>'+esc(subs)+'</td><td style="color:#888">'+esc(yrs)+'</td>'
+      +'<td style="white-space:nowrap"><b style="color:'+col+'">'+(r.pct||0)+' 分</b> <span style="color:#999;font-size:.75rem">('+(r.correct||0)+'/'+(r.total||0)+')</span></td></tr>';
+  });
+  h+='</tbody></table>';
+
+  // 最常錯的題
+  if(topWrong.length){
+    h+='<div class="stu-sec-title">最常錯的題（前 '+topWrong.length+'）</div>';
+    topWrong.forEach(w=>{ const qt=String(w.q||'').replace(/<\/?u>/g,'');
+      h+='<div class="stu-wrong-item"><span class="stu-wrong-tag">'+esc(SUBJ_NAMES_ADMIN[w.subject]||w.subject||'')+'·'+esc(w.yr||'')+'　錯 '+w.n+' 次</span>'+esc(qt)+'</div>';
+    });
+  }
+
+  document.getElementById('student-detail-box').innerHTML=h;
+  document.getElementById('student-detail-overlay').style.display='flex';
+}
+function closeStudentDetail(){ const o=document.getElementById('student-detail-overlay'); if(o) o.style.display='none'; }
+
 function renderAdminPanel(){
   const isMaster = _currentRole==='master';
+  renderDashboard();
   const head = document.getElementById('learner-head');
   if(head){
     head.innerHTML = '<th>名稱</th><th>密碼</th><th>Gmail</th><th>考試次數</th><th>最近成績</th>' + (isMaster?'<th>操作</th>':'');
@@ -701,7 +857,7 @@ function renderAdminPanel(){
       '<button class="admin-reset-btn" onclick="resetUserHistory('+i+')">清除記錄</button>'+
       '<button class="admin-delete-btn" onclick="deleteUser('+i+')">刪除</button>'+
       '</div></td>') : '';
-    return '<tr><td>'+esc(acc.name)+guestTag+'</td>'+
+    return '<tr><td><button type="button" class="stu-link" onclick="openStudentDetail('+i+')">'+esc(acc.name)+'</button>'+guestTag+'</td>'+
       '<td class="pw-cell"><span style="color:#aaa;font-family:sans-serif;font-size:.8rem">🔒 已加密</span></td>'+
       '<td>'+(acc.email?esc(acc.email):'—')+'</td>'+
       '<td>'+recs.length+' 次</td>'+
