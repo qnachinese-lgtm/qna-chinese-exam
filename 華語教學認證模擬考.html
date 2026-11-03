@@ -4189,10 +4189,17 @@ function _randomPw(){
 
 async function legacyNames(email){
   if(!_db || !email) return [];
+  email = email.trim().toLowerCase();
   try{
-    const d = await _db.collection(LEGACY_COL).doc(await hashPw(email.trim().toLowerCase())).get();
-    return (d.exists && Array.isArray(d.data().names)) ? d.data().names : [];
-  }catch(e){ console.warn('legacyNames:', e); return []; }
+    const d = await _db.collection(LEGACY_COL).doc(await hashPw(email)).get();
+    if(d.exists && Array.isArray(d.data().names) && d.data().names.length) return d.data().names;
+  }catch(e){ console.warn('legacyNames:', e); }
+  // 升級索引還沒建立（主管理員尚未開過後台）→ 直接用 Email 找還沒升級的舊資料。
+  // 舊規則下查得到；新規則下會被擋（屆時索引已建立，不需要這一步）。
+  try{
+    const s2 = await _db.collection('users').where('email','==',email).get();
+    return s2.docs.filter(x=>!x.data().uid).map(x=>x.id);
+  }catch(e){ return []; }
 }
 
 // 讀取（或認領）目前登入者的學習者資料
