@@ -316,9 +316,10 @@ const FB_CONFIG = {
   messagingSenderId: "645044163415",
   appId: "1:645044163415:web:c33d1a22422de3083b6412"
 };
-firebase.initializeApp(FB_CONFIG);
-const auth = firebase.auth();
-const _db  = firebase.firestore();
+// 後台用獨立的 Firebase app（名稱 'admin'），登入狀態與學習者頁面分開，互不影響
+const _adminApp = firebase.initializeApp(FB_CONFIG, 'admin');
+const auth = _adminApp.auth();
+const _db  = _adminApp.firestore();
 
 let _currentRole = null;
 let _adminLoginAttempt = false;   // 使用者剛按下「登入」   // 'master' | 'admin'
