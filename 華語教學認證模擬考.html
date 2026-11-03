@@ -409,6 +409,7 @@ body.dark a { color:#9ec5ff; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <!-- jsPDF / XLSX 改為「用到才載入」，加速手機首次開啟 -->
 </head>
@@ -473,31 +474,16 @@ body.dark a { color:#9ec5ff; }
     </div>
     <div class="login-error" id="login-error"></div>
     <button class="login-btn" id="login-submit-btn" onclick="submitLogin()">登入 →</button>
-    <div id="otp-login-wrap" style="margin-top:8px;text-align:center">
-      <button type="button" onclick="showOtpLogin()" style="background:none;border:none;color:#357abd;font-size:.82rem;cursor:pointer;text-decoration:underline">📧 用 Email 驗證碼登入（免密碼）</button>
-      <div id="otp-login-box" style="display:none;margin-top:8px;background:#f0f7ff;border:1px solid #bcdcff;border-radius:8px;padding:12px;text-align:left">
-        <div id="otp-login-step1">
-          <input type="email" id="otp-login-email" placeholder="註冊用的 Email" style="width:100%;margin-bottom:8px">
-          <button class="login-btn" onclick="otpLoginSend()" style="padding:8px;font-size:.85rem">發送驗證碼</button>
-          <div id="otp-login-msg1" style="font-size:.8rem;margin-top:6px"></div>
-        </div>
-        <div id="otp-login-step2" style="display:none">
-          <input type="text" id="otp-login-code" placeholder="6 位數驗證碼" inputmode="numeric" style="width:100%;margin-bottom:8px">
-          <button class="login-btn" onclick="otpLoginVerify()" style="padding:8px;font-size:.85rem;background:#2e7d32">登入</button>
-          <div id="otp-login-msg2" style="font-size:.8rem;margin-top:6px"></div>
-        </div>
-      </div>
-    </div>
     <div id="user-forgot-wrap" style="text-align:center;margin-top:8px">
       <button type="button" style="background:none;border:none;color:#1976d2;font-size:.8rem;cursor:pointer;text-decoration:underline" onclick="toggleUserForgot()">忘記密碼？</button>
     </div>
     <div id="user-forgot-box" style="display:none;margin-top:8px;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:12px 14px;font-size:.82rem;color:#5d4037;text-align:left;line-height:1.7">
       <strong>🔑 忘記密碼</strong>
       <div id="uforg-step1" style="margin-top:8px">
-        <p style="margin-bottom:6px">請輸入您的帳號名稱，驗證碼將發送到您登記的 Gmail</p>
-        <input type="text" id="uforg-name" placeholder="帳號名稱或 Gmail" maxlength="100"
+        <p style="margin-bottom:6px">請輸入註冊用的 Gmail，我們會寄一封「重設密碼」信給你</p>
+        <input type="text" id="uforg-name" placeholder="註冊用的 Gmail" maxlength="100"
           style="width:100%;padding:8px 10px;border:1.5px solid #ffe082;border-radius:6px;font-size:.85rem;margin-bottom:6px;box-sizing:border-box;background:#fffde7;overflow:hidden;text-overflow:ellipsis">
-        <button onclick="requestUserOTP()" style="width:100%;padding:8px;background:#f9a825;color:#fff;border:none;border-radius:6px;font-size:.85rem;cursor:pointer">發送驗證碼</button>
+        <button onclick="requestUserOTP()" style="width:100%;padding:8px;background:#f9a825;color:#fff;border:none;border-radius:6px;font-size:.85rem;cursor:pointer">寄送重設密碼信</button>
         <div id="uforg-msg1" style="margin-top:6px;font-size:.8rem"></div>
       </div>
       <div id="uforg-step2" style="display:none;margin-top:8px">
@@ -1746,7 +1732,7 @@ teaching: [
   { yr:"2023", q:"下列何者<u>不屬於</u>教師在課堂中的「話語形式偏差」？", opts:["語音受方言影響","有贅詞贅字","重複敘述句子","句內殘缺，句意模糊"], ans:2, exp:"對的答案：(C) 重複敘述句子——此題選「不屬於」。適度重複是常見的教學策略（強調、確認），不屬於教師的「話語形式偏差」。\n錯的選項：(A) 語音受方言影響——屬話語形式偏差；題目要選「不屬於」的，這屬於，故錯。\n錯的選項：(B) 有贅詞贅字——屬形式偏差，故錯。\n錯的選項：(D) 句內殘缺、句意模糊——屬形式偏差，故錯。" },
   { yr:"2023", q:"某人力仲介公司為了方便外籍看護能經常模仿、記憶並重複練習華語，特別給所屬的外籍看護人手一本自編教材，這本教材比較可能運用下列哪一種教學法？", opts:["聽說教學法","直接教學法","情境教學法","文法翻譯法"], ans:0, exp:"對的答案：(A) 聽說教學法——強調模仿、記憶、反覆操練，符合此自編教材的用途。\n錯的選項：(B) 直接教學法——以目標語直接教學，不以模仿背誦為核心，故錯。\n錯的選項：(C) 情境教學法——以情境帶語言，不符，故錯。\n錯的選項：(D) 文法翻譯法——重語法與翻譯，不是模仿記憶重複，故錯。" },
   { yr:"2023", q:"學者認為不同語言裡所包含的文化概念和分類，會影響語言使用者對於現實世界的認知，也就是說不同的語言的人會因語言差異，對事物產生不同的看法、思考與行為方式。這是什麼樣的學說？", opts:["Long 的互動假說（Interaction Hypothesis）","Schumann 的文化適應假說（Acculturation Theory）","Krashen 的自然次序假說（Natural Order Hyphothesis）","Sapir-Whorf Hypothesis 的語言相對論假說（Linguistic Relativity）"], ans:3, exp:"對的答案：(D) Sapir-Whorf 語言相對論——主張語言結構會影響使用者的思維與對世界的認知，正符合題意。\n錯的選項：(A) Long 互動假說——談互動促進習得，不是語言影響思維，故錯。\n錯的選項：(B) Schumann 文化適應假說——談文化適應距離影響習得，不符，故錯。\n錯的選項：(C) Krashen 自然次序假說——談習得有自然順序，不符，故錯。" },
-  { yr:"2023", q:"閱讀教學可分為精讀和泛讀兩種，下列對於精讀教學的敘述，哪一個選項<u>較不適當</u>？", opts:["朗讀和默讀是精讀教學的重要環節。","精讀的閱讀理解是由下而上的歷程。","精讀課是外語教學的語言知識輸入和積累。","對比泛讀，精讀更側重提高學習者的閱讀能力和閱讀技巧。"], ans:3, exp:"對的答案：(B)——此題選「較不適當」。精讀的閱讀理解是「由下而上與由上而下交互」的歷程，不是「單純由下而上」，故敘述不適當。\n錯的選項：(A) 朗讀、默讀是精讀重要環節——正確；題目要選「較不適當」的，這正確，故不是答案。\n錯的選項：(C) 精讀是語言知識的輸入與積累——正確，故不是答案。\n錯的選項：(D) 精讀更側重提高閱讀能力與技巧——正確，故不是答案。" },
+  { yr:"2023", q:"閱讀教學可分為精讀和泛讀兩種，下列對於精讀教學的敘述，哪一個選項<u>較不適當</u>？", opts:["朗讀和默讀是精讀教學的重要環節。","精讀的閱讀理解是由下而上的歷程。","精讀課是外語教學的語言知識輸入和積累。","對比泛讀，精讀更側重提高學習者的閱讀能力和閱讀技巧。"], ans:3, exp:"對的答案：(D)——此題選「較不適當」。精讀著重逐句、逐段的細緻理解，以詞彙、語法等語言知識的學習與積累為主；「提高閱讀能力和閱讀技巧」（如略讀、查讀、推測詞義、加快閱讀速度）是泛讀的主要目標。(D) 把兩者的重點說反了，故敘述不適當。\n錯的選項：(A) 朗讀和默讀是精讀教學的重要環節——敘述適當，故不是答案。\n錯的選項：(B) 精讀的閱讀理解是由下而上的歷程——精讀從字詞、句子逐層理解到篇章，屬由下而上的處理方式，敘述適當，故不是答案。\n錯的選項：(C) 精讀課是語言知識的輸入和積累——敘述適當，故不是答案。" },
   { yr:"2023", q:"“SQ3R”是由五個閱讀步驟所組成：瀏覽、提問、閱讀、背誦與複習，用以提升學習者自主學習的能力。在華語的閱讀教學中，下列選項的實施方式何者<u>不恰當</u>？", opts:["閱讀討論時可允許學習者以母語進行討論。","對於學習弱勢的學習者應給予平等的發言機會。","教學者應設計系統性的問題、提供回答問題的策略。","背誦階段可以採取分組競爭的方式，激發學習者開口。"], ans:3, exp:"對的答案：(D)——此題選「不恰當」。SQ3R 的「背誦（Recite）」階段是學習者「自我複述、檢索內容」，不是「分組競爭開口」，故此實施方式不恰當。\n錯的選項：(A) 閱讀討論時允許用母語——恰當；題目要選「不恰當」的，這恰當，故不是答案。\n錯的選項：(B) 給弱勢學習者平等發言機會——恰當，故不是答案。\n錯的選項：(C) 設計系統性問題、提供回答策略——恰當，故不是答案。" },
   { yr:"2023", q:"華語新聞課堂中，老師要求學習者在聽新聞時，特別注意人名、日期、時間、地點和某個事件等訊息。請問這樣練習的目的是什麼？", opts:["學習掌握新聞的語法","學習掌握語篇的結構","學習運用由下而上（bottom-up）的技巧","學習運用由上而下（top-down）的技巧"], ans:2, exp:"對的答案：(C) 學習運用由下而上（bottom-up）的技巧——要學生注意人名、日期、地點等「具體細節」，是從局部細節入手，屬由下而上。\n錯的選項：(A) 掌握新聞的語法——不是此練習（抓細節訊息）的目的，故錯。\n錯的選項：(B) 掌握語篇的結構——不是此練習的目的，故錯。\n錯的選項：(D) 由上而下（top-down）——是從整體背景推測，與注意細節相反，故錯。" },
   { yr:"2023", q:"美國外語教學協會（ACTFL）確立語言溝通的三種模式，並為世界語言教師提供描述語言表現的組織原則。此三種模式<u>不包括</u>以下哪一個選項？", opts:["情境對比（comparative）","理解詮釋（interpretive）","人際溝通（interpersonal）","表達演示（presentational）"], ans:0, exp:"對的答案：(A) 情境對比（comparative）——此題選「不包括」。ACTFL 的三種溝通模式是人際、理解詮釋、表達演示；沒有「情境對比」。\n錯的選項：(B) 理解詮釋（interpretive）——是三模式之一；題目要選「不包括」的，這包括，故錯。\n錯的選項：(C) 人際溝通（interpersonal）——是三模式之一，故錯。\n錯的選項：(D) 表達演示（presentational）——是三模式之一，故錯。" },
@@ -4167,6 +4153,409 @@ async function saveProfilePassword(){
   setTimeout(()=>msgEl.textContent='', 3000);
 }
 
+
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  學習者登入 v2：改用 Firebase 帳號（Firebase Authentication）
+//  - 密碼交給 Firebase 保管，資料庫不再存密碼
+//  - 每位學習者只能讀寫自己的資料（配合新的 Firestore 規則）
+//  - 舊帳號：第一次用新系統登入時，驗證信箱後自動升級（認領舊資料）
+//  本區塊放在頁面最後，會覆蓋前面同名的舊函式。
+// ═══════════════════════════════════════════════════════════════
+(function(){ try{ localStorage.removeItem('tocfl_current_user'); }catch(e){} })(); // 不再用 localStorage 自動登入
+
+let _auth = null;
+let _authBusy = false;      // 登入/註冊流程進行中，避免 onAuthStateChanged 重複處理
+let _enteredUid = null;     // 目前已進入的學習者 uid
+const LEGACY_COL = 'legacy'; // 舊帳號索引：legacy/{sha256(email)} = { names:[...] }
+
+function _authErrMsg(e){
+  const c = (e && e.code) || '';
+  if(c==='auth/invalid-email') return 'Email 格式不正確';
+  if(c==='auth/weak-password') return '密碼至少需要 6 個字元';
+  if(c==='auth/too-many-requests') return '嘗試次數過多，請稍後再試';
+  if(c==='auth/network-request-failed') return '網路連線失敗，請檢查網路後再試';
+  if(c==='auth/requires-recent-login') return '為了安全，請先登出再重新登入後再試一次';
+  if(c==='auth/operation-not-allowed') return '系統尚未開啟 Email 登入，請聯絡管理員';
+  return '發生錯誤：' + (c || (e && e.message) || '未知錯誤');
+}
+const _BAD_LOGIN = ['auth/user-not-found','auth/wrong-password','auth/invalid-credential','auth/invalid-login-credentials'];
+
+function _randomPw(){
+  const a = new Uint8Array(18); crypto.getRandomValues(a);
+  return Array.from(a).map(b=>b.toString(36).padStart(2,'0')).join('') + 'Aa1!';
+}
+
+async function legacyNames(email){
+  if(!_db || !email) return [];
+  try{
+    const d = await _db.collection(LEGACY_COL).doc(await hashPw(email.trim().toLowerCase())).get();
+    return (d.exists && Array.isArray(d.data().names)) ? d.data().names : [];
+  }catch(e){ console.warn('legacyNames:', e); return []; }
+}
+
+// 讀取（或認領）目前登入者的學習者資料
+async function loadMyProfile(user){
+  const snap = await _db.collection('users').where('uid','==',user.uid).get();
+  if(!snap.empty){
+    const d = snap.docs[0];
+    return {ok:true, profile:Object.assign({}, d.data(), {_docId:d.id})};
+  }
+  const names = await legacyNames(user.email);
+  if(names.length){
+    if(!user.emailVerified) return {ok:false, reason:'unverified'};
+    let claimed = null;
+    for(const n of names){
+      try{
+        const ref = _db.collection('users').doc(n);
+        const d = await ref.get();
+        if(!d.exists) continue;
+        const data = d.data();
+        if(data.uid && data.uid !== user.uid) continue;
+        if((data.email||'').toLowerCase() !== (user.email||'').toLowerCase()) continue;
+        await ref.update({uid:user.uid, pw:firebase.firestore.FieldValue.delete(), migratedAt:new Date().toISOString()});
+        if(!claimed){ claimed = Object.assign({}, data, {uid:user.uid, _docId:n}); delete claimed.pw; }
+      }catch(e){ console.warn('claim '+n+':', e); }
+    }
+    if(claimed) return {ok:true, profile:claimed};
+  }
+  return {ok:false, reason:'noprofile'};
+}
+
+// 進入學習者畫面
+function enterLearner(profile){
+  const user = _auth && _auth.currentUser;
+  if(!user) return;
+  if(_enteredUid === user.uid && st.currentUser === profile.name) return;
+  _enteredUid = user.uid;
+  const name = profile.name;
+  st.currentUser = name; st.isGuest = false;
+  // 本機只留自己的資料（清掉舊版同步下來的其他人資料）
+  localStorage.setItem(USERS_KEY, JSON.stringify([{name, email:profile.email||user.email, createdAt:profile.createdAt||''}]));
+  localStorage.setItem('tocfl_user_email', profile.email||user.email||'');
+  try{
+    const hist = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').filter(r=>r.name===name);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(hist));
+  }catch(e){}
+  // 跨裝置錯題合併
+  if(Array.isArray(profile.wrongQs)){
+    try{
+      const all = JSON.parse(localStorage.getItem(WRONG_KEY)||'{}');
+      const merged = (all[name]||[]).slice();
+      profile.wrongQs.forEach(cq=>{ if(cq && cq.q && !merged.find(e=>e.q===cq.q)) merged.push(cq); });
+      all[name] = merged;
+      localStorage.setItem(WRONG_KEY, JSON.stringify(all));
+    }catch(e){}
+  }
+  // 信箱在別處改過（已驗證）→ 同步回資料
+  if(user.email && (profile.email||'').toLowerCase() !== user.email.toLowerCase()){
+    _db.collection('users').doc(profile._docId||name).update({email:user.email.toLowerCase()}).catch(e=>console.warn(e));
+  }
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('subject-screen').style.display='block';
+  const nm = document.getElementById('user-bar-name'); if(nm) nm.textContent = name;
+  const le = document.getElementById('login-error'); if(le) le.textContent='';
+  ['user-email-input','user-pw-input'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  if(typeof renderProgressPanel==='function') renderProgressPanel();
+  if(typeof updateWrongReviewBtn==='function') updateWrongReviewBtn();
+  if(typeof startSessionTimer==='function') startSessionTimer();
+  if(typeof checkExamResume==='function') checkExamResume();
+  syncMyHistory();
+}
+
+// 只同步自己的考試紀錄
+async function syncMyHistory(){
+  const user = _auth && _auth.currentUser;
+  if(!_db || !user || !st.currentUser) return;
+  try{
+    const snap = await _db.collection('config').doc('examHistory').collection('records').where('uid','==',user.uid).get();
+    const cloud = snap.docs.map(d=>d.data());
+    const local = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').filter(r=>r.name===st.currentUser);
+    const key = r => (r.name||'')+'|'+(r.date||'')+'|'+(r.time||'');
+    const map = new Map();
+    local.concat(cloud).forEach(r=>{ const c=Object.assign({}, r); delete c.uid; map.set(key(c), c); });
+    const hist = [...map.values()].filter(r=>r.name===st.currentUser);
+    hist.sort((a,b)=>((b.date||'')+(b.time||'')).localeCompare((a.date||'')+(a.time||'')));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(hist));
+    if(typeof renderProgressPanel==='function') renderProgressPanel();
+    const hs = document.getElementById('history-screen');
+    if(hs && hs.style.display!=='none' && typeof renderHistory==='function') renderHistory();
+  }catch(e){ console.warn('syncMyHistory:', e); }
+}
+function syncFromCloud(){ return syncMyHistory(); }   // 取代舊版「下載全部學習者」
+
+async function onLearnerAuthChanged(user){
+  if(_authBusy) return;
+  if(!user){ _enteredUid = null; return; }
+  try{
+    const r = await loadMyProfile(user);
+    if(r.ok) enterLearner(r.profile);
+  }catch(e){ console.warn('auto login:', e); }
+}
+
+function initFirebase(){
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+    _db = firebase.firestore();
+    _auth = firebase.auth();
+    loadQBFromCloud();
+    _auth.onAuthStateChanged(onLearnerAuthChanged);
+  }catch(e){ console.warn('Firebase unavailable:', e); }
+}
+
+// ── 註冊（一般註冊與訪客轉註冊共用）──
+// 回傳 {ok:true, profile} 或 {ok:false, msg}
+async function registerLearnerCore(email, name, pw){
+  if(!_auth || !_db) return {ok:false, msg:'無法連線，請檢查網路後再試'};
+  if(pw.length < 6) return {ok:false, msg:'密碼至少需要 6 個字元'};
+  if(name === '訪客') return {ok:false, msg:'這個名稱不能使用，請換一個'};
+  if(/[\/]/.test(name)) return {ok:false, msg:'名稱不能包含「/」'};
+  // 舊系統已註冊過的 Email → 請用登入（會引導升級）
+  if((await legacyNames(email)).length) return {ok:false, msg:'此 Gmail 已註冊過，請改用「登入」（系統會引導你完成升級）'};
+  // 名稱是否已被使用（有人用 → 讀不到 → 視為已使用）
+  try{
+    const d = await _db.collection('users').doc(name).get();
+    if(d.exists) return {ok:false, msg:'此學習者名稱已被使用，請換一個'};
+  }catch(e){
+    if(e.code==='permission-denied') return {ok:false, msg:'此學習者名稱已被使用，請換一個'};
+    return {ok:false, msg:_authErrMsg(e)};
+  }
+  _authBusy = true;
+  try{
+    let user;
+    try{
+      user = (await _auth.createUserWithEmailAndPassword(email, pw)).user;
+    }catch(e){
+      if(e.code !== 'auth/email-already-in-use') return {ok:false, msg:_authErrMsg(e)};
+      // 已有 Firebase 帳號（例如資料曾被刪除）→ 用這組密碼登入看看
+      try{ user = (await _auth.signInWithEmailAndPassword(email, pw)).user; }
+      catch(e2){ return {ok:false, msg:'此 Gmail 已註冊過，請直接登入（忘記密碼可按「忘記密碼？」）'}; }
+      const r = await loadMyProfile(user);
+      if(r.ok) return {ok:true, profile:r.profile, existing:true};
+    }
+    const profile = {name, email, uid:user.uid, createdAt:new Date().toISOString(), method:'email'};
+    try{
+      await _db.collection('users').doc(name).set(profile);
+    }catch(e){
+      try{ await user.delete(); }catch(_){ try{ await _auth.signOut(); }catch(__){} }
+      return {ok:false, msg:'建立失敗（名稱可能剛被別人使用），請換一個名稱再試'};
+    }
+    return {ok:true, profile:Object.assign({}, profile, {_docId:name})};
+  } finally { _authBusy = false; }
+}
+
+async function submitLogin(){
+  const isRegister = document.getElementById('tab-register').classList.contains('active');
+  const errEl = document.getElementById('login-error');
+  const fail = m => { errEl.style.color='#c62828'; errEl.textContent=m; };
+  const info = (m,c) => { errEl.style.color=c||'#888'; errEl.textContent=m; };
+  if(!_auth || !_db) return fail('無法連線，請檢查網路後再試');
+
+  if(isRegister){
+    const email = document.getElementById('user-email-input-reg').value.trim().toLowerCase();
+    const pw = document.getElementById('user-pw-input-reg').value;
+    const name = document.getElementById('user-name-input').value.trim();
+    const pw2 = document.getElementById('user-pw-confirm').value;
+    if(!email) return fail('請輸入 Gmail 電郵地址');
+    if(!name) return fail('請輸入學習者名稱');
+    if(!pw) return fail('請輸入密碼');
+    if(pw !== pw2) return fail('兩次密碼不一致');
+    info('建立中…');
+    const r = await registerLearnerCore(email, name, pw);
+    if(!r.ok) return fail(r.msg);
+    ['user-email-input-reg','user-name-input','user-pw-input-reg','user-pw-confirm'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+    switchTab('login');
+    enterLearner(r.profile);
+    return;
+  }
+
+  const email = document.getElementById('user-email-input').value.trim().toLowerCase();
+  const pw = document.getElementById('user-pw-input').value;
+  if(!email) return fail('請輸入 Gmail 電郵地址');
+  if(!pw) return fail('請輸入密碼');
+  info('登入中…');
+  _authBusy = true;
+  try{
+    let user;
+    try{
+      user = (await _auth.signInWithEmailAndPassword(email, pw)).user;
+    }catch(e){
+      if(!_BAD_LOGIN.includes(e.code)) return fail(_authErrMsg(e));
+      const names = await legacyNames(email);
+      if(!names.length) return fail('Email 或密碼不正確（還沒有帳號請按上方「新建帳號」）');
+      // 舊帳號第一次登入新系統：建立 Firebase 帳號並寄驗證信
+      try{
+        const cred = await _auth.createUserWithEmailAndPassword(email, pw);
+        try{ await cred.user.sendEmailVerification(); }catch(_){}
+        await _auth.signOut();
+        return info('🔒 系統已升級登入方式。我們寄了一封驗證信到 '+email+'，請點信中的連結，再回來用同一組 Email 和密碼登入。（找不到信請看垃圾信匣）', '#2e7d32');
+      }catch(e2){
+        if(e2.code==='auth/email-already-in-use') return fail('密碼不正確。忘記密碼請按下方「忘記密碼？」');
+        if(e2.code==='auth/weak-password') return fail('系統已升級，舊密碼少於 6 碼無法沿用，請按下方「忘記密碼？」重設密碼');
+        return fail(_authErrMsg(e2));
+      }
+    }
+    const r = await loadMyProfile(user);
+    if(r.ok){ enterLearner(r.profile); return; }
+    if(r.reason==='unverified'){
+      try{ await user.sendEmailVerification(); }catch(_){}
+      await _auth.signOut();
+      return info('請先完成信箱驗證：驗證信已寄到 '+email+'，點信中的連結後再登入一次。（找不到信請看垃圾信匣）', '#b8860b');
+    }
+    await _auth.signOut();
+    return fail('找不到這個 Email 的學習者資料，請按上方「新建帳號」重新建立（可沿用同一組 Email 和密碼）');
+  }catch(e){
+    return fail(_authErrMsg(e));
+  } finally { _authBusy = false; }
+}
+
+// ── 訪客就地註冊 ──
+async function submitGuestRegister(){
+  const m = document.getElementById('greg-msg'); if(m) m.style.color='#c62828';
+  const name = document.getElementById('greg-name').value.trim();
+  const email = document.getElementById('greg-email').value.trim().toLowerCase();
+  const pw = document.getElementById('greg-pw').value;
+  const pw2 = document.getElementById('greg-pw2').value;
+  if(!email){ m.textContent='請輸入 Gmail 電郵地址'; return; }
+  if(!name){ m.textContent='請輸入帳號名稱'; return; }
+  if(!pw){ m.textContent='請輸入密碼'; return; }
+  if(pw!==pw2){ m.textContent='兩次密碼不一致'; return; }
+  m.style.color='#888'; m.textContent='建立中…';
+  const r = await registerLearnerCore(email, name, pw);
+  if(!r.ok){ m.style.color='#c62828'; m.textContent=r.msg; return; }
+  const realName = r.profile.name;
+
+  if(typeof stopSessionTimer==='function') stopSessionTimer();
+  st.currentUser = realName; st.isGuest = false;
+  _enteredUid = _auth.currentUser ? _auth.currentUser.uid : null;
+  localStorage.setItem(USERS_KEY, JSON.stringify([{name:realName, email, createdAt:r.profile.createdAt||''}]));
+  localStorage.setItem('tocfl_user_email', email);
+
+  let movedRecs = 0;
+  try{
+    const pend = JSON.parse(localStorage.getItem(GUEST_PENDING_KEY)||'[]');
+    if(pend.length){
+      const history = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').filter(x=>x.name===realName);
+      pend.slice().reverse().forEach(rec=>{ rec.name=realName; history.unshift(rec); fbAddExamRecord(rec); });
+      if(history.length>200) history.splice(200);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+      movedRecs = pend.length;
+    }
+    localStorage.removeItem(GUEST_PENDING_KEY);
+  }catch(e){}
+
+  let movedWrong = 0;
+  try{
+    const all = JSON.parse(localStorage.getItem(WRONG_KEY)||'{}');
+    const gw = all['訪客']||[];
+    if(gw.length){
+      const mine = all[realName]||[];
+      gw.forEach(cq=>{ if(cq && cq.q && !mine.find(e=>e.q===cq.q)) mine.push(cq); });
+      all[realName] = mine; movedWrong = gw.length;
+    }
+    delete all['訪客'];
+    localStorage.setItem(WRONG_KEY, JSON.stringify(all));
+    if(all[realName] && all[realName].length) fbSaveWrongQs(realName, all[realName]);
+  }catch(e){}
+
+  const nm = document.getElementById('user-bar-name'); if(nm) nm.textContent = realName;
+  const grb = document.getElementById('btn-guest-register'); if(grb) grb.style.display='none';
+  closeGuestRegister();
+  if(typeof startSessionTimer==='function') startSessionTimer();
+  renderProgressPanel();
+  updateWrongReviewBtn();
+  alert('✅ 帳號建立成功，已自動登入！\n已為你保存 '+movedRecs+' 筆測驗紀錄、'+movedWrong+' 題錯題。');
+}
+
+// ── 忘記密碼：改用 Firebase 寄重設信 ──
+async function requestUserOTP(){
+  const email = document.getElementById('uforg-name').value.trim().toLowerCase();
+  const msgEl = document.getElementById('uforg-msg1');
+  msgEl.style.color='#c62828';
+  if(!email || !email.includes('@')){ msgEl.textContent='請輸入註冊用的 Gmail'; return; }
+  if(!_auth){ msgEl.textContent='無法連線，請檢查網路後再試'; return; }
+  msgEl.style.color='#5d4037'; msgEl.textContent='發送中…';
+  try{
+    // 舊帳號還沒有 Firebase 帳號 → 先建立（隨機密碼），再寄重設信讓本人設定密碼
+    if((await legacyNames(email)).length){
+      _authBusy = true;
+      try{ await _auth.createUserWithEmailAndPassword(email, _randomPw()); await _auth.signOut(); }
+      catch(e){ /* 已有帳號：直接寄重設信即可 */ }
+      finally{ _authBusy = false; }
+    }
+    await _auth.sendPasswordResetEmail(email);
+    msgEl.style.color='#2e7d32';
+    msgEl.textContent='✅ 如果這個 Email 有註冊，重設密碼信已寄出，請查收（含垃圾信匣）。設定新密碼後回來登入。';
+  }catch(e){
+    if(e.code==='auth/user-not-found'){ msgEl.style.color='#c62828'; msgEl.textContent='找不到這個 Email 的帳號'; return; }
+    msgEl.style.color='#c62828'; msgEl.textContent=_authErrMsg(e);
+  }
+}
+
+// ── 雲端寫入：考試紀錄帶上 uid（新規則要求）──
+function fbAddExamRecord(record){
+  if(!_db || !_auth || !_auth.currentUser) return;
+  const rec = Object.assign({}, record, {uid:_auth.currentUser.uid});
+  const id = record.name+'_'+record.date+'_'+record.time.replace(/:/g,'');
+  _db.collection('config').doc('examHistory').collection('records').doc(id).set(rec).catch(e=>console.warn('fbAddExamRecord:', e));
+}
+function fbDeleteUserHistory(name){
+  if(!_db || !_auth || !_auth.currentUser) return;
+  _db.collection('config').doc('examHistory').collection('records').where('uid','==',_auth.currentUser.uid).get().then(snap=>{
+    snap.docs.forEach(d=>{ if(d.data().name===name) d.ref.delete(); });
+  }).catch(e=>console.warn('fbDeleteUserHistory:', e));
+}
+function fbSaveUsers(){ /* v2：帳號資料只由本人或主管理員寫入，這個舊函式停用 */ }
+
+// ── 帳號設定 ──
+async function saveProfileEmail(){
+  const email = document.getElementById('profile-email-input').value.trim().toLowerCase();
+  const msgEl = document.getElementById('profile-email-msg');
+  const user = _auth && _auth.currentUser;
+  if(!email){ msgEl.className='profile-msg err'; msgEl.textContent='請輸入信箱'; return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ msgEl.className='profile-msg err'; msgEl.textContent='信箱格式不正確'; return; }
+  if(!user){ msgEl.className='profile-msg err'; msgEl.textContent='請重新登入後再試'; return; }
+  try{
+    await user.verifyBeforeUpdateEmail(email);
+    msgEl.className='profile-msg ok';
+    msgEl.textContent='✅ 確認信已寄到 '+email+'，點信中的連結後生效（之後請用新信箱登入）。';
+  }catch(e){ msgEl.className='profile-msg err'; msgEl.textContent=_authErrMsg(e); }
+}
+
+async function saveProfilePassword(){
+  const oldPw = document.getElementById('profile-pw-old').value;
+  const newPw = document.getElementById('profile-pw-new').value;
+  const confirmPw = document.getElementById('profile-pw-confirm').value;
+  const msgEl = document.getElementById('profile-pw-msg');
+  const user = _auth && _auth.currentUser;
+  if(!oldPw||!newPw||!confirmPw){ msgEl.className='profile-msg err'; msgEl.textContent='請填寫所有欄位'; return; }
+  if(newPw.length < 6){ msgEl.className='profile-msg err'; msgEl.textContent='新密碼至少需要 6 個字元'; return; }
+  if(newPw !== confirmPw){ msgEl.className='profile-msg err'; msgEl.textContent='兩次輸入的新密碼不一致'; return; }
+  if(!user){ msgEl.className='profile-msg err'; msgEl.textContent='請重新登入後再試'; return; }
+  try{
+    await user.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(user.email, oldPw));
+  }catch(e){
+    msgEl.className='profile-msg err';
+    msgEl.textContent = _BAD_LOGIN.includes(e.code) ? '目前密碼錯誤' : _authErrMsg(e); return;
+  }
+  try{
+    await user.updatePassword(newPw);
+    ['profile-pw-old','profile-pw-new','profile-pw-confirm'].forEach(id=>document.getElementById(id).value='');
+    msgEl.className='profile-msg ok'; msgEl.textContent='✅ 密碼已成功更新';
+    setTimeout(()=>msgEl.textContent='', 3000);
+  }catch(e){ msgEl.className='profile-msg err'; msgEl.textContent=_authErrMsg(e); }
+}
+
+// ── 登出時一併登出 Firebase ──
+(function(){
+  const _oldChangeUser = window.changeUser;
+  window.changeUser = function(){
+    _enteredUid = null;
+    if(typeof _oldChangeUser === 'function') _oldChangeUser.apply(this, arguments);
+    if(_auth && _auth.currentUser) _auth.signOut().catch(()=>{});
+  };
+})();
 
 </script>
 </body>

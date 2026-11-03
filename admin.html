@@ -235,9 +235,9 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
     <input type="hidden" id="modal-idx">
     <label>名稱</label>
     <input type="text" id="modal-name" placeholder="帳號名稱" maxlength="20">
-    <label>密碼（留空則不修改）</label>
-    <input type="password" id="modal-pw" placeholder="新密碼（留空不改）">
-    <label>Gmail（忘記密碼使用）</label>
+    <label>密碼（新增時必填，至少6碼；已升級的帳號請用「寄重設密碼信」）</label>
+    <input type="password" id="modal-pw" placeholder="密碼">
+    <label>Gmail（學習者用它登入）</label>
     <input type="email" id="modal-email" placeholder="Gmail 信箱">
     <div class="modal-error" id="modal-error"></div>
     <div class="modal-btns">
@@ -258,7 +258,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
     <label>密碼（至少6碼）</label>
     <input type="text" id="newadmin-pw" placeholder="幫他設定的密碼">
     <div class="modal-error" id="newadmin-error"></div>
-    <div style="font-size:.75rem;color:#999;margin-top:6px">建立後把這組帳密給對方。一般管理員登入後只能查看學習者，不能修改。</div>
+    <div style="font-size:.75rem;color:#999;margin-top:6px">建立後把 Email 和密碼給對方；對方會收到驗證信，點連結後才能登入。一般管理員只能查看學習者，不能修改。</div>
     <div class="modal-btns">
       <button class="modal-btn-primary" onclick="addAdmin()">儲存</button>
       <button class="modal-btn-cancel"  onclick="closeAdminAddModal()">取消</button>
@@ -320,7 +320,8 @@ firebase.initializeApp(FB_CONFIG);
 const auth = firebase.auth();
 const _db  = firebase.firestore();
 
-let _currentRole = null;   // 'master' | 'admin'
+let _currentRole = null;
+let _adminLoginAttempt = false;   // 使用者剛按下「登入」   // 'master' | 'admin'
 let _currentEmail = null;
 let _adminEmails = new Set([MASTER_EMAIL]);   // 管理員 email,用來從學習者名單濾掉
 const SUBJ_NAMES = {chinese:'國文',culture:'華人社會與文化',linguistics:'漢語語言學',teaching:'華語文教學'};
@@ -338,21 +339,20 @@ async function getAdminAccounts(){
     if(!doc.exists) return [];
     const data = doc.data();
     let accounts = Array.isArray(data.accounts) ? data.accounts.slice() : [];
-    // 相容舊資料：把舊的 emails 清單併進 accounts（沒密碼，待主管理員重設）
     if(Array.isArray(data.emails)){
       data.emails.forEach(em=>{
         const e=(em||'').toLowerCase();
-        if(e && e!==MASTER_EMAIL && !accounts.some(a=>(a.email||'').toLowerCase()===e)){ accounts.push({email:e, pw:''}); }
+        if(e && e!==MASTER_EMAIL && !accounts.some(a=>(a.email||'').toLowerCase()===e)){ accounts.push({email:e}); }
       });
-      // 遷移完成後永久移除舊 emails 欄位，避免之後刪除的管理員一直被還原
-      _db.collection('config').doc('admins').set({accounts, emails: firebase.firestore.FieldValue.delete()}, {merge:true}).catch(()=>{});
     }
     return accounts;
   }catch(e){ console.warn('getAdminAccounts:', e); return []; }
 }
 async function saveAdminAccounts(accounts){
-  // 一併移除舊的 emails 欄位，避免被刪掉的管理員又被「還原」成無密碼空殼
-  await _db.collection('config').doc('admins').set({accounts, emails: firebase.firestore.FieldValue.delete()}, {merge:true});
+  // v2：名單不再存密碼；adminEmails 給資料庫規則判斷「誰是管理員」
+  const clean = accounts.map(a=>{ const o=Object.assign({}, a); delete o.pw; o.email=(o.email||'').toLowerCase(); return o; });
+  const adminEmails = clean.map(a=>a.email).filter(Boolean);
+  await _db.collection('config').doc('admins').set({accounts:clean, adminEmails, emails: firebase.firestore.FieldValue.delete()}, {merge:true});
 }
 async function getRole(email){
   if(!email) return null;
@@ -377,52 +377,30 @@ async function adminLogin(){
   const email = (document.getElementById('admin-email').value||'').trim().toLowerCase();
   const pw    = document.getElementById('admin-pw').value;
   const err   = document.getElementById('admin-login-err');
-  err.textContent='';
+  err.style.color='#c62828'; err.textContent='';
   if(!email){ err.textContent='請輸入 Email'; return; }
   if(!pw){ err.textContent='請輸入密碼'; return; }
-
-  if(email !== MASTER_EMAIL){
-    // 一般管理員：用主管理員設定的帳密（存雲端）比對
-    const accounts = await getAdminAccounts();
-    const acc = accounts.find(a=>(a.email||'').toLowerCase()===email);
-    if(!acc){ err.style.color='#c62828'; err.textContent='此 Email 沒有後台權限'; return; }
-    if(!acc.pw){ err.style.color='#c62828'; err.textContent='此帳號尚未設定密碼，請聯絡主管理員'; return; }
-    if(acc.pw !== await hashPw(pw)){ err.style.color='#c62828'; err.textContent='密碼不正確'; return; }
-    localStorage.setItem(ADMIN_CLIENT_KEY, email);
-    enterPanel(email, 'admin', acc.name);
-    return;
-  }
-
-  // 主管理員：Firebase 真驗證
   err.textContent='登入中…'; err.style.color='#888';
+  _adminLoginAttempt = true;
   try{
+    if(auth.currentUser) await auth.signOut();
     await auth.signInWithEmailAndPassword(email, pw);
-    // onAuthStateChanged 會接手顯示後台
+    // 之後由 onAuthStateChanged 判斷身分
   }catch(e){
+    _adminLoginAttempt = false;
     err.style.color='#c62828';
-    if(e.code==='auth/user-not-found'){
-      // 已授權但還沒設密碼 → 第一次設定
-      if(pw.length < 6){ err.textContent='第一次設定密碼至少 6 碼'; return; }
-      if(confirm('此 Email 尚未設定密碼。要用剛輸入的密碼建立帳號嗎？')){
-        try{ await auth.createUserWithEmailAndPassword(email, pw); }
-        catch(e2){ err.textContent = '建立失敗：'+(e2.code||e2.message); }
-      } else { err.textContent=''; }
-    } else if(e.code==='auth/wrong-password' || e.code==='auth/invalid-credential'){
-      err.textContent='密碼錯誤';
-    } else if(e.code==='auth/invalid-email'){
-      err.textContent='Email 格式不正確';
-    } else if(e.code==='auth/too-many-requests'){
-      err.textContent='嘗試次數過多，請稍後再試';
-    } else {
-      err.textContent='登入失敗：'+(e.code||e.message);
-    }
+    if(['auth/user-not-found','auth/wrong-password','auth/invalid-credential','auth/invalid-login-credentials'].includes(e.code)){
+      err.textContent='Email 或密碼不正確（新的管理員請先到信箱點「重設密碼」信設定密碼）';
+    } else if(e.code==='auth/invalid-email'){ err.textContent='Email 格式不正確';
+    } else if(e.code==='auth/too-many-requests'){ err.textContent='嘗試次數過多，請稍後再試';
+    } else { err.textContent='登入失敗：'+(e.code||e.message); }
   }
 }
 
 function adminLogout(){
   localStorage.removeItem(ADMIN_CLIENT_KEY);
-  if(auth.currentUser){ auth.signOut(); }
-  else { _currentRole=null; _currentEmail=null; showScreen('login'); }
+  _currentRole=null; _currentEmail=null;
+  if(auth.currentUser){ auth.signOut(); } else { showScreen('login'); }
 }
 
 function toggleForgot(){
@@ -439,19 +417,11 @@ async function sendReset(){
   const msg = document.getElementById('reset-msg');
   msg.style.color='#c62828';
   if(!email){ msg.textContent='請輸入 Email'; return; }
-  const role = await getRole(email);
-  if(!role){ msg.textContent='此 Email 沒有後台權限'; return; }
   try{
     await auth.sendPasswordResetEmail(email);
     msg.style.color='#2e7d32';
-    msg.textContent='✅ 重設信已寄至 '+email+'，請查收（含垃圾信匣）。';
-  }catch(e){
-    if(e.code==='auth/user-not-found'){
-      msg.textContent='此 Email 還沒設過密碼，請直接在上方輸入 Email + 新密碼登入即可建立。';
-    } else {
-      msg.textContent='寄送失敗：'+(e.code||e.message);
-    }
-  }
+    msg.textContent='✅ 如果這是管理員帳號，重設信已寄至 '+email+'，請查收（含垃圾信匣）。';
+  }catch(e){ msg.textContent='寄送失敗：'+(e.code||e.message); }
 }
 
 // ═══════════════════════════════════════════
@@ -589,25 +559,36 @@ function enterPanel(email, role, name){
 }
 
 async function tryClientAdminSession(){
-  const email = localStorage.getItem(ADMIN_CLIENT_KEY);
-  if(!email) return;
-  const accounts = await getAdminAccounts();
-  const acc = accounts.find(a=>(a.email||'').toLowerCase()===email.toLowerCase());
-  if(acc){ enterPanel(email, 'admin', acc.name); }
-  else { localStorage.removeItem(ADMIN_CLIENT_KEY); }
+  // v2：一般管理員也改用 Firebase 登入，清掉舊版的本機登入狀態
+  localStorage.removeItem(ADMIN_CLIENT_KEY);
 }
 
 auth.onAuthStateChanged(async (user)=>{
-  if(localStorage.getItem(ADMIN_CLIENT_KEY)) return;   // 一般管理員登入狀態優先
+  localStorage.removeItem(ADMIN_CLIENT_KEY);
+  const attempt = _adminLoginAttempt; _adminLoginAttempt = false;
+  const err = document.getElementById('admin-login-err');
   if(!user){ _currentRole=null; _currentEmail=null; showScreen('login'); return; }
-  if((user.email||'').toLowerCase() !== MASTER_EMAIL){
-    await auth.signOut();
+  const email = (user.email||'').toLowerCase();
+  if(email === MASTER_EMAIL){ err.textContent=''; enterPanel(email, 'master'); return; }
+  // 一般管理員：信箱必須驗證過，且在管理員名單內
+  if(!user.emailVerified){
     showScreen('login');
-    const err=document.getElementById('admin-login-err');
-    err.style.color='#c62828'; err.textContent='此帳號沒有後台權限';
+    if(attempt){
+      try{ await user.sendEmailVerification(); }catch(e){}
+      await auth.signOut();
+      err.style.color='#b8860b';
+      err.textContent='請先驗證信箱：驗證信已寄到 '+email+'，點信中連結後再登入一次（找不到請看垃圾信匣）。';
+    }
     return;
   }
-  enterPanel(user.email, 'master');
+  const accounts = await getAdminAccounts();
+  const acc = accounts.find(a=>(a.email||'').toLowerCase()===email);
+  if(acc){ err.textContent=''; enterPanel(email, 'admin', acc.name); return; }
+  showScreen('login');
+  if(attempt){
+    await auth.signOut();
+    err.style.color='#c62828'; err.textContent='此帳號沒有後台權限';
+  }
 });
 
 // ═══════════════════════════════════════════
@@ -619,19 +600,19 @@ async function syncFromCloud(){
   try{
     let usersSnap = await _db.collection('users').get();
     _adminUsers = usersSnap.docs.map(d=>Object.assign({}, d.data(), {_docId:d.id}));
-    // 主管理員載入時，自動清掉「無密碼的重複空殼」
     if(_currentRole==='master'){
-      const shells=[]; getUserGroups().forEach(g=>g.all.forEach(rec=>{ if(rec!==g.primary && rec._docId && !rec.pw) shells.push(rec._docId); }));
+      const shells=[]; getUserGroups().forEach(g=>g.all.forEach(rec=>{ if(_isShell(rec,g)) shells.push(rec._docId); }));
       if(shells.length){
         for(const id of shells){ try{ await _db.collection('users').doc(id).delete(); }catch(e){ console.warn(e); } }
         usersSnap = await _db.collection('users').get();
         _adminUsers = usersSnap.docs.map(d=>Object.assign({}, d.data(), {_docId:d.id}));
       }
     }
-    localStorage.setItem(USERS_KEY, JSON.stringify(usersSnap.docs.map(d=>d.data())));
-    // 讀考試紀錄；就算這裡失敗也不影響學習者名單顯示
+    localStorage.setItem(USERS_KEY, JSON.stringify(usersSnap.docs.map(d=>{ const o=Object.assign({}, d.data()); delete o.pw; return o; })));
+    let histDocs = [];
     try{
       const histSnap = await _db.collection('config').doc('examHistory').collection('records').get();
+      histDocs = histSnap.docs;
       const hist = histSnap.docs.map(d=>d.data());
       hist.sort((a,b)=>((b.date||'')+(b.time||'')).localeCompare((a.date||'')+(a.time||'')));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(hist));
@@ -642,7 +623,41 @@ async function syncFromCloud(){
       _guestRecords.sort((a,b)=>((b.date||'')+(b.time||'')).localeCompare((a.date||'')+(a.time||'')));
     }catch(eg){ console.warn('讀取訪客紀錄失敗:', eg); _guestRecords=[]; }
     renderAdminPanel();
+    if(_currentRole==='master') masterMaintenance(histDocs);
   }catch(e){ console.warn('syncFromCloud:', e); }
+}
+
+// 主管理員開後台時自動做的升級維護：
+//  1) 建立「舊帳號索引」legacy/{sha256(email)}，讓舊帳號能在新登入系統升級
+//  2) 把已升級學習者的舊考試紀錄補上 uid（新規則下本人才讀得到）
+//  3) 管理員名單補上 adminEmails 欄位（新規則用它判斷管理員）
+async function masterMaintenance(histDocs){
+  try{
+    const idx = new Map();
+    _adminUsers.forEach(u=>{
+      if(u.uid || !u.email) return;
+      const e=(u.email||'').toLowerCase();
+      if(!idx.has(e)) idx.set(e, []);
+      idx.get(e).push(u._docId || u.name);
+    });
+    for(const [e, names] of idx){
+      try{ await _db.collection('legacy').doc(await hashPw(e)).set({names}); }catch(err){ console.warn('legacy index:', err); }
+    }
+    const uidByName = new Map(); _adminUsers.forEach(u=>{ if(u.uid && u.name) uidByName.set(u.name, u.uid); });
+    let fixed = 0;
+    for(const d of histDocs){
+      const r = d.data();
+      if(r.uid || !uidByName.has(r.name)) continue;
+      try{ await d.ref.update({uid: uidByName.get(r.name)}); fixed++; }catch(err){ console.warn('backfill:', err); }
+    }
+    const doc = await _db.collection('config').doc('admins').get();
+    const data = doc.exists ? doc.data() : {};
+    const accounts = await getAdminAccounts();
+    const want = accounts.map(a=>(a.email||'').toLowerCase()).filter(Boolean).sort().join(',');
+    const have = (data.adminEmails||[]).slice().sort().join(',');
+    if(want!==have || accounts.some(a=>a.pw) || Array.isArray(data.emails)) await saveAdminAccounts(accounts);
+    if(idx.size || fixed) console.log('升級維護：舊帳號索引 '+idx.size+' 筆，補 uid 的紀錄 '+fixed+' 筆');
+  }catch(e){ console.warn('masterMaintenance:', e); }
 }
 function getUserAccounts(){ return JSON.parse(localStorage.getItem(USERS_KEY)||'[]'); }
 
@@ -654,10 +669,11 @@ function getUserGroups(){
     if(!map.has(key)) map.set(key, []);
     map.get(key).push(u);
   }
-  return [...map.values()].map(g=>({ primary: g.find(x=>x.pw) || g[0], all: g }));
+  return [...map.values()].map(g=>({ primary: g.find(x=>x.uid) || g.find(x=>x.pw) || g[0], all: g }));
 }
+function _isShell(rec, g){ return rec!==g.primary && rec._docId && !rec.pw && !rec.uid; }
 function countCleanable(){
-  let n=0; getUserGroups().forEach(g=>g.all.forEach(rec=>{ if(rec!==g.primary && rec._docId && !rec.pw) n++; })); return n;
+  let n=0; getUserGroups().forEach(g=>g.all.forEach(rec=>{ if(_isShell(rec,g)) n++; })); return n;
 }
 
 function fbSaveUserDoc(rec){
@@ -672,6 +688,31 @@ async function hashPw(pw){
   const data = new TextEncoder().encode(pw);
   const hash = await crypto.subtle.digest('SHA-256', data);
   return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function _secondaryAuth(){
+  let app = firebase.apps.find(a=>a.name==='creator');
+  if(!app) app = firebase.initializeApp(FB_CONFIG, 'creator');
+  return app.auth();
+}
+async function createAuthAccount(email, pw, sendVerify){
+  const a = _secondaryAuth();
+  try{ await a.setPersistence(firebase.auth.Auth.Persistence.NONE); }catch(e){}
+  const cred = await a.createUserWithEmailAndPassword(email, pw);
+  if(sendVerify){ try{ await cred.user.sendEmailVerification(); }catch(e){} }
+  const uid = cred.user.uid;
+  try{ await a.signOut(); }catch(e){}
+  return uid;
+}
+function _randomPw(){
+  const a = new Uint8Array(18); crypto.getRandomValues(a);
+  return Array.from(a).map(b=>b.toString(36).padStart(2,'0')).join('') + 'Aa1!';
+}
+// 寄重設密碼信；對方若還沒有 Firebase 帳號，先用隨機密碼建立
+async function sendResetFor(email){
+  try{ await createAuthAccount(email, _randomPw(), false); }
+  catch(e){ if(e.code!=='auth/email-already-in-use') throw e; }
+  await auth.sendPasswordResetEmail(email);
 }
 
 // ═══════════════════════════════════════════
@@ -819,7 +860,7 @@ function renderAdminPanel(){
   renderDashboard();
   const head = document.getElementById('learner-head');
   if(head){
-    head.innerHTML = '<th>名稱</th><th>密碼</th><th>Gmail</th><th>考試次數</th><th>最近成績</th>' + (isMaster?'<th>操作</th>':'');
+    head.innerHTML = '<th>名稱</th><th>登入方式</th><th>Gmail</th><th>考試次數</th><th>最近成績</th>' + (isMaster?'<th>操作</th>':'');
   }
   const groups = getVisibleGroups();
   const history  = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
@@ -853,12 +894,12 @@ function renderAdminPanel(){
     const guestTag = acc.viaGuest ? ' <span style="background:#e8f0fe;color:#1a56c4;font-size:.68rem;padding:1px 6px;border-radius:6px;border:1px solid #b9cdf5;white-space:nowrap">訪客建立</span>' : '';
     const actions = isMaster ? ('<td><div class="admin-action-cell">'+
       '<button class="admin-edit-btn" onclick="openEditModal('+i+')">編輯</button>'+
-      '<button class="admin-pw-btn" onclick="openResetPwModal('+i+')">重設密碼</button>'+
+      '<button class="admin-pw-btn" onclick="openResetPwModal('+i+')">寄重設密碼信</button>'+
       '<button class="admin-reset-btn" onclick="resetUserHistory('+i+')">清除記錄</button>'+
       '<button class="admin-delete-btn" onclick="deleteUser('+i+')">刪除</button>'+
       '</div></td>') : '';
     return '<tr><td><button type="button" class="stu-link" onclick="openStudentDetail('+i+')">'+esc(acc.name)+'</button>'+guestTag+'</td>'+
-      '<td class="pw-cell"><span style="color:#aaa;font-family:sans-serif;font-size:.8rem">🔒 已加密</span></td>'+
+      '<td class="pw-cell"><span style="font-family:sans-serif;font-size:.8rem;color:'+(acc.uid?'#2e7d32':'#b8860b')+'">'+(acc.uid?'✅ 已升級':'⏳ 待升級')+'</span></td>'+
       '<td>'+(acc.email?esc(acc.email):'—')+'</td>'+
       '<td>'+recs.length+' 次</td>'+
       '<td>'+lastScore+'</td>'+ actions +'</tr>';
@@ -924,9 +965,9 @@ async function clearGuestRecords(){
 async function cleanupDuplicates(){
   if(_currentRole!=='master') return;
   const toDelete = [];
-  getUserGroups().forEach(g=>g.all.forEach(rec=>{ if(rec!==g.primary && rec._docId && !rec.pw) toDelete.push(rec); }));
+  getUserGroups().forEach(g=>g.all.forEach(rec=>{ if(_isShell(rec,g)) toDelete.push(rec); }));
   if(!toDelete.length){ alert('沒有空殼帳號需要清理'); return; }
-  if(!confirm('將刪除 '+toDelete.length+' 筆「無密碼的重複空殼」帳號（每人保留有密碼的那一筆，考試紀錄不受影響）。確定嗎？')) return;
+  if(!confirm('將刪除 '+toDelete.length+' 筆「重複的空殼」帳號（每人保留主要的那一筆，考試紀錄不受影響）。確定嗎？')) return;
   for(const rec of toDelete){ try{ await _db.collection('users').doc(rec._docId).delete(); }catch(e){ console.warn(e); } }
   alert('✅ 已清除 '+toDelete.length+' 筆空殼帳號');
   syncFromCloud();
@@ -946,12 +987,12 @@ async function renderAdminsList(){
       const email = (acc.email||'');
       _adminEmails.add(email.toLowerCase());
       if(email.toLowerCase()===MASTER_EMAIL) return;
-      const noPw = acc.pw ? '' : ' <span style="color:#c62828;font-size:.72rem">(未設密碼)</span>';
-      rows += '<tr><td>'+(acc.name?esc(acc.name)+'（'+esc(email)+'）':esc(email))+noPw+'</td><td><span class="role-badge role-admin">管理員</span></td>'+
+      const st = acc.authReady ? '' : ' <span style="color:#c62828;font-size:.72rem">(尚未啟用新登入：請按「寄重設密碼信」)</span>';
+      rows += '<tr><td>'+(acc.name?esc(acc.name)+'（'+esc(email)+'）':esc(email))+st+'</td><td><span class="role-badge role-admin">管理員</span></td>'+
         '<td><div class="admin-action-cell">'+
-          '<button class="admin-edit-btn" onclick="openAdminEditModal(\''+email+'\')">編輯</button>'+
-          '<button class="admin-pw-btn" onclick="resetAdminPw(\''+email+'\')">重設密碼</button>'+
-          '<button class="admin-delete-btn" onclick="deleteAdmin(\''+email+'\')">刪除</button>'+
+          '<button class="admin-edit-btn" onclick="openAdminEditModal(\''+esc(email)+'\')">編輯</button>'+
+          '<button class="admin-pw-btn" onclick="resetAdminPw(\''+esc(email)+'\')">寄重設密碼信</button>'+
+          '<button class="admin-delete-btn" onclick="deleteAdmin(\''+esc(email)+'\')">刪除</button>'+
         '</div></td></tr>';
     });
   }catch(e){ console.warn(e); }
@@ -966,20 +1007,22 @@ function openAdminAddModal(){
   document.getElementById('newadmin-name').value='';
   document.getElementById('newadmin-email').value='';
   document.getElementById('newadmin-pw').value='';
+  document.getElementById('newadmin-pw').disabled=false;
   document.getElementById('newadmin-pw').placeholder='幫他設定的密碼（至少6碼）';
   const er=document.getElementById('newadmin-error'); if(er) er.textContent='';
   document.getElementById('admin-add-overlay').style.display='flex';
 }
 async function openAdminEditModal(email){
   if(_currentRole!=='master') return;
+  const accounts = await getAdminAccounts();
+  const _a = accounts.find(a=>(a.email||'').toLowerCase()===(email||'').toLowerCase());
   _editAdminOrig = (email||'').toLowerCase();
-  const _accs = await getAdminAccounts();
-  const _a = _accs.find(a=>(a.email||'').toLowerCase()===_editAdminOrig);
   document.getElementById('admin-add-title').textContent='編輯管理員帳號';
   document.getElementById('newadmin-name').value=(_a && _a.name) || '';
   document.getElementById('newadmin-email').value=email;
   document.getElementById('newadmin-pw').value='';
-  document.getElementById('newadmin-pw').placeholder='密碼（留空則不修改）';
+  document.getElementById('newadmin-pw').placeholder='（編輯時無法改密碼，請用「寄重設密碼信」）';
+  document.getElementById('newadmin-pw').disabled=true;
   const er=document.getElementById('newadmin-error'); if(er) er.textContent='';
   document.getElementById('admin-add-overlay').style.display='flex';
 }
@@ -996,38 +1039,45 @@ async function addAdmin(){   // 彈窗「儲存」：新增或編輯
   if(email===MASTER_EMAIL){ err.textContent='這已經是主管理員'; return; }
   try{
     let accounts = await getAdminAccounts();
+    let note = '';
     if(_editAdminOrig===null){
       if(accounts.some(a=>(a.email||'').toLowerCase()===email)){ err.textContent='此 Email 已是管理員'; return; }
       if(pw.length<6){ err.textContent='密碼至少 6 碼'; return; }
-      accounts.push({email, name, pw: await hashPw(pw)});
+      err.style.color='#888'; err.textContent='建立中…';
+      try{
+        await createAuthAccount(email, pw, true);
+        note = '密碼：'+pw+'\n\n對方會收到一封「驗證信箱」的信，點連結後就能用 Email + 密碼登入。';
+      }catch(e){
+        if(e.code!=='auth/email-already-in-use'){ err.style.color='#c62828'; err.textContent='建立失敗：'+(e.code||e.message); return; }
+        note = '這個 Email 本來就有帳號，對方請用自己原本的密碼登入（忘記可在登入頁按「忘記密碼」）。剛剛輸入的密碼不會生效。';
+      }
+      accounts.push({email, name, authReady:true});
     } else {
       const acc = accounts.find(a=>(a.email||'').toLowerCase()===_editAdminOrig);
       if(!acc){ err.textContent='找不到此管理員'; return; }
       if(email!==_editAdminOrig && accounts.some(a=>(a.email||'').toLowerCase()===email)){ err.textContent='此 Email 已被使用'; return; }
+      if(email!==_editAdminOrig){ acc.authReady=false; note='Email 已變更，請按「寄重設密碼信」讓對方用新 Email 設定密碼。'; }
       acc.email = email; acc.name = name;
-      if(pw){ if(pw.length<6){ err.textContent='密碼至少 6 碼'; return; } acc.pw = await hashPw(pw); }
     }
     await saveAdminAccounts(accounts);
+    err.style.color='#c62828'; err.textContent='';
     closeAdminAddModal();
     renderAdminsList();
-    alert('✅ 已儲存管理員：'+email + (pw ? ('\n密碼：'+pw+'\n請把帳密給對方。') : ''));
-  }catch(e){ err.textContent='儲存失敗：'+(e.code||e.message); }
+    alert('✅ 已儲存管理員：'+email + (note ? '\n'+note : ''));
+  }catch(e){ err.style.color='#c62828'; err.textContent='儲存失敗：'+(e.code||e.message); }
 }
 
 async function resetAdminPw(email){
   if(_currentRole!=='master') return;
-  const newPw = prompt('重設「'+email+'」的密碼：\n（請輸入新密碼，至少6碼）');
-  if(newPw===null) return;
-  if((newPw||'').trim().length<6){ alert('密碼至少 6 碼'); return; }
+  if(!confirm('寄一封「重設密碼」信到 '+email+'？\n對方點信中連結就能自己設定新密碼。')) return;
   try{
+    await sendResetFor(email);
     const accounts = await getAdminAccounts();
     const acc = accounts.find(a=>(a.email||'').toLowerCase()===(email||'').toLowerCase());
-    if(!acc){ alert('找不到此管理員'); return; }
-    acc.pw = await hashPw(newPw);
-    await saveAdminAccounts(accounts);
+    if(acc && !acc.authReady){ acc.authReady = true; await saveAdminAccounts(accounts); }
     renderAdminsList();
-    alert('✅ 已重設\n管理員：'+email+'\n新密碼：'+newPw+'\n請把新密碼給對方。');
-  }catch(e){ alert('重設失敗：'+(e.code||e.message)); }
+    alert('✅ 重設信已寄到 '+email+'（請對方也檢查垃圾信匣）');
+  }catch(e){ alert('寄送失敗：'+(e.code||e.message)); }
 }
 
 async function deleteAdmin(email){
@@ -1094,18 +1144,16 @@ function openAddModal(){
   document.getElementById('admin-modal-overlay').style.display='flex';
 }
 function closeModal(){ document.getElementById('admin-modal-overlay').style.display='none'; }
-function openResetPwModal(gi){
+async function openResetPwModal(gi){
   if(_currentRole!=='master') return;
   const g = getVisibleGroups()[gi]; if(!g) return;
   const acc = g.primary;
-  const newPw = prompt('重設「'+acc.name+'」的密碼：\n（請輸入新密碼，確認後直接儲存）');
-  if(newPw===null) return;
-  if(!newPw.trim()){ alert('密碼不可為空白'); return; }
-  hashPw(newPw).then(hashed=>{
-    g.all.forEach(rec=>{ rec.pw=hashed; fbSaveUserDoc(rec); });
-    alert('✅ 已重設\n帳號：'+acc.name+'\n新密碼：'+newPw);
-    setTimeout(syncFromCloud, 500);
-  });
+  if(!acc.email){ alert('這個帳號沒有 Email，無法重設密碼'); return; }
+  if(!confirm('寄一封「重設密碼」信到 '+acc.email+'？\n學習者點信中連結就能自己設定新密碼。')) return;
+  try{
+    await sendResetFor(acc.email);
+    alert('✅ 重設信已寄到 '+acc.email+'（請學習者也檢查垃圾信匣）');
+  }catch(e){ alert('寄送失敗：'+(e.code||e.message)); }
 }
 async function saveModal(){
   if(_currentRole!=='master') return;
@@ -1113,19 +1161,42 @@ async function saveModal(){
   const pw=document.getElementById('modal-pw').value;
   const email=document.getElementById('modal-email').value.trim().toLowerCase();
   const err=document.getElementById('modal-error');
+  err.style.color='#c62828';
   if(!name){ err.textContent='請輸入名稱'; return; }
   if(_isAdd){
-    if(!pw){ err.textContent='請輸入密碼'; return; }
+    if(!email){ err.textContent='請輸入 Gmail（學習者用它登入）'; return; }
+    if(pw.length<6){ err.textContent='密碼至少 6 碼'; return; }
     if(_adminUsers.find(a=>a.name===name)){ err.textContent='此名稱已存在'; return; }
-    const rec={name, pw:await hashPw(pw)}; if(email) rec.email=email;
-    fbSaveUserDoc(rec);
+    err.style.color='#888'; err.textContent='建立中…';
+    let uid = null, note = '';
+    try{ uid = await createAuthAccount(email, pw, false); }
+    catch(e){
+      if(e.code!=='auth/email-already-in-use'){ err.style.color='#c62828'; err.textContent='建立失敗：'+(e.code||e.message); return; }
+      note = '\n這個 Email 本來就有帳號，學習者請用自己原本的密碼登入（第一次登入會要求驗證信箱）。';
+    }
+    const rec = {name, email, createdAt:new Date().toISOString(), method:'admin'};
+    if(uid) rec.uid = uid;
+    try{
+      await _db.collection('users').doc(name).set(rec);
+      if(!uid){ await _db.collection('legacy').doc(await hashPw(email)).set({names:[name]}); }
+    }catch(e){ err.style.color='#c62828'; err.textContent='儲存失敗：'+(e.code||e.message); return; }
+    alert('✅ 已建立學習者：'+name+'\nEmail：'+email+(uid?'\n密碼：'+pw:'')+note);
   } else {
     const g=getUserGroups()[_editGroupIdx]; if(!g){ err.textContent='帳號不存在'; return; }
     const rec=g.primary;
     if(name!==rec.name && _adminUsers.find(a=>a.name===name && a!==rec)){ err.textContent='此名稱已被使用'; return; }
-    rec.name=name; if(pw) rec.pw=await hashPw(pw); if(email) rec.email=email;
+    if(pw){
+      if(rec.uid){ err.textContent='已升級的帳號無法在這裡改密碼，請關閉後按「寄重設密碼信」'; return; }
+      rec.pw = await hashPw(pw);
+    }
+    rec.name=name;
+    if(email && email!==(rec.email||'').toLowerCase()){
+      if(rec.uid){ err.textContent='已升級的帳號請由學習者自己在「帳號設定」改信箱'; return; }
+      rec.email=email;
+    }
     fbSaveUserDoc(rec);
   }
+  err.textContent='';
   closeModal();
   setTimeout(syncFromCloud, 500);
 }
