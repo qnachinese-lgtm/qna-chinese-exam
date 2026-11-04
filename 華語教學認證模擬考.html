@@ -645,6 +645,28 @@ body.dark .pf-row { border-top-color:#31353b; }
 body.dark .pf-form input { background:#2a2e34; border-color:#3a3f47; color:#e6e6e6; }
 
 .pf-lock { font-size:12px; color:#b5aa9e; white-space:nowrap; }
+
+/* 首頁精修：少框線、選中樣式統一 */
+.subject-grid { gap:10px; margin-bottom:24px; }
+.subject-card { display:grid; grid-template-columns:44px 1fr; grid-template-rows:auto auto; column-gap:12px; align-items:center; padding:14px 14px; border:1.5px solid var(--line); border-radius:14px; box-shadow:none; }
+.subject-card:hover { transform:none; border-color:#dcc6bd; box-shadow:none; background:#fffdfa; }
+.subject-card .icon { grid-row:1 / span 2; width:44px; height:44px; margin:0; border-radius:12px; }
+.subject-card .title { grid-column:2; font-size:16px; line-height:1.3; padding-right:22px; }
+.subject-card .cnt { grid-column:2; margin-top:2px; font-size:13px; }
+.subject-card.selected { background:var(--brand-soft); border-color:var(--brand); box-shadow:none; }
+.subject-card.selected .icon { background:#fff; }
+.subj-check { top:50%; right:12px; margin-top:-10px; width:20px; height:20px; }
+.yr-plain { margin:0 0 12px; }
+#yr-filter-row { gap:8px; }
+#yr-filter-row .yr-btn { border:1.5px solid transparent; background:#efe8dc; color:#5d554d; padding:8px 0; }
+#yr-filter-row .yr-btn:hover { background:#e8dfd0; }
+#yr-filter-row .yr-btn.active { background:var(--brand-soft); border-color:var(--brand); color:var(--brand); font-weight:700; }
+.opt-line { margin:0 0 18px; }
+body.dark .subject-card.selected { background:#3a2828; border-color:#c0392b; }
+body.dark .subject-card.selected .icon { background:#23262b; }
+body.dark #yr-filter-row .yr-btn { background:#2b2f35; color:#c8cbd0; }
+body.dark #yr-filter-row .yr-btn.active { background:#3a2828; border-color:#c0392b; color:#f0a5a0; }
+@media(max-width:720px){ .subject-card .title { font-size:15px; } }
 /* 深色模式 */
 body.dark header.topbar { background:#1b1d21; border-bottom-color:#2e3238; }
 body.dark .tb-sub { border-left-color:#3a3f47; }
@@ -833,7 +855,7 @@ body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark 
     </div>
   </div>
   <div class="sec-label">選擇年份<span class="sec-hint">可複選，一年約一份考卷</span><button type="button" class="yr-all" id="yr-all-slot">全選</button></div>
-  <div class="setup-card yr-card"><div class="yr-filter-row" id="yr-filter-row"></div></div>
+  <div class="yr-plain"><div class="yr-filter-row" id="yr-filter-row"></div></div>
   <div class="opt-line">
     <span class="opt-summary" id="opt-summary"></span>
     <button type="button" class="opt-toggle" id="opt-toggle" onclick="toggleOptions()">調整<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
