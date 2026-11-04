@@ -36,6 +36,10 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 .sec-btn.ghost:hover { background:#eef5fc; }
 .sec-btn.warn { background:#ff7043; color:#fff; }
 .sec-table { overflow-x:auto; }
+/* 收合按鈕：只用箭頭圖示（展開時朝上、收起時朝下） */
+.sec-btn.icon { width:36px; min-width:36px; padding:0; }
+.sec-btn.icon svg { width:18px; height:18px; display:block; transition:transform .2s; }
+.sec-btn.icon.collapsed svg { transform:rotate(180deg); }
 .admin-add-btn { background:linear-gradient(135deg,#4a90d9,#357abd); color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:.88rem; font-weight:600; cursor:pointer; margin-bottom:16px; }
 .admin-add-btn:hover { opacity:.88; }
 .admin-action-cell { display:flex; gap:6px; flex-wrap:nowrap; align-items:center; white-space:nowrap; }
@@ -173,7 +177,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
       <span class="admin-title">📚 學習者名單</span>
       <button id="cleanup-btn" class="sec-btn warn" onclick="cleanupDuplicates()" style="display:none">🧹 清除空殼</button>
       <button id="add-learner-btn" class="sec-btn primary" onclick="openAddModal()">＋ 新增學習者</button>
-      <button id="toggle-learners-btn" class="sec-btn ghost" onclick="toggleLearnersTable()">隱藏</button>
+      <button id="toggle-learners-btn" class="sec-btn ghost icon" onclick="toggleLearnersTable()" title="收起名單" aria-label="收起名單"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 15 12 9 18 15"/></svg></button>
     </div>
     <div class="sec-desc">所有學習者的帳號、登入方式與成績。點名稱可查看個人的詳細學習紀錄。</div>
     <div id="learners-table-container" class="sec-table">
@@ -189,7 +193,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
       <div class="sec-head">
         <span class="admin-title">👤 管理員存取權限</span>
         <button class="sec-btn primary" onclick="openAdminAddModal()">＋ 新增管理員</button>
-        <button id="toggle-admins-btn" class="sec-btn ghost" onclick="toggleSecTable('admins-table-container',this)">隱藏</button>
+        <button id="toggle-admins-btn" class="sec-btn ghost icon" onclick="toggleSecTable('admins-table-container',this)" title="收起名單" aria-label="收起名單"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 15 12 9 18 15"/></svg></button>
       </div>
       <div class="sec-desc">只有主管理員能新增或刪除管理員；其他管理員只能查看學習者資料。</div>
       <div id="admins-table-container" class="sec-table">
@@ -206,7 +210,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
         <span class="admin-title">📝 訪客試做名單</span>
         <span id="guest-summary" style="font-size:.8rem;color:#888"></span>
         <button id="guest-clear-btn" class="sec-btn warn" onclick="clearGuestRecords()" style="display:none">清空訪客紀錄</button>
-        <button id="toggle-guest-btn" class="sec-btn ghost" onclick="toggleGuestTable()">隱藏</button>
+        <button id="toggle-guest-btn" class="sec-btn ghost icon" onclick="toggleGuestTable()" title="收起名單" aria-label="收起名單"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 15 12 9 18 15"/></svg></button>
       </div>
       <div class="sec-desc">同一個瀏覽器視為同一位訪客（匿名，不含個人身分）；清除瀏覽器資料或換裝置會被視為新的訪客。</div>
       <div id="guest-table-container" class="sec-table">
@@ -233,7 +237,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
       <div class="admin-header" style="margin-bottom:8px">
         <span class="admin-title">📖 題庫管理</span>
         <span id="qb-status" style="font-size:.8rem;color:#888;margin-left:auto"></span>
-        <button id="qb-toggle-btn" class="admin-back" onclick="toggleQBPanel()" style="background:#4a90e2;color:#fff;border:none;cursor:pointer;padding:8px 16px;border-radius:8px;margin-left:8px">隱藏</button>
+        <button id="qb-toggle-btn" class="sec-btn ghost icon" onclick="toggleQBPanel()" style="margin-left:8px" title="收起題庫" aria-label="收起題庫"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 15 12 9 18 15"/></svg></button>
       </div>
       <div class="admin-section">直接在這裡新增、修改、刪除題目；存檔後考試頁面會自動同步。題目或選項要畫底線，請用 &lt;u&gt;文字&lt;/u&gt;。</div>
       <div id="qb-panel">
@@ -518,7 +522,7 @@ async function loadQBAdmin(){
 
 function toggleQBPanel(){
   const p=document.getElementById('qb-panel'); const b=document.getElementById('qb-toggle-btn');
-  const hidden=p.style.display==='none'; p.style.display=hidden?'block':'none'; b.textContent=hidden?'隱藏':'顯示';
+  const hidden=p.style.display==='none'; p.style.display=hidden?'block':'none'; setToggleIcon(b, !hidden, '題庫');
 }
 
 function renderQBList(){
@@ -802,18 +806,24 @@ async function sendResetFor(email){
 // ═══════════════════════════════════════════
 //  學習者名單
 // ═══════════════════════════════════════════
+function setToggleIcon(b, collapsed, what){
+  if(!b) return;
+  b.classList.toggle('collapsed', collapsed);
+  const t = (collapsed ? '展開' : '收起') + (what || '名單');
+  b.title = t; b.setAttribute('aria-label', t);
+}
 function toggleSecTable(id, btn){
   const c=document.getElementById(id); if(!c) return;
   const hidden = c.style.display==='none';
   c.style.display = hidden ? 'block':'none';
-  btn.textContent = hidden ? '隱藏':'顯示';
+  setToggleIcon(btn, !hidden);
 }
 function toggleLearnersTable(){
   const c=document.getElementById('learners-table-container');
   const b=document.getElementById('toggle-learners-btn');
   const hidden = c.style.display==='none';
   c.style.display = hidden ? 'block':'none';
-  b.textContent = hidden ? '隱藏':'顯示';
+  setToggleIcon(b, !hidden);
 }
 
 function toggleGuestTable(){
@@ -822,7 +832,7 @@ function toggleGuestTable(){
   if(!c||!b) return;
   const hidden = c.style.display==='none';
   c.style.display = hidden ? 'block':'none';
-  b.textContent = hidden ? '隱藏':'顯示';
+  setToggleIcon(b, !hidden);
 }
 
 function getVisibleGroups(){
