@@ -123,6 +123,113 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 .qb-modal input, .qb-modal textarea, .qb-modal select { width:100%; box-sizing:border-box; padding:9px 11px; border:2px solid #e0e0e0; border-radius:8px; font-size:.9rem; outline:none; font-family:inherit; }
 .qb-modal textarea { resize:vertical; line-height:1.7; }
 .qb-modal input:focus, .qb-modal textarea:focus, .qb-modal select:focus { border-color:#4a90d9; }
+
+/* ════════ 後台 v3 版面：上方分頁、深紅主色、線條圖示 ════════ */
+:root { --brand:#8b1a1a; --brand-h:#a32222; --brand-soft:#fbf1ef; --ink:#2c2c2c; --muted:#8a8178; --line:#ece4d6; --card:#fff; --page:#f5f0e8; }
+body { font-family:-apple-system,"PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif; background:var(--page); color:var(--ink); }
+main { max-width:1080px; padding:0 16px 40px; }
+#admin-screen { padding:0; }
+.ico { width:18px; height:18px; flex:0 0 auto; display:block; }
+/* 頂端列 */
+.topbar { position:sticky; top:0; z-index:50; background:var(--page); padding:14px 0 0; }
+.topbar-row { display:flex; align-items:center; gap:10px; padding:4px 0 12px; }
+.brand { display:flex; align-items:center; gap:10px; flex:1; min-width:0; }
+.brand-mark { width:32px; height:32px; border-radius:9px; background:var(--brand); color:#fff; display:flex; align-items:center; justify-content:center; font-family:"Noto Serif TC",serif; font-weight:700; font-size:15px; }
+.brand-name { font-size:16px; font-weight:700; white-space:nowrap; }
+.env-tag { font-size:12px; font-weight:600; padding:3px 9px; border-radius:6px; white-space:nowrap; }
+.env-tag.staging { background:#fdf0d6; color:#8a5a00; }
+.env-tag.prod { background:#e6f2e8; color:#2e6b38; }
+.who { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); min-width:0; }
+.who #who-am-i { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:220px; }
+.role-badge { font-size:12px; font-weight:600; padding:3px 9px; border-radius:6px; border:none; white-space:nowrap; }
+.role-master { background:var(--brand-soft); color:var(--brand); border:none; }
+.role-admin { background:#e9f0f8; color:#2b5a8a; border:none; }
+.icon-btn { width:36px; height:36px; border-radius:9px; border:1px solid var(--line); background:#fff; color:var(--muted); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+.icon-btn:hover { color:var(--brand); border-color:#d9c7b8; }
+/* 分頁列 */
+.tabs { display:flex; gap:4px; border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none; }
+.tabs::-webkit-scrollbar { display:none; }
+.tab { display:flex; align-items:center; gap:7px; padding:10px 14px 11px; border:none; background:none; font:inherit; font-size:14px; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; }
+.tab:hover { color:var(--ink); }
+.tab.active { color:var(--brand); border-bottom-color:var(--brand); font-weight:600; }
+/* 每一頁 */
+.page { display:none; padding-top:22px; }
+.page.active { display:block; }
+.page-head { display:flex; align-items:flex-start; gap:10px; margin-bottom:16px; }
+.page-head-text { flex:1; min-width:0; }
+.page-title { font-size:20px; font-weight:700; margin:0 0 4px; }
+.page-desc { font-size:13px; color:var(--muted); line-height:1.6; }
+.page-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+/* 按鈕 */
+.btn { height:36px; padding:0 14px; border-radius:9px; font:inherit; font-size:14px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; border:1px solid transparent; }
+.btn .ico { width:16px; height:16px; }
+.btn-primary { background:var(--brand); color:#fff; }
+.btn-primary:hover { background:var(--brand-h); }
+.btn-secondary { background:#fff; color:var(--ink); border-color:var(--line); }
+.btn-secondary:hover { border-color:#d9c7b8; background:#fffdf9; }
+.btn-danger { background:#fff; color:#b3261e; border-color:#f0cfcb; }
+.btn-danger:hover { background:#fdf1f0; }
+.chip-note { font-size:13px; color:var(--muted); white-space:nowrap; }
+/* 卡片與表格 */
+.card { background:var(--card); border:1px solid var(--line); border-radius:14px; }
+.sec-table { overflow-x:auto; }
+.admin-table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:none; }
+.admin-table th { background:#faf6ef; color:var(--muted); font-weight:600; font-size:13px; padding:11px 16px; text-align:left; border-bottom:1px solid var(--line); white-space:nowrap; }
+.admin-table td { padding:12px 16px; font-size:14px; border-bottom:1px solid #f3eee5; vertical-align:middle; }
+.admin-table tr:last-child td { border-bottom:none; }
+.admin-table tr:hover td { background:#fdfaf5; }
+.admin-table td.actions { width:56px; text-align:right; }
+.stu-link { color:var(--ink); font-weight:600; text-decoration:none; border-bottom:1px dashed #cdbfae; }
+.stu-link:hover { color:var(--brand); border-bottom-color:var(--brand); }
+.chip { display:inline-block; font-size:12px; font-weight:600; padding:3px 9px; border-radius:6px; white-space:nowrap; }
+.chip.ok { background:#e6f2e8; color:#2e6b38; }
+.chip.wait { background:#fdf0d6; color:#8a5a00; }
+.chip.info { background:#e9f0f8; color:#2b5a8a; }
+.empty-row { text-align:center; color:var(--muted); padding:28px 16px !important; }
+/* ⋯ 選單 */
+.dots-btn { width:32px; height:32px; border-radius:8px; border:none; background:none; color:var(--muted); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; }
+.dots-btn:hover { background:#f4efe6; color:var(--ink); }
+.row-menu { position:fixed; z-index:2000; min-width:170px; background:#fff; border:1px solid var(--line); border-radius:12px; box-shadow:0 10px 30px rgba(60,30,20,.16); padding:6px; }
+.row-menu button { display:flex; width:100%; align-items:center; gap:8px; padding:9px 10px; border:none; background:none; border-radius:8px; font:inherit; font-size:14px; color:var(--ink); cursor:pointer; text-align:left; white-space:nowrap; }
+.row-menu button:hover { background:#f6f1e9; }
+.row-menu button.danger { color:#b3261e; }
+.row-menu button.danger:hover { background:#fdf1f0; }
+.row-menu hr { border:none; border-top:1px solid #f1ebe0; margin:4px 2px; }
+/* 儀表板 */
+.dash-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; }
+.dash-card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px 18px; box-shadow:none; min-width:0; }
+.dash-label { font-size:13px; color:var(--muted); margin:0 0 6px; order:-1; }
+.dash-card { display:flex; flex-direction:column; }
+.dash-val { font-size:24px; font-weight:700; color:var(--ink); line-height:1.2; }
+.dash-sub { font-size:12px; color:#a99f94; margin-top:4px; }
+.dash-bars { margin-top:12px; background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px 18px; box-shadow:none; }
+.dash-bar { background:#f1ebe0; }
+/* 題庫工具列 */
+.toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:0 0 12px; }
+.qb-ctrl { height:36px; padding:0 10px; border:1px solid var(--line); border-radius:9px; font:inherit; font-size:14px; background:#fff; }
+.search-box { position:relative; flex:1; min-width:180px; }
+.search-box .ico { position:absolute; left:10px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:#b0a69b; }
+.search-box input { width:100%; padding-left:34px; }
+.qb-edit-link { background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:8px; padding:5px 12px; cursor:pointer; font:inherit; font-size:13px; }
+.qb-edit-link:hover { border-color:var(--brand); color:var(--brand); opacity:1; }
+/* 備份頁 */
+.backup-card { padding:20px; }
+#qb-status:not(:empty)::before { content:'　·　'; }
+#qb-status { color:#8a8178; }
+.backup-target { font-size:13px; color:var(--muted); margin:0 0 14px; }
+/* 彈窗與登入沿用主色 */
+.modal-btn-primary, .login-btn { background:var(--brand); }
+.modal-btn-primary:hover { background:var(--brand-h); }
+.login-btn:hover { opacity:1; background:var(--brand-h); }
+.admin-modal input:focus, .admin-login-box input:focus, .qb-modal input:focus, .qb-modal textarea:focus, .qb-modal select:focus { border-color:var(--brand); }
+.link-btn { color:var(--brand); }
+.admin-login-box h3 { display:flex; align-items:center; justify-content:center; gap:10px; }
+@media(max-width:640px){
+  .who #who-am-i { display:none; }
+  .page-head { flex-direction:column; }
+  .page-actions { justify-content:flex-start; }
+  .tab { padding:10px 10px 11px; }
+}
 </style>
 <!-- Firebase（真驗證：Auth + Firestore） -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -137,7 +244,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 <!-- 登入畫面 -->
 <div id="admin-login-screen">
   <div class="admin-login-box">
-    <h3>🔐 管理者後臺</h3>
+    <h3><span class="brand-mark">Q</span>QNA 管理後台</h3>
     <p>請用管理員 Email 與密碼登入</p>
     <input type="email" id="admin-email" placeholder="管理員 Email" autocomplete="username"
       onkeydown="if(event.key==='Enter')document.getElementById('admin-pw').focus()">
@@ -158,104 +265,123 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 
 <main>
   <div id="admin-screen">
-    <div class="admin-header">
-      <button class="admin-back" onclick="adminLogout()">← 登出</button>
-      <span class="admin-title">⚙️ 管理者後臺</span>
-      <span id="role-badge" class="role-badge role-admin"></span>
-    </div>
-    <div id="who-am-i" style="font-size:.8rem;color:#888;margin-bottom:16px"></div>
-
-    <!-- 總覽儀表板 -->
-    <div class="admin-header" style="margin-bottom:12px">
-      <span class="admin-title">📊 總覽</span>
-    </div>
-    <div id="dashboard" style="margin-bottom:28px"></div>
-
-    <!-- 學習者名單 -->
-    <div class="sec">
-    <div class="sec-head">
-      <span class="admin-title">📚 學習者名單</span>
-      <button id="cleanup-btn" class="sec-btn warn" onclick="cleanupDuplicates()" style="display:none">🧹 清除空殼</button>
-      <button id="add-learner-btn" class="sec-btn primary" onclick="openAddModal()">＋ 新增學習者</button>
-      <button id="toggle-learners-btn" class="sec-btn ghost icon" onclick="toggleLearnersTable()" title="收起名單" aria-label="收起名單"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 15 12 9 18 15"/></svg></button>
-    </div>
-    <div class="sec-desc">所有學習者的帳號、登入方式與成績。點名稱可查看個人的詳細學習紀錄。</div>
-    <div id="learners-table-container" class="sec-table">
-    <table class="admin-table">
-      <thead><tr id="learner-head"></tr></thead>
-      <tbody id="admin-tbody"></tbody>
-    </table>
-    </div>
+    <div class="topbar">
+      <div class="topbar-row">
+        <div class="brand"><span class="brand-mark">Q</span><span class="brand-name">QNA 管理後台</span><span id="env-tag" class="env-tag"></span></div>
+        <div class="who"><span id="who-am-i"></span><span id="role-badge" class="role-badge role-admin"></span></div>
+        <button class="icon-btn" onclick="adminLogout()" title="登出" aria-label="登出"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><polyline points="10 8 6 12 10 16"/><line x1="6" y1="12" x2="16" y2="12"/></svg></button>
+      </div>
+      <nav class="tabs" role="tablist">
+        <button class="tab" data-page="overview" onclick="showPage('overview')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>總覽</button>
+        <button class="tab" data-page="learners" onclick="showPage('learners')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/></svg>學習者</button>
+        <button class="tab master-only" data-page="qb" onclick="showPage('qb')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><line x1="8" y1="8" x2="16" y2="8"/></svg>題庫</button>
+        <button class="tab" data-page="guests" onclick="showPage('guests')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/><path d="M10.5 7.2a1.6 1.6 0 1 1 2.2 1.5c-.5.2-.7.6-.7 1.1"/></svg>訪客</button>
+        <button class="tab master-only" data-page="admins" onclick="showPage('admins')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><rect x="9" y="11" width="6" height="5" rx="1"/><path d="M10.5 11V9.5a1.5 1.5 0 0 1 3 0V11"/></svg>管理員</button>
+        <button class="tab master-only" data-page="backup" onclick="showPage('backup')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="8" ry="2.5"/><path d="M4 5.5v6c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5v-6"/><path d="M4 11.5v6c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5v-6"/></svg>備份</button>
+      </nav>
     </div>
 
-    <!-- 管理員白名單（僅主管理員可見） -->
-    <div id="admins-section" class="sec" style="display:none">
-      <div class="sec-head">
-        <span class="admin-title">👤 管理員存取權限</span>
-        <button class="sec-btn primary" onclick="openAdminAddModal()">＋ 新增管理員</button>
-        <button id="toggle-admins-btn" class="sec-btn ghost icon" onclick="toggleSecTable('admins-table-container',this)" title="收起名單" aria-label="收起名單"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 15 12 9 18 15"/></svg></button>
-      </div>
-      <div class="sec-desc">只有主管理員能新增或刪除管理員；其他管理員只能查看學習者資料。</div>
-      <div id="admins-table-container" class="sec-table">
-      <table class="admin-table">
-        <thead><tr><th>管理員 Email</th><th>角色</th><th style="text-align:center">操作</th></tr></thead>
-        <tbody id="admins-tbody"></tbody>
-      </table>
-      </div>
-    </div>
+    <!-- 總覽 -->
+    <section class="page" id="page-overview">
+      <div class="page-head"><div class="page-head-text"><h2 class="page-title">總覽</h2><div class="page-desc">全體學習者的作答概況。</div></div></div>
+      <div id="dashboard"></div>
+    </section>
 
-    <!-- 訪客試做名單 -->
-    <div id="guest-section" class="sec">
-      <div class="sec-head">
-        <span class="admin-title">📝 訪客試做名單</span>
-        <span id="guest-summary" style="font-size:.8rem;color:#888"></span>
-        <button id="guest-clear-btn" class="sec-btn warn" onclick="clearGuestRecords()" style="display:none">清空訪客紀錄</button>
-        <button id="toggle-guest-btn" class="sec-btn ghost icon" onclick="toggleGuestTable()" title="收起名單" aria-label="收起名單"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 15 12 9 18 15"/></svg></button>
-      </div>
-      <div class="sec-desc">同一個瀏覽器視為同一位訪客（匿名，不含個人身分）；清除瀏覽器資料或換裝置會被視為新的訪客。</div>
-      <div id="guest-table-container" class="sec-table">
-      <table class="admin-table">
-        <thead><tr><th>訪客</th><th>試做次數</th><th>做過的科目</th><th>最近得分</th><th>最近時間</th></tr></thead>
-        <tbody id="guest-tbody"></tbody>
-      </table>
-      </div>
-    </div>
-    <!-- 題庫管理（僅主管理員） -->
-    <div id="backup-section" style="display:none;border-top:2px solid #e0e0e0;padding-top:20px;margin-top:24px">
-      <div class="admin-header" style="margin-bottom:12px"><span class="admin-title">📦 資料備份與還原</span></div>
-      <div class="admin-section" id="backup-target"></div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <button class="admin-add-btn" style="margin:0" onclick="downloadBackup()">📦 下載完整備份</button>
-        <label class="admin-back" style="background:#fff3e0;border:1px solid #ffb74d;cursor:pointer;padding:8px 14px;border-radius:8px">♻️ 從備份還原…
-          <input type="file" accept=".json,application/json" style="display:none" onchange="restoreBackup(this)"></label>
-        <span id="backup-status" style="font-size:.85rem;color:#555"></span>
-      </div>
-      <div class="admin-section" style="margin-top:10px">備份檔會下載到你的電腦，內容包含學習者名單、考試紀錄、訪客紀錄、題庫、管理員名單。建議每週下載一次。還原只會「寫入／覆蓋」備份檔裡有的資料，不會刪除其他資料。</div>
-    </div>
-
-    <div id="qb-section" style="border-top:2px solid #e0e0e0;padding-top:20px;margin-top:24px;display:none">
-      <div class="admin-header" style="margin-bottom:8px">
-        <span class="admin-title">📖 題庫管理</span>
-        <span id="qb-status" style="font-size:.8rem;color:#888;margin-left:auto"></span>
-        <button id="qb-toggle-btn" class="sec-btn ghost icon" onclick="toggleQBPanel()" style="margin-left:8px" title="收起題庫" aria-label="收起題庫"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 15 12 9 18 15"/></svg></button>
-      </div>
-      <div class="admin-section">直接在這裡新增、修改、刪除題目；存檔後考試頁面會自動同步。題目或選項要畫底線，請用 &lt;u&gt;文字&lt;/u&gt;。</div>
-      <div id="qb-panel">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0">
-          <select id="qb-subject" class="qb-ctrl" onchange="renderQBList()">
-            <option value="chinese">國文</option>
-            <option value="linguistics">漢語語言學</option>
-            <option value="teaching">華語文教學</option>
-            <option value="culture">華人社會與文化</option>
-          </select>
-          <select id="qb-year" class="qb-ctrl" onchange="renderQBList()"><option value="">全部年份</option></select>
-          <input id="qb-search" class="qb-ctrl" placeholder="🔍 搜尋題目關鍵字" oninput="renderQBList()" style="flex:1;min-width:160px">
-          <button class="admin-add-btn" style="margin:0" onclick="openQBEdit(-1)">＋ 新增題目</button>
-          <button class="admin-back" onclick="importQBFromCode()" style="background:#7e57c2;color:#fff;border:none;cursor:pointer;padding:8px 14px;border-radius:8px">⬆️ 從程式碼匯入/重置</button>
+    <!-- 學習者 -->
+    <section class="page" id="page-learners">
+      <div class="page-head">
+        <div class="page-head-text"><h2 class="page-title">學習者</h2><div class="page-desc">所有學習者的帳號、登入狀態與成績。點名稱可查看個人的詳細學習紀錄。</div></div>
+        <div class="page-actions">
+          <button id="cleanup-btn" class="btn btn-secondary" onclick="cleanupDuplicates()" style="display:none"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4l6 6"/><path d="M12 6l6 6-7 7H5v-6z"/></svg>清除空殼</button>
+          <button id="add-learner-btn" class="btn btn-primary" onclick="openAddModal()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增學習者</button>
         </div>
-        <div id="qb-list" style="overflow-x:auto"></div>
       </div>
-    </div>
+      <div id="learners-table-container" class="sec-table">
+        <table class="admin-table">
+          <thead><tr id="learner-head"></tr></thead>
+          <tbody id="admin-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 題庫（主管理員） -->
+    <section class="page" id="page-qb">
+      <div id="qb-section">
+        <div class="page-head">
+          <div class="page-head-text"><h2 class="page-title">題庫</h2><div class="page-desc">新增、修改、刪除題目。題目或選項要畫底線，請用 &lt;u&gt;文字&lt;/u&gt;。<span id="qb-status"></span></div></div>
+          <div class="page-actions">
+            <button class="btn btn-secondary" onclick="importQBFromCode()" title="用考試頁內建題庫覆蓋雲端題庫"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><polyline points="20 4 20 9 15 9"/></svg>從程式碼匯入</button>
+            <button class="btn btn-primary" onclick="openQBEdit(-1)"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增題目</button>
+          </div>
+        </div>
+        <div id="qb-panel">
+          <div class="toolbar">
+            <select id="qb-subject" class="qb-ctrl" onchange="renderQBList()">
+              <option value="chinese">國文</option>
+              <option value="linguistics">漢語語言學</option>
+              <option value="teaching">華語文教學</option>
+              <option value="culture">華人社會與文化</option>
+            </select>
+            <select id="qb-year" class="qb-ctrl" onchange="renderQBList()"><option value="">全部年份</option></select>
+            <div class="search-box"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><line x1="16" y1="16" x2="20.5" y2="20.5"/></svg><input id="qb-search" class="qb-ctrl" placeholder="搜尋題目關鍵字" oninput="renderQBList()"></div>
+          </div>
+          <div id="qb-list" class="sec-table"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 訪客 -->
+    <section class="page" id="page-guests">
+      <div id="guest-section">
+        <div class="page-head">
+          <div class="page-head-text"><h2 class="page-title">訪客</h2><div class="page-desc">免註冊試做的紀錄。同一個瀏覽器視為同一位訪客（匿名）；清除瀏覽器資料或換裝置會被視為新的訪客。</div></div>
+          <div class="page-actions">
+            <span id="guest-summary" class="chip-note"></span>
+            <button id="guest-clear-btn" class="btn btn-danger" onclick="clearGuestRecords()" style="display:none"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg>清空紀錄</button>
+          </div>
+        </div>
+        <div id="guest-table-container" class="sec-table">
+          <table class="admin-table">
+            <thead><tr><th>訪客</th><th>試做次數</th><th>做過的科目</th><th>最近得分</th><th>最近時間</th></tr></thead>
+            <tbody id="guest-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 管理員（主管理員） -->
+    <section class="page" id="page-admins">
+      <div id="admins-section">
+        <div class="page-head">
+          <div class="page-head-text"><h2 class="page-title">管理員</h2><div class="page-desc">只有主管理員能新增或刪除管理員；其他管理員只能查看學習者資料。新的管理員第一次登入時，系統會寄驗證信給他。</div></div>
+          <div class="page-actions"><button class="btn btn-primary" onclick="openAdminAddModal()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增管理員</button></div>
+        </div>
+        <div id="admins-table-container" class="sec-table">
+          <table class="admin-table">
+            <thead><tr><th>管理員</th><th>角色</th><th></th></tr></thead>
+            <tbody id="admins-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 備份（主管理員） -->
+    <section class="page" id="page-backup">
+      <div id="backup-section">
+        <div class="page-head">
+          <div class="page-head-text"><h2 class="page-title">資料備份與還原</h2><div class="page-desc">備份檔會下載到你的電腦，內容包含學習者名單、考試紀錄、訪客紀錄、題庫、管理員名單。建議每週下載一次。還原只會寫入或覆蓋備份檔裡有的資料，不會刪除其他資料。</div></div>
+        </div>
+        <div class="card backup-card">
+          <div class="backup-target" id="backup-target"></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-primary" onclick="downloadBackup()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><polyline points="7 10 12 15 17 10"/><path d="M5 19h14"/></svg>下載完整備份</button>
+            <label class="btn btn-secondary"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V9"/><polyline points="7 14 12 9 17 14"/><path d="M5 5h14"/></svg>從備份還原…
+              <input type="file" accept=".json,application/json" style="display:none" onchange="restoreBackup(this)"></label>
+            <span id="backup-status" style="font-size:13px;color:#555"></span>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </main>
 
@@ -536,7 +662,7 @@ function renderQBList(){
   const kw=(document.getElementById('qb-search').value||'').trim();
   const rows=arr.map((q,i)=>({q:q,i:i})).filter(o=>(!yf||String(o.q.yr)===yf)&&(!kw||((o.q.q||'')+(o.q.opts||[]).join('')).indexOf(kw)>=0));
   let html='<table class="admin-table"><thead><tr><th style="width:48px">#</th><th style="width:64px">年份</th><th>題目</th><th style="width:56px">答案</th><th style="width:70px"></th></tr></thead><tbody>';
-  if(!rows.length){ html+='<tr><td colspan="5" style="text-align:center;color:#999;padding:18px">沒有符合的題目</td></tr>'; }
+  if(!rows.length){ html+='<tr><td colspan="5" class="empty-row">沒有符合的題目。</td></tr>'; }
   rows.forEach(o=>{
     const stem=esc(String(o.q.q||'').replace(/<\/?u>/g,'')).slice(0,46);
     const ansLbl=o.q.free?'送分':[o.q.ans].concat(Array.isArray(o.q.alt)?o.q.alt:[]).map(k=>['A','B','C','D'][k]||'?').join('/');
@@ -620,14 +746,15 @@ async function importQBFromCode(){
 function enterPanel(email, role, name){
   _currentRole = role; _currentEmail = (email||'').toLowerCase();
   showScreen('panel');
-  document.getElementById('who-am-i').textContent = '登入身分：'+_currentEmail;
+  document.getElementById('who-am-i').textContent = _currentEmail;
+  const _env=document.getElementById('env-tag'); if(_env){ _env.textContent = IS_STAGING ? '測試版' : '正式版'; _env.className = 'env-tag ' + (IS_STAGING ? 'staging' : 'prod'); }
   const badge=document.getElementById('role-badge');
   badge.textContent = role==='master' ? '主管理員' : ('管理員'+(name?'（'+name+'）':''));
   badge.className = 'role-badge ' + (role==='master'?'role-master':'role-admin');
   document.getElementById('add-learner-btn').style.display = role==='master' ? '' : 'none';
-  document.getElementById('admins-section').style.display  = role==='master' ? 'block' : 'none';
-  document.getElementById('qb-section').style.display = role==='master' ? 'block' : 'none';
-  const _bk=document.getElementById('backup-section'); if(_bk) _bk.style.display = role==='master' ? 'block' : 'none';
+  document.querySelectorAll('.tab.master-only').forEach(t=>{ t.style.display = role==='master' ? '' : 'none'; });
+  let _pg='overview'; try{ _pg=sessionStorage.getItem('qna_admin_page')||'overview'; }catch(e){}
+  showPage(_pg);
   const _bt=document.getElementById('backup-target'); if(_bt) _bt.textContent = '目前連線的資料庫：'+FB_CONFIG.projectId+(IS_STAGING?'（測試版）':'（正式版）');
   if(role==='master') loadQBAdmin();
   syncFromCloud();
@@ -806,6 +933,41 @@ async function sendResetFor(email){
 // ═══════════════════════════════════════════
 //  學習者名單
 // ═══════════════════════════════════════════
+
+// ═══════════════════════════════════════════
+//  分頁切換與「⋯」操作選單
+// ═══════════════════════════════════════════
+function showPage(name){
+  if(_currentRole!=='master' && ['qb','admins','backup'].includes(name)) name='overview';
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', p.id==='page-'+name));
+  document.querySelectorAll('.tab').forEach(t=>{ const on=t.dataset.page===name; t.classList.toggle('active', on); t.setAttribute('aria-selected', on?'true':'false'); });
+  try{ sessionStorage.setItem('qna_admin_page', name); }catch(e){}
+  closeRowMenu();
+}
+const DOTS_SVG = '<svg class="ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
+function dotsBtn(menuKey){ return '<button class="dots-btn" onclick="openRowMenu(this,'+menuKey+')" title="更多操作" aria-label="更多操作">'+DOTS_SVG+'</button>'; }
+let _rowMenuItems = {};
+function openRowMenu(btn, key){
+  closeRowMenu();
+  const items = _rowMenuItems[key]; if(!items) return;
+  const m = document.createElement('div'); m.className='row-menu'; m.id='row-menu';
+  items.forEach(it=>{
+    if(it==='-'){ m.appendChild(document.createElement('hr')); return; }
+    const b=document.createElement('button'); b.type='button'; b.textContent=it.label; if(it.danger) b.className='danger';
+    b.onclick=()=>{ closeRowMenu(); it.run(); };
+    m.appendChild(b);
+  });
+  document.body.appendChild(m);
+  const r=btn.getBoundingClientRect(); const mw=m.offsetWidth, mh=m.offsetHeight;
+  let top=r.bottom+6; if(top+mh>window.innerHeight-8) top=Math.max(8, r.top-mh-6);
+  m.style.top=top+'px'; m.style.left=Math.max(8, Math.min(window.innerWidth-mw-8, r.right-mw))+'px';
+}
+function closeRowMenu(){ const m=document.getElementById('row-menu'); if(m) m.remove(); }
+document.addEventListener('click', e=>{ const m=document.getElementById('row-menu'); if(m && !m.contains(e.target) && !e.target.closest('.dots-btn')) closeRowMenu(); });
+window.addEventListener('scroll', closeRowMenu, true);
+window.addEventListener('resize', closeRowMenu);
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeRowMenu(); });
+
 function setToggleIcon(b, collapsed, what){
   if(!b) return;
   b.classList.toggle('collapsed', collapsed);
@@ -960,14 +1122,14 @@ function renderAdminPanel(){
   renderDashboard();
   const head = document.getElementById('learner-head');
   if(head){
-    head.innerHTML = '<th>名稱</th><th>登入方式</th><th>Gmail</th><th>考試次數</th><th>最近成績</th>' + (isMaster?'<th>操作</th>':'');
+    head.innerHTML = '<th>名稱</th><th>狀態</th><th>Gmail</th><th>考試次數</th><th>最近成績</th>' + (isMaster?'<th></th>':'');
   }
   const groups = getVisibleGroups();
   const history  = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
   const tbody = document.getElementById('admin-tbody');
   if(!tbody) return;
   const cols = isMaster ? 6 : 5;
-  if(!groups.length){ tbody.innerHTML='<tr><td colspan="'+cols+'" style="text-align:center;color:#999;padding:20px">尚無學習者帳號</td></tr>'; renderAdminsList(); updateCleanupBtn(); renderGuestRecords(); return; }
+  if(!groups.length){ tbody.innerHTML='<tr><td colspan="'+cols+'" class="empty-row">還沒有學習者。'+(isMaster?'按右上角「新增學習者」，或請學生自行註冊。':'')+'</td></tr>'; renderAdminsList(); updateCleanupBtn(); renderGuestRecords(); return; }
   const _subjNames = {chinese:'國文', linguistics:'漢語語言學', teaching:'華語文教學', culture:'華人社會與文化'};
   const _subjOrder = ['chinese','linguistics','teaching','culture'];
   function _scoresBySubject(recs){
@@ -991,15 +1153,16 @@ function renderAdminPanel(){
     const acc = g.primary;
     const recs = history.filter(r=>r.name===acc.name);
     const lastScore = recs.length ? _scoresBySubject(recs) : '—';
-    const guestTag = acc.viaGuest ? ' <span style="background:#e8f0fe;color:#1a56c4;font-size:.68rem;padding:1px 6px;border-radius:6px;border:1px solid #b9cdf5;white-space:nowrap">訪客建立</span>' : '';
-    const actions = isMaster ? ('<td><div class="admin-action-cell">'+
-      '<button class="admin-edit-btn" onclick="openEditModal('+i+')">編輯</button>'+
-      '<button class="admin-pw-btn" onclick="openResetPwModal('+i+')">寄重設密碼信</button>'+
-      '<button class="admin-reset-btn" onclick="resetUserHistory('+i+')">清除記錄</button>'+
-      '<button class="admin-delete-btn" onclick="deleteUser('+i+')">刪除</button>'+
-      '</div></td>') : '';
+    const guestTag = acc.viaGuest ? ' <span class="chip info" style="margin-left:6px">訪客轉註冊</span>' : '';
+    if(isMaster) _rowMenuItems['L'+i] = [
+      {label:'編輯資料', run:()=>openEditModal(i)},
+      {label:'寄重設密碼信', run:()=>openResetPwModal(i)},
+      '-',
+      {label:'清除考試紀錄', danger:true, run:()=>resetUserHistory(i)},
+      {label:'刪除帳號', danger:true, run:()=>deleteUser(i)}];
+    const actions = isMaster ? ('<td class="actions">'+dotsBtn("'L"+i+"'")+'</td>') : '';
     return '<tr><td><button type="button" class="stu-link" onclick="openStudentDetail('+i+')">'+esc(acc.name)+'</button>'+guestTag+'</td>'+
-      '<td class="pw-cell"><span style="font-family:sans-serif;font-size:.8rem;color:'+(acc.uid?'#2e7d32':'#b8860b')+'">'+(acc.uid?'✅ 已升級':'⏳ 待升級')+'</span></td>'+
+      '<td>'+(acc.uid?'<span class="chip ok">已升級</span>':'<span class="chip wait" title="還沒用新的登入系統登入過">待升級</span>')+'</td>'+
       '<td>'+(acc.email?esc(acc.email):'—')+'</td>'+
       '<td>'+recs.length+' 次</td>'+
       '<td>'+lastScore+'</td>'+ actions +'</tr>';
@@ -1013,7 +1176,7 @@ function updateCleanupBtn(){
   const btn = document.getElementById('cleanup-btn');
   if(!btn) return;
   const n = countCleanable();
-  if(_currentRole==='master' && n>0){ btn.style.display=''; btn.textContent='🧹 清除空殼（'+n+'）'; }
+  if(_currentRole==='master' && n>0){ btn.style.display=''; btn.lastChild.textContent='清除空殼（'+n+'）'; }
   else { btn.style.display='none'; }
 }
 
@@ -1040,7 +1203,7 @@ function renderGuestRecords(){
   if(sum) sum.textContent='共 '+list.length+' 位訪客　今日 '+todayVisitors+' 位';
   const clr=document.getElementById('guest-clear-btn');
   if(clr) clr.style.display=(_currentRole==='master' && recs.length)?'':'none';
-  if(!list.length){ tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#999;padding:20px">尚無訪客試做紀錄</td></tr>'; return; }
+  if(!list.length){ tbody.innerHTML='<tr><td colspan="5" class="empty-row">還沒有訪客試做紀錄。</td></tr>'; return; }
   tbody.innerHTML=list.slice(0,300).map(g=>{
     const r=g.latest;
     const subjSet=new Set();
@@ -1080,20 +1243,22 @@ async function renderAdminsList(){
   if(_currentRole!=='master') return;
   const tbody = document.getElementById('admins-tbody');
   if(!tbody) return;
-  let rows = '<tr><td>'+MASTER_EMAIL+'</td><td><span class="role-badge role-master">主管理員</span></td><td style="text-align:center">—</td></tr>';
+  let rows = '<tr><td>'+MASTER_EMAIL+'</td><td><span class="role-badge role-master">主管理員</span></td><td class="actions"></td></tr>';
   try{
     const accounts = await getAdminAccounts();
     accounts.forEach(acc=>{
       const email = (acc.email||'');
       _adminEmails.add(email.toLowerCase());
       if(email.toLowerCase()===MASTER_EMAIL) return;
-      const st = acc.authReady ? '' : ' <span style="color:#c62828;font-size:.72rem">(尚未啟用新登入：請按「寄重設密碼信」)</span>';
-      rows += '<tr><td>'+(acc.name?esc(acc.name)+'（'+esc(email)+'）':esc(email))+st+'</td><td><span class="role-badge role-admin">管理員</span></td>'+
-        '<td><div class="admin-action-cell">'+
-          '<button class="admin-edit-btn" onclick="openAdminEditModal(\''+esc(email)+'\')">編輯</button>'+
-          '<button class="admin-pw-btn" onclick="resetAdminPw(\''+esc(email)+'\')">寄重設密碼信</button>'+
-          '<button class="admin-delete-btn" onclick="deleteAdmin(\''+esc(email)+'\')">刪除</button>'+
-        '</div></td></tr>';
+      const st = acc.authReady ? '' : ' <span class="chip wait" style="margin-left:6px" title="請從 ⋯ 選單寄重設密碼信">尚未啟用新登入</span>';
+      const key = 'A'+Object.keys(_rowMenuItems).length;
+      _rowMenuItems[key] = [
+        {label:'編輯資料', run:()=>openAdminEditModal(email)},
+        {label:'寄重設密碼信', run:()=>resetAdminPw(email)},
+        '-',
+        {label:'移除管理員', danger:true, run:()=>deleteAdmin(email)}];
+      rows += '<tr><td>'+(acc.name?'<b>'+esc(acc.name)+'</b> <span style="color:#8a8178">'+esc(email)+'</span>':esc(email))+st+'</td><td><span class="role-badge role-admin">管理員</span></td>'+
+        '<td class="actions">'+dotsBtn("'"+key+"'")+'</td></tr>';
     });
   }catch(e){ console.warn(e); }
   tbody.innerHTML = rows;
