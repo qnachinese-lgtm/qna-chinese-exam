@@ -873,6 +873,7 @@ body.dark .yr-filter-row > *, body.dark .yr-filter-row .yr { color:#e6e6e6; }
 /* 開始列固定在科目、年份下方，不再黏在畫面底部跟著捲動 */
 .start-bar { position:static !important; box-shadow:none !important; }
 #btn-review { white-space:nowrap; }
+.tb-count { min-width:20px; height:20px; padding:0 6px; border-radius:10px; background:var(--brand-soft); color:var(--brand); font-size:12px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }
 /* ════════ 我的紀錄 v3 ════════ */
 #history-screen { padding:22px 0 30px; }
 .hist-header { gap:12px; margin-bottom:18px; }
@@ -1021,6 +1022,7 @@ body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark 
   <div class="tb-inner">
     <div class="tb-brand"><span class="tb-mark">美</span><span class="tb-name">美娟華語工作室</span><span class="tb-sub">對外華語教學能力認證考試・模擬練習</span></div>
     <div class="tb-user" id="tb-user" style="display:none">
+      <button class="tb-link tb-review" id="btn-review" onclick="openReviewPicker()" style="display:none"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span>錯題複習</span><b class="tb-count" id="wrong-count">0</b></button>
       <button class="tb-link" onclick="showHistory()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><path d="M7 15l4-5 3 3 5-7"/></svg><span>我的紀錄</span></button>
       <div class="tb-avatar-wrap">
         <button class="tb-avatar" id="tb-avatar" onclick="toggleUserMenu(event)" aria-label="帳號選單">?</button>
@@ -1174,7 +1176,6 @@ body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark 
   </div>
   <div class="start-bar">
     <div class="start-sum"><div id="start-sum-main">先選擇科目</div><div id="start-sum-sub"></div></div>
-    <button class="btn-review" id="btn-review" onclick="openReviewPicker()" style="display:none"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>錯題複習 <span id="wrong-count">0</span></button>
     <button class="btn-primary" id="start-btn" onclick="startExam()" disabled>開始模擬考</button>
   </div>
   <div class="pdf-section">
@@ -3244,14 +3245,23 @@ async function shareResult(){
     if(blob) file=new File([blob],'qna-score.png',{type:'image/png'});
   }catch(e){ file=null; }
   if(sbtn){ sbtn.disabled=false; sbtn.textContent=solabel; }
-  try{
-    if(file && navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], text:text, title:'美娟華語工作室 模擬考成績'}); return; }
-    if(navigator.share){ await navigator.share({title:'美娟華語工作室 模擬考成績', text:text, url:url}); return; }
-  }catch(e){ if(e && e.name==='AbortError') return; }
-  if(file){ try{ const a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download='qna-score.png'; a.click(); }catch(e){} }
-  try{ await navigator.clipboard.writeText(text); alert('已複製分享文字'+(file?'，並下載成績卡圖片':'')+'！可貼到 LINE／Facebook 分享。'); }
-  catch(e){ alert(text); }
+  // 先顯示成績卡預覽，讓使用者自己選：下載圖片／複製文字／分享（手機）
+  window._shareData={file, text, url};
+  const imgUrl = file ? URL.createObjectURL(file) : '';
+  let ov=document.getElementById('share-overlay');
+  if(!ov){ ov=document.createElement('div'); ov.id='share-overlay'; ov.onclick=e=>{ if(e.target===ov) ov.style.display='none'; };
+    ov.style.cssText='display:none;position:fixed;inset:0;background:rgba(40,28,20,.45);z-index:2000;align-items:center;justify-content:center;padding:16px';
+    document.body.appendChild(ov); }
+  const canShare = !!navigator.share && /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+  ov.innerHTML='<div class="md-box" style="max-width:560px"><div class="md-head"><div><div class="md-title">分享成績</div><div class="md-desc">下載成績卡圖片，或複製文字，貼到 LINE、Facebook 給朋友。</div></div><button class="md-x" onclick="document.getElementById(\'share-overlay\').style.display=\'none\'" aria-label="關閉"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button></div>'
+    +'<div class="md-body">'+(imgUrl?'<img src="'+imgUrl+'" alt="成績卡" style="width:100%;border-radius:12px;border:1px solid #ece4d6;display:block">':'<div class="md-desc">成績卡圖片產生失敗，仍可複製文字分享。</div>')
+    +'<div style="margin-top:12px;font-size:13px;color:#8a8178;background:#faf6ef;border-radius:10px;padding:10px 12px;line-height:1.7">'+text.replace(/</g,'&lt;')+'</div><div id="share-msg" class="md-ok" style="margin-top:10px"></div></div>'
+    +'<div class="md-foot">'+(canShare?'<button class="md-btn" onclick="shareNative()">分享…</button>':'')+'<button class="md-btn" onclick="shareCopy()">複製文字</button>'+(imgUrl?'<button class="md-btn primary" onclick="shareDownload()">下載圖片</button>':'')+'</div></div>';
+  ov.style.display='flex';
 }
+function shareDownload(){ const d=window._shareData||{}; if(!d.file) return; const a=document.createElement('a'); a.href=URL.createObjectURL(d.file); a.download='美娟華語工作室_成績卡.png'; a.click(); const m=document.getElementById('share-msg'); if(m) m.textContent='圖片已下載。'; }
+async function shareCopy(){ const d=window._shareData||{}; const m=document.getElementById('share-msg'); try{ await navigator.clipboard.writeText(d.text||''); if(m) m.textContent='已複製，可以貼到 LINE 或 Facebook。'; }catch(e){ if(m) m.textContent='無法自動複製，請手動選取上面的文字。'; } }
+async function shareNative(){ const d=window._shareData||{}; try{ if(d.file && navigator.canShare && navigator.canShare({files:[d.file]})) await navigator.share({files:[d.file], text:d.text}); else await navigator.share({text:d.text, url:d.url}); }catch(e){} }
 
 function retryExam(){ document.getElementById('result-screen').style.display='none'; startExam(); }
 // 交卷後逐題檢討（看正確答案與解析）
