@@ -7,16 +7,16 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-R8F31WP0MX"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-R8F31WP0MX');</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QNA Chinese｜對外華語教學能力認證考試 模擬練習</title>
+<title>美娟華語工作室｜對外華語教學能力認證考試 模擬練習</title>
 <meta name="description" content="對外華語教學能力認證考試（華語教師證照）線上模擬練習平台：國文、華人社會與文化、漢語語言學、華語文教學四科題庫，可依年份練習、即時批改、錯題複習、成績追蹤。">
-<meta name="author" content="QNA Chinese">
+<meta name="author" content="美娟華語工作室">
 <meta name="theme-color" content="#8b1a1a">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='88'&gt;📚&lt;/text&gt;&lt;/svg&gt;">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="QNA Chinese">
-<meta property="og:title" content="QNA Chinese｜對外華語教學認證考試 模擬練習">
+<meta property="og:site_name" content="美娟華語工作室">
+<meta property="og:title" content="美娟華語工作室｜對外華語教學認證考試 模擬練習">
 <meta property="og:description" content="華語教師證照線上模擬練習：四科題庫、依年份練習、即時批改、錯題複習、成績追蹤。">
 <meta property="og:url" content="https://qna-exam-platform.vercel.app/">
 <meta name="twitter:card" content="summary">
@@ -490,7 +490,7 @@ body.dark a { color:#9ec5ff; }
 <div id="login-screen" style="display:flex;align-items:center;justify-content:center;min-height:70vh">
   <div class="login-box">
     <div style="font-size:2.5rem;margin-bottom:12px">📚</div>
-    <h2>QNA Chinese<br><span style="font-size:.75em;font-weight:700">對外華語教學認證考試平台</span></h2>
+    <h2>美娟華語工作室<br><span style="font-size:.75em;font-weight:700">對外華語教學認證考試平台</span></h2>
     <p>模擬考系統｜個人學習進度追蹤</p>
     <div style="font-size:.8rem;color:#5d4037;background:#fffaf0;border:1px dashed #e0c9a0;border-radius:8px;padding:10px 12px;margin:0 0 14px;text-align:left;line-height:1.7">
       <b>怎麼用：</b>選 1～4 個科目 → 開始模擬考 → 即時看答案與解析，自動記錄錯題與成績。<br>
@@ -2664,14 +2664,14 @@ async function shareResult(){
   const pct=total>0?Math.round((st.correct/total)*100):0;
   const subjs=[...new Set(st.examResults.map(r=>r.subject))].map(s=>SUBJ_NAMES[s]||s).join('、')||'模擬考';
   const pass=pct>=70;
-  const text='我在 QNA Chinese 對外華語教學認證模擬考【'+subjs+'】拿了 '+pct+' 分'+(pass?' 🎉':' 💪')+'！一起來練習 👉 '+url;
+  const text='我在「美娟華語工作室」對外華語教學認證模擬考【'+subjs+'】拿了 '+pct+' 分'+(pass?' 🎉':' 💪')+'！一起來練習 👉 '+url;
   const sbtn=document.querySelector('.btn-share'); const solabel=sbtn?sbtn.textContent:''; if(sbtn){ sbtn.disabled=true; sbtn.textContent='產生中…'; }
   let file=null;
   try{
     await _lazyScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
     const card=document.createElement('div');
     card.style.cssText="position:fixed;left:-9999px;top:0;width:600px;height:315px;background:linear-gradient(135deg,#8b1a1a,#6d1414);color:#fff;font-family:'Microsoft JhengHei','PingFang TC',sans-serif;padding:34px;box-sizing:border-box;overflow:hidden";
-    card.innerHTML="<div style='font-size:15px;letter-spacing:3px;opacity:.85;font-weight:600'>QNA CHINESE</div>"
+    card.innerHTML="<div style='font-size:15px;letter-spacing:3px;opacity:.85;font-weight:600'>美娟華語工作室</div>"
       +"<div style='font-size:23px;font-weight:800;margin:8px 0 2px'>對外華語教學認證 模擬考</div>"
       +"<div style='font-size:14px;opacity:.85;margin-bottom:14px'>"+subjs+"</div>"
       +"<div style='font-size:74px;font-weight:900;line-height:1'>"+pct+"<span style='font-size:26px'> 分</span></div>"
@@ -2686,8 +2686,8 @@ async function shareResult(){
   }catch(e){ file=null; }
   if(sbtn){ sbtn.disabled=false; sbtn.textContent=solabel; }
   try{
-    if(file && navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], text:text, title:'QNA Chinese 模擬考成績'}); return; }
-    if(navigator.share){ await navigator.share({title:'QNA Chinese 模擬考成績', text:text, url:url}); return; }
+    if(file && navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], text:text, title:'美娟華語工作室 模擬考成績'}); return; }
+    if(navigator.share){ await navigator.share({title:'美娟華語工作室 模擬考成績', text:text, url:url}); return; }
   }catch(e){ if(e && e.name==='AbortError') return; }
   if(file){ try{ const a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download='qna-score.png'; a.click(); }catch(e){} }
   try{ await navigator.clipboard.writeText(text); alert('已複製分享文字'+(file?'，並下載成績卡圖片':'')+'！可貼到 LINE／Facebook 分享。'); }
@@ -3126,7 +3126,7 @@ async function exportPDF(){
 <div class="sheet">
   <div class="hd">
     <div class="seal">📚</div>
-    <div class="brand">QNA CHINESE</div>
+    <div class="brand">美娟華語工作室</div>
     <h1>對外華語教學能力認證考試</h1>
     <div class="sub">模擬考成績單 · Mock Exam Report</div>
   </div>
@@ -3161,7 +3161,7 @@ async function exportPDF(){
   </div>
   <div class="legend">✓ 答對　✗ 答錯　·　答對題目的「正確答案」欄以「—」表示</div>
   <div class="ft">
-    <span>本成績單由 QNA Chinese 模擬考系統自動產生</span>
+    <span>本成績單由美娟華語工作室模擬考系統自動產生</span>
     <span>qna-exam-platform.vercel.app</span>
   </div>
 </div>

@@ -1,6 +1,6 @@
 {
-  "name": "QNA Chinese 對外華語教學認證模擬考",
-  "short_name": "QNA 模擬考",
+  "name": "美娟華語工作室 對外華語教學認證模擬考",
+  "short_name": "美娟華語",
   "description": "對外華語教學能力認證考試線上模擬練習：四科題庫、依年份練習、即時批改、錯題複習、成績追蹤。",
   "start_url": "/",
   "scope": "/",
