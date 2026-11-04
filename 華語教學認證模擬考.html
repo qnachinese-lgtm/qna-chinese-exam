@@ -590,6 +590,20 @@ body.in-exam .tb-user { display:none !important; }
 body.dark .sec-label { color:#e6e6e6; }
 body.dark .step { background:#23262b; border-color:#6b3a36; color:#f0a5a0; }
 body.dark .step.done { background:#c0392b; border-color:#c0392b; color:#fff; }
+
+/* 簡化版首頁：設定收起來 */
+.subject-card .sub { display:none; }
+.subject-card .cnt { margin-top:6px; }
+.opt-line { display:flex; align-items:center; gap:10px; margin:-6px 0 16px; padding:0 2px; }
+.opt-summary { flex:1; min-width:0; font-size:13px; color:var(--muted); }
+.opt-toggle { display:inline-flex; align-items:center; gap:4px; background:none; border:none; padding:4px 2px; font:inherit; font-size:13px; color:var(--brand); cursor:pointer; white-space:nowrap; }
+.opt-toggle .ico { width:15px; height:15px; transition:transform .2s; }
+.opt-toggle.open .ico { transform:rotate(180deg); }
+.opt-panel { margin:-6px 0 16px; }
+.yr-row .setup-label { flex-direction:column; align-items:flex-start; }
+.yr-row .yr-all { margin-left:0; }
+button:focus:not(:focus-visible) { outline:none; }
+@media(max-width:720px){ .opt-line { flex-wrap:wrap; } }
 /* 深色模式 */
 body.dark header.topbar { background:#1b1d21; border-bottom-color:#2e3238; }
 body.dark .tb-sub { border-left-color:#3a3f47; }
@@ -746,7 +760,7 @@ body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark 
     <div class="sec-label">最近成績</div>
     <div class="prog-cards" id="prog-cards"></div>
   </div>
-  <div class="sec-label"><span class="step" id="step-1">1</span>選擇科目<span class="sec-hint">可複選</span></div>
+  <div class="sec-label">選擇科目<span class="sec-hint">可複選</span></div>
   <div class="subject-grid">
     <div class="subject-card" data-subject="chinese" onclick="toggleSubject(this)">
       <svg class="subj-check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><polyline points="7.5 12.5 10.5 15.5 16.5 9" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -777,10 +791,13 @@ body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark 
       <div class="cnt">0 題</div>
     </div>
   </div>
-  <div class="sec-label"><span class="step" id="step-2">2</span>選擇年份<span class="sec-hint">可複選</span><button type="button" class="yr-all" id="yr-all-slot">全選</button></div>
-  <div class="setup-card yr-card"><div class="yr-filter-row" id="yr-filter-row"></div></div>
-  <div class="sec-label"><span class="step done" id="step-3">3</span>練習設定<span class="sec-hint">不改也可以，直接用預設</span></div>
-  <div class="setup-card">
+  <div class="opt-line">
+    <span class="opt-summary" id="opt-summary"></span>
+    <button type="button" class="opt-toggle" id="opt-toggle" onclick="toggleOptions()">調整<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
+  </div>
+  <div class="opt-panel" id="opt-panel" style="display:none">
+    <div class="setup-card">
+    <div class="setup-row yr-row"><div class="setup-label">年份<button type="button" class="yr-all" id="yr-all-slot">全選</button></div><div class="yr-filter-row" id="yr-filter-row"></div></div>
     <div class="setup-row"><span class="setup-label">出題順序</span><div class="seg">
       <button class="mode-btn active" id="mode-seq" onclick="setMode('sequential')">依序</button>
       <button class="mode-btn" id="mode-rand" onclick="setMode('random')">隨機</button></div></div>
@@ -792,8 +809,9 @@ body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark 
       <button class="timer-btn" onclick="setTimerMode(90,this)">1.5 分／題</button>
       <button class="timer-btn" onclick="setTimerMode(120,this)">2 分／題</button></div></div>
   </div>
+  </div>
   <div class="start-bar">
-    <div class="start-sum"><div id="start-sum-main">第 1 步：選擇科目</div><div id="start-sum-sub"></div></div>
+    <div class="start-sum"><div id="start-sum-main">先選擇科目</div><div id="start-sum-sub"></div></div>
     <button class="btn-review" id="btn-review" onclick="openReviewPicker()" style="display:none"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>錯題複習 <span id="wrong-count">0</span></button>
     <button class="btn-primary" id="start-btn" onclick="startExam()" disabled>開始模擬考</button>
   </div>
@@ -4835,10 +4853,9 @@ function updateStartSummary(){
   const main = document.getElementById('start-sum-main'), sub = document.getElementById('start-sum-sub');
   if(!main) return;
   const n = st.selected.length, years = st.selectedYears||[];
-  const s1=document.getElementById('step-1'), s2=document.getElementById('step-2');
-  if(s1) s1.classList.toggle('done', n>0); if(s2) s2.classList.toggle('done', years.length>0);
-  if(!n){ main.textContent = '第 1 步：選擇科目'; sub.textContent = '點上面的科目卡片，可以複選'; return; }
-  if(!years.length){ main.textContent = '第 2 步：選擇年份'; sub.textContent = '已選 '+n+' 科，再選至少一個年份（或按「全選」）'; return; }
+  updateOptSummary();
+  if(!n){ main.textContent = '先選擇科目'; sub.textContent = '點上面的科目卡片，可以複選'; return; }
+  if(!years.length){ main.textContent = '請至少選一個年份'; sub.textContent = '按「調整」打開設定，選年份或按「全選」'; return; }
   let total = 0;
   st.selected.forEach(s=>{ const c = QB[s].filter(q=>years.includes(q.yr)).length; total += st.isGuest ? Math.min(c,10) : c; });
   const allYears = [...new Set(Object.values(QB).flat().map(q=>q.yr))];
@@ -4882,6 +4899,26 @@ window.buildYrFilter = function(){
   refresh();
 };
 buildYrFilter();
+
+function updateOptSummary(){
+  const el = document.getElementById('opt-summary'); if(!el) return;
+  const all = [...new Set(Object.values(QB).flat().map(q=>String(q.yr)))];
+  const ys = st.selectedYears||[];
+  const yTxt = !ys.length ? '未選年份' : (ys.length===all.length ? '全部' : (ys.length<=3 ? ys.slice().sort((a,b)=>b-a).join('、') : ys.length+' 個年份'));
+  const t = (typeof _timerSecsPerQ!=='undefined') ? _timerSecsPerQ : 0;
+  el.textContent = '年份：'+yTxt+'・'+(st.mode==='random'?'隨機出題':'依序出題')+'・'+(st.revealMode==='end'?'交卷後看答案':'每題立即看答案')+'・'+(t? (t/60)+' 分鐘／題' : '不計時');
+}
+function toggleOptions(){
+  const p=document.getElementById('opt-panel'), b=document.getElementById('opt-toggle');
+  const open = p.style.display==='none'; p.style.display = open ? 'block' : 'none';
+  b.classList.toggle('open', open); b.firstChild.textContent = open ? '收起' : '調整';
+}
+(function(){
+  ['setMode','setReveal','setTimerMode'].forEach(n=>{ const o=window[n]; if(typeof o!=='function') return; window[n]=function(){ const r=o.apply(this,arguments); updateOptSummary(); return r; }; });
+  // 年份預設全選
+  if(!st.selectedYears || !st.selectedYears.length){ st.selectedYears = [...new Set(Object.values(QB).flat().map(q=>String(q.yr)))]; }
+  buildYrFilter(); updateOptSummary();
+})();
 </script>
 </body>
 </html>
