@@ -604,6 +604,15 @@ body.dark .step.done { background:#c0392b; border-color:#c0392b; color:#fff; }
 .yr-row .yr-all { margin-left:0; }
 button:focus:not(:focus-visible) { outline:none; }
 @media(max-width:720px){ .opt-line { flex-wrap:wrap; } }
+
+.sec-label .yr-all { margin-left:auto; font-size:13px; }
+.yr-card { padding:14px 16px; margin-bottom:12px; }
+.start-warn { color:#b3261e; }
+
+/* 練習設定：每個選項同寬，上下對齊 */
+.seg .mode-btn, .seg .timer-btn { width:76px; padding:6px 0; text-align:center; }
+.setup-label { flex:0 0 72px; }
+@media(max-width:400px){ .seg .mode-btn, .seg .timer-btn { width:68px; font-size:13px; } }
 /* 深色模式 */
 body.dark header.topbar { background:#1b1d21; border-bottom-color:#2e3238; }
 body.dark .tb-sub { border-left-color:#3a3f47; }
@@ -791,23 +800,24 @@ body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark 
       <div class="cnt">0 題</div>
     </div>
   </div>
+  <div class="sec-label">選擇年份<span class="sec-hint">可複選，一年約一份考卷</span><button type="button" class="yr-all" id="yr-all-slot">全選</button></div>
+  <div class="setup-card yr-card"><div class="yr-filter-row" id="yr-filter-row"></div></div>
   <div class="opt-line">
     <span class="opt-summary" id="opt-summary"></span>
     <button type="button" class="opt-toggle" id="opt-toggle" onclick="toggleOptions()">調整<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
   </div>
   <div class="opt-panel" id="opt-panel" style="display:none">
     <div class="setup-card">
-    <div class="setup-row yr-row"><div class="setup-label">年份<button type="button" class="yr-all" id="yr-all-slot">全選</button></div><div class="yr-filter-row" id="yr-filter-row"></div></div>
     <div class="setup-row"><span class="setup-label">出題順序</span><div class="seg">
       <button class="mode-btn active" id="mode-seq" onclick="setMode('sequential')">依序</button>
       <button class="mode-btn" id="mode-rand" onclick="setMode('random')">隨機</button></div></div>
-    <div class="setup-row"><span class="setup-label">看答案</span><div class="seg">
-      <button class="mode-btn active" id="reveal-instant" onclick="setReveal('instant')">每題立即</button>
-      <button class="mode-btn" id="reveal-end" onclick="setReveal('end')">交卷後</button></div></div>
-    <div class="setup-row"><span class="setup-label">計時</span><div class="seg timer-row">
-      <button class="timer-btn active" onclick="setTimerMode(0,this)">不計時</button>
-      <button class="timer-btn" onclick="setTimerMode(90,this)">1.5 分／題</button>
-      <button class="timer-btn" onclick="setTimerMode(120,this)">2 分／題</button></div></div>
+    <div class="setup-row"><span class="setup-label">答案顯示</span><div class="seg">
+      <button class="mode-btn active" id="reveal-instant" onclick="setReveal('instant')">逐題</button>
+      <button class="mode-btn" id="reveal-end" onclick="setReveal('end')">交卷</button></div></div>
+    <div class="setup-row"><span class="setup-label">每題時限</span><div class="seg timer-row">
+      <button class="timer-btn active" onclick="setTimerMode(0,this)">不限</button>
+      <button class="timer-btn" onclick="setTimerMode(90,this)">90 秒</button>
+      <button class="timer-btn" onclick="setTimerMode(120,this)">120 秒</button></div></div>
   </div>
   </div>
   <div class="start-bar">
@@ -4855,12 +4865,13 @@ function updateStartSummary(){
   const n = st.selected.length, years = st.selectedYears||[];
   updateOptSummary();
   if(!n){ main.textContent = '先選擇科目'; sub.textContent = '點上面的科目卡片，可以複選'; return; }
-  if(!years.length){ main.textContent = '請至少選一個年份'; sub.textContent = '按「調整」打開設定，選年份或按「全選」'; return; }
+  if(!years.length){ main.textContent = '請至少選一個年份'; sub.textContent = '點上面的年份，可以複選'; return; }
   let total = 0;
   st.selected.forEach(s=>{ const c = QB[s].filter(q=>years.includes(q.yr)).length; total += st.isGuest ? Math.min(c,10) : c; });
   const allYears = [...new Set(Object.values(QB).flat().map(q=>q.yr))];
-  main.textContent = '已選 '+n+' 科・'+(years.length===allYears.length ? '全部年份' : years.length+' 個年份');
-  sub.textContent = '共 '+total+' 題';
+  const ySorted = years.slice().sort((a,b)=>b-a);
+  main.textContent = '已選 '+n+' 科・'+(years.length===allYears.length ? '全部年份' : (years.length<=2 ? ySorted.join('、')+' 年' : years.length+' 個年份'));
+  sub.innerHTML = '共 '+total+' 題'+(total>100 ? '<span class="start-warn">・題數較多，建議分次練習</span>' : '');
 }
 function toggleUserMenu(e){ if(e) e.stopPropagation(); const m=document.getElementById('user-menu'); if(m) m.classList.toggle('open'); }
 function closeUserMenu(){ const m=document.getElementById('user-menu'); if(m) m.classList.remove('open'); }
@@ -4906,7 +4917,7 @@ function updateOptSummary(){
   const ys = st.selectedYears||[];
   const yTxt = !ys.length ? '未選年份' : (ys.length===all.length ? '全部' : (ys.length<=3 ? ys.slice().sort((a,b)=>b-a).join('、') : ys.length+' 個年份'));
   const t = (typeof _timerSecsPerQ!=='undefined') ? _timerSecsPerQ : 0;
-  el.textContent = '年份：'+yTxt+'・'+(st.mode==='random'?'隨機出題':'依序出題')+'・'+(st.revealMode==='end'?'交卷後看答案':'每題立即看答案')+'・'+(t? (t/60)+' 分鐘／題' : '不計時');
+  el.textContent = '其他設定：'+(st.mode==='random'?'隨機出題':'依序出題')+'・'+(st.revealMode==='end'?'交卷看答案':'逐題看答案')+'・'+(t? '每題 '+t+' 秒' : '不限時間');
 }
 function toggleOptions(){
   const p=document.getElementById('opt-panel'), b=document.getElementById('opt-toggle');
@@ -4916,7 +4927,7 @@ function toggleOptions(){
 (function(){
   ['setMode','setReveal','setTimerMode'].forEach(n=>{ const o=window[n]; if(typeof o!=='function') return; window[n]=function(){ const r=o.apply(this,arguments); updateOptSummary(); return r; }; });
   // 年份預設全選
-  if(!st.selectedYears || !st.selectedYears.length){ st.selectedYears = [...new Set(Object.values(QB).flat().map(q=>String(q.yr)))]; }
+  if(!st.selectedYears || !st.selectedYears.length){ const ys=[...new Set(Object.values(QB).flat().map(q=>String(q.yr)))].sort((a,b)=>b-a); st.selectedYears = ys.length ? [ys[0]] : []; }
   buildYrFilter(); updateOptSummary();
 })();
 </script>
