@@ -866,6 +866,10 @@ body.dark #wrong-count { color:#fff; }
 body.dark .yr-filter-row > *, body.dark .yr-filter-row .yr { color:#e6e6e6; }
 @media(max-width:640px){ .ex-exit { margin-left:auto; } }
 
+.env-tag { font-size:12px; font-weight:600; padding:3px 9px; border-radius:6px; white-space:nowrap; background:#fdf0d6; color:#8a5a00; flex:0 0 auto; }
+#btn-guest-register { height:40px; padding:0 16px; border:1px solid var(--line); background:#fff; color:var(--ink); font-weight:600; border-radius:10px; white-space:nowrap; flex:0 0 auto; }
+#btn-guest-register .ico { color:var(--brand); }
+#btn-guest-register:hover { border-color:#d9b9b3; background:#fffaf8; }
 /* ════════ 我的紀錄 v3 ════════ */
 #history-screen { padding:22px 0 30px; }
 .hist-header { gap:12px; margin-bottom:18px; }
@@ -4274,7 +4278,7 @@ function renderProgressPanel(){
   const panel = document.getElementById('progress-panel');
   const cards = document.getElementById('prog-cards');
   if(!panel||!cards||!st.currentUser) return;
-  const _grb=document.getElementById('btn-guest-register'); if(_grb) _grb.style.display = st.isGuest?'inline-block':'none';
+  const _grb=document.getElementById('btn-guest-register'); if(_grb) _grb.style.display = st.isGuest?'inline-flex':'none';
   const history = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
   const mine = history.filter(r=>r.name===st.currentUser).slice(0,3);
   const subjNames = {chinese:'國文',culture:'華人社會與文化',linguistics:'漢語語言學',teaching:'華語文教學'};
@@ -4332,12 +4336,13 @@ const FB_CONFIG = IS_STAGING ? {
 // 測試版 / 留底版：畫面頂端顯示標記，避免跟正式版搞混
 (function(){
   const host = location.hostname;
-  const label = IS_STAGING ? '🧪 測試版（測試資料，不影響正式版）' : (/backup/i.test(host) ? '📦 留底版（舊版程式備份，資料與正式版共用）' : '');
+  const label = IS_STAGING ? '測試版' : (/backup/i.test(host) ? '留底版' : '');
   if(!label) return;
-  const add = () => { if(document.getElementById('env-banner')) return;
-    const b = document.createElement('div'); b.id = 'env-banner'; b.textContent = label;
-    b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:'+(IS_STAGING?'#6a1b9a':'#455a64')+';color:#fff;text-align:center;font-size:13px;padding:5px 8px;font-family:sans-serif;opacity:.92;pointer-events:none';
-    document.body.appendChild(b); };
+  // 與後台相同：在網站名稱旁顯示小標籤
+  const add = () => { if(document.getElementById('env-tag')) return;
+    const name = document.querySelector('.tb-name'); if(!name) return;
+    const t = document.createElement('span'); t.id = 'env-tag'; t.className = 'env-tag'; t.textContent = label;
+    name.insertAdjacentElement('afterend', t); };
   if(document.body) add(); else document.addEventListener('DOMContentLoaded', add);
 })();
 
