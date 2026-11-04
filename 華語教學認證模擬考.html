@@ -443,6 +443,139 @@ body.dark a { color:#9ec5ff; }
 .btn-share { padding:10px 18px; background:#1d9bf0; color:#fff; border:none; border-radius:9px; font-size:.9rem; font-weight:600; cursor:pointer; margin:4px; }
 .btn-share:disabled { background:#9ec9e8; cursor:default; }
 .btn-xlsx { padding:10px 18px; background:#2e7d32; color:#fff; border:none; border-radius:9px; font-size:.9rem; font-weight:600; cursor:pointer; margin:4px; }
+
+/* ════════ 學習者網站 v3：頂端列、登入、首頁 ════════ */
+:root { --brand:#8b1a1a; --brand-h:#a32222; --brand-soft:#fbf1ef; --ink:#2c2c2c; --muted:#8a8178; --line:#ece4d6; }
+.ico { width:18px; height:18px; display:block; flex:0 0 auto; }
+/* 頂端列 */
+header.topbar { background:#fffdf9; color:var(--ink); padding:0; text-align:left; box-shadow:none; border-bottom:1px solid var(--line); }
+.tb-inner { max-width:880px; margin:0 auto; padding:10px 64px 10px 16px; min-height:60px; display:flex; align-items:center; gap:12px; }
+.tb-brand { display:flex; align-items:center; gap:10px; flex:1; min-width:0; }
+.tb-mark, .lg-mark { width:34px; height:34px; border-radius:10px; background:var(--brand); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; flex:0 0 auto; }
+.tb-name { font-size:17px; font-weight:700; letter-spacing:1px; white-space:nowrap; }
+.tb-sub { font-size:13px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-left:10px; border-left:1px solid var(--line); }
+.tb-user { display:flex; align-items:center; gap:6px; }
+.tb-link { display:flex; align-items:center; gap:6px; height:36px; padding:0 12px; border:none; background:none; border-radius:9px; font:inherit; font-size:14px; color:var(--muted); cursor:pointer; white-space:nowrap; }
+.tb-link:hover { background:#f4efe6; color:var(--ink); }
+.tb-avatar-wrap { position:relative; }
+.tb-avatar { width:36px; height:36px; border-radius:50%; border:none; background:var(--brand-soft); color:var(--brand); font:inherit; font-weight:700; font-size:15px; cursor:pointer; }
+.tb-avatar:hover { box-shadow:0 0 0 3px #f1dcd8; }
+.user-menu { display:none; position:absolute; right:0; top:44px; z-index:500; min-width:200px; background:#fff; border:1px solid var(--line); border-radius:12px; box-shadow:0 12px 32px rgba(60,30,20,.16); padding:6px; }
+.user-menu.open { display:block; }
+.um-head { padding:8px 10px 10px; border-bottom:1px solid #f1ebe0; margin-bottom:4px; }
+.um-name { font-weight:700; font-size:14px; }
+.um-mail { font-size:12px; color:var(--muted); margin-top:2px; word-break:break-all; }
+.user-menu button { display:flex; width:100%; align-items:center; gap:10px; padding:9px 10px; border:none; background:none; border-radius:8px; font:inherit; font-size:14px; color:var(--ink); cursor:pointer; text-align:left; }
+.user-menu button .ico { width:16px; height:16px; color:var(--muted); }
+.user-menu button:hover { background:#f6f1e9; }
+.user-menu hr { border:none; border-top:1px solid #f1ebe0; margin:4px 2px; }
+body.in-exam .tb-user { display:none !important; }
+#settings-fab { top:10px; right:14px; }
+/* 登入 */
+.login-box { border:1px solid var(--line); border-radius:18px; box-shadow:0 10px 30px rgba(60,30,20,.08); padding:36px 32px 28px; max-width:380px; }
+.lg-mark { width:48px; height:48px; border-radius:14px; font-size:22px; margin:0 auto 14px; }
+.login-box h2 { font-size:22px; letter-spacing:1px; margin:0 0 6px; }
+.login-box .lg-sub { font-size:14px; color:var(--muted); margin:0 0 4px; }
+.login-box .lg-hint { font-size:13px; color:#a99f94; margin:0 0 22px; }
+.login-tabs { background:#f4efe6; border:none; border-radius:10px; padding:3px; gap:2px; margin-bottom:18px; }
+.login-tab { background:transparent; border-radius:8px; font:inherit; font-size:14px; color:var(--muted); padding:8px; }
+.login-tab.active { background:#fff; color:var(--brand); font-weight:700; box-shadow:0 1px 4px rgba(60,30,20,.12); }
+.login-box input, .login-box input[type=password] { border:1.5px solid #e6dccb; border-radius:10px; font-family:inherit; }
+.login-box input:focus, .login-box input[type=password]:focus { border-color:var(--brand); }
+.login-btn { background:var(--brand); border-radius:10px; height:48px; padding:0 12px; font:inherit; font-size:16px; font-weight:700; letter-spacing:2px; }
+.login-btn:hover { opacity:1; background:var(--brand-h); }
+.login-btn.ghost { background:#fff; color:var(--brand); border:1.5px solid #e2c9c4; }
+.login-btn.ghost:hover { background:var(--brand-soft); }
+.lg-link { background:none; border:none; color:var(--muted); font:inherit; font-size:13px; cursor:pointer; }
+.lg-link:hover { color:var(--brand); text-decoration:underline; }
+.lg-or { display:flex; align-items:center; gap:10px; margin:16px 0 12px; color:#b5aa9e; font-size:12px; }
+.lg-or span { flex:1; height:1px; background:var(--line); }
+/* 首頁 */
+.home-hello { display:flex; align-items:center; gap:12px; margin:4px 0 18px; }
+.home-hello-text { flex:1; min-width:0; }
+#home-hello { font-size:22px; font-weight:700; margin:0 0 4px; color:var(--ink); text-align:left; }
+.home-sub { font-size:14px; color:var(--muted); }
+.btn-outline { display:inline-flex; align-items:center; gap:6px; height:38px; padding:0 14px; border:1.5px solid #e2c9c4; background:#fff; color:var(--brand); border-radius:10px; font:inherit; font-size:14px; font-weight:700; cursor:pointer; white-space:nowrap; }
+.btn-outline .ico { width:16px; height:16px; }
+.btn-outline:hover { background:var(--brand-soft); }
+.sec-label { font-size:13px; font-weight:700; color:var(--muted); letter-spacing:1px; margin:0 0 10px; }
+.sec-hint { font-weight:400; color:#b5aa9e; margin-left:8px; letter-spacing:0; }
+#progress-panel { margin-bottom:22px; }
+.prog-cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.prog-card { background:#fff; border:1px solid var(--line); border-left:1px solid var(--line); border-radius:14px; padding:12px 14px; box-shadow:none; min-width:0; }
+.prog-card-date { font-size:12px; color:#a99f94; }
+.prog-card-subj { font-size:13px; color:#5d554d; margin:2px 0 6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.prog-card-score { font-size:22px; }
+.prog-card-detail { font-size:12px; }
+.prog-empty { background:#fff; border:1px dashed var(--line); border-radius:14px; padding:14px 16px; color:var(--muted); font-size:14px; grid-column:1/-1; }
+.subject-grid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:22px; }
+.subject-card { position:relative; border:1.5px solid var(--line); border-radius:14px; padding:16px 14px 14px; background:#fff; }
+.subject-card:hover { border-color:#d9b9b3; transform:translateY(-2px); box-shadow:0 6px 18px rgba(60,30,20,.08); }
+.subject-card.selected { border:1.5px solid var(--brand); background:#fff; box-shadow:0 0 0 3px var(--brand-soft); }
+.subject-card .icon { width:40px; height:40px; border-radius:11px; background:#f6f1e9; color:var(--muted); display:flex; align-items:center; justify-content:center; margin-bottom:12px; font-size:0; }
+.subject-card .icon .ico { width:22px; height:22px; }
+.subject-card.selected .icon { background:var(--brand-soft); color:var(--brand); }
+.subject-card .title { font-size:16px; }
+.subject-card .sub { font-size:12px; color:#a99f94; margin-top:4px; line-height:1.5; }
+.subject-card .cnt { font-size:13px; color:var(--muted); margin-top:10px; font-weight:700; }
+.subject-card.selected .cnt { color:var(--brand); }
+.subj-check { position:absolute; top:12px; right:12px; width:22px; height:22px; color:var(--brand); opacity:0; transform:scale(.6); transition:all .15s; }
+.subject-card.selected .subj-check { opacity:1; transform:none; }
+.setup-card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:4px 18px; margin-bottom:16px; }
+.setup-row { display:flex; align-items:center; gap:16px; padding:12px 0; border-top:1px solid #f3eee5; }
+.setup-row:first-child { border-top:none; }
+.setup-label { flex:0 0 72px; font-size:14px; color:var(--muted); }
+.yr-filter-row { justify-content:flex-start; gap:6px; flex:1; }
+.yr-btn { padding:5px 12px; border:1px solid var(--line); border-radius:999px; font:inherit; font-size:13px; color:#5d554d; background:#fff; }
+.yr-btn:hover { border-color:#d9b9b3; }
+.yr-btn.active { background:var(--brand); border-color:var(--brand); color:#fff; }
+.seg { display:inline-flex; background:#f4efe6; border-radius:10px; padding:3px; gap:2px; flex-wrap:wrap; margin:0; }
+.seg .mode-btn, .seg .timer-btn { border:none; background:transparent; border-radius:8px; padding:6px 14px; font:inherit; font-size:14px; color:#6b6259; cursor:pointer; white-space:nowrap; }
+.seg .mode-btn.active, .seg .timer-btn.active { background:#fff; color:var(--brand); font-weight:700; box-shadow:0 1px 4px rgba(60,30,20,.12); }
+.start-bar { position:sticky; bottom:12px; z-index:50; display:flex; align-items:center; gap:10px; background:#fffdf9; border:1px solid var(--line); border-radius:16px; padding:12px 14px 12px 18px; box-shadow:0 10px 28px rgba(60,30,20,.12); margin-bottom:26px; }
+.start-sum { flex:1; min-width:0; }
+#start-sum-main { font-size:15px; font-weight:700; }
+#start-sum-sub { font-size:12px; color:var(--muted); margin-top:2px; }
+.btn-review { display:inline-flex; align-items:center; gap:6px; width:auto; height:42px; margin:0; padding:0 14px; background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:11px; font:inherit; font-size:14px; font-weight:400; }
+.btn-review .ico { width:16px; height:16px; color:var(--brand); }
+.btn-review #wrong-count { font-weight:700; color:var(--brand); }
+.start-bar .btn-primary { width:auto; max-width:none; margin:0; height:42px; padding:0 22px; border-radius:11px; background:var(--brand); font:inherit; font-size:15px; font-weight:700; letter-spacing:1px; }
+.start-bar .btn-primary:hover { background:var(--brand-h); }
+.start-bar .btn-primary:disabled { background:#d8cfc4; }
+.pdf-section { background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:none; padding:16px 18px; }
+.pdf-section h3 { display:flex; align-items:center; gap:8px; font-size:14px; color:var(--ink); }
+.pdf-section h3 .ico { width:16px; height:16px; color:var(--muted); }
+.pdf-grid { grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); }
+.pdf-link { display:flex; align-items:baseline; gap:6px; background:#faf6ef; border:1px solid transparent; color:var(--ink); font-size:13px; }
+.pdf-link .yr { color:var(--brand); }
+.pdf-link .pdf-t { color:var(--muted); font-size:12px; }
+.pdf-link:hover { background:var(--brand-soft); border-color:#ecd3ce; }
+@media(max-width:720px){
+  .tb-sub { display:none; }
+  .tb-link span { display:none; }
+  .subject-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .prog-cards { grid-template-columns:1fr; }
+  .setup-row { flex-direction:column; align-items:flex-start; gap:8px; }
+  .start-bar { flex-wrap:wrap; bottom:8px; }
+  .start-sum { flex-basis:100%; }
+  .start-bar .btn-primary { flex:1; }
+  .home-hello { flex-wrap:wrap; }
+}
+/* 深色模式 */
+body.dark header.topbar { background:#1b1d21; border-bottom-color:#2e3238; }
+body.dark .tb-sub { border-left-color:#3a3f47; }
+body.dark .tb-link:hover, body.dark .user-menu button:hover { background:#2b2f35; color:#e6e6e6; }
+body.dark .tb-avatar { background:#3a2828; color:#f0a5a0; }
+body.dark .user-menu, body.dark .setup-card, body.dark .start-bar, body.dark .pdf-section, body.dark .prog-card, body.dark .prog-empty, body.dark .subject-card, body.dark .yr-btn, body.dark .btn-review, body.dark .btn-outline, body.dark .login-btn.ghost { background:#23262b; border-color:#3a3f47; color:#e6e6e6; }
+body.dark .um-head, body.dark .user-menu hr, body.dark .setup-row { border-color:#31353b; }
+body.dark .seg, body.dark .login-tabs { background:#1b1d21; }
+body.dark .seg .mode-btn.active, body.dark .seg .timer-btn.active, body.dark .login-tab.active { background:#3a3f47; color:#fff; box-shadow:none; }
+body.dark .seg .mode-btn, body.dark .seg .timer-btn, body.dark .login-tab { color:#a9adb4; }
+body.dark .subject-card.selected { border-color:#c0392b; box-shadow:0 0 0 3px #3a2828; }
+body.dark .subject-card .icon, body.dark .pdf-link { background:#2b2f35; color:#a9adb4; }
+body.dark .subject-card.selected .icon { background:#3a2828; color:#f0a5a0; }
+body.dark .yr-btn.active { background:#c0392b; border-color:#c0392b; }
+body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark .pdf-section h3 { color:#e6e6e6; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -480,22 +613,34 @@ body.dark a { color:#9ec5ff; }
   </div>
 </div>
 <script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg')document.documentElement.style.fontSize='112.5%';else if(_fs==='xl')document.documentElement.style.fontSize='125%';}catch(e){}</script>
-<header>
-  <h1>對外華語教學能力認證考試</h1>
-  <p>教育部 · 模擬練習系統 · 考古題題庫</p>
+<header class="topbar">
+  <div class="tb-inner">
+    <div class="tb-brand"><span class="tb-mark">美</span><span class="tb-name">美娟華語工作室</span><span class="tb-sub">對外華語教學能力認證考試・模擬練習</span></div>
+    <div class="tb-user" id="tb-user" style="display:none">
+      <button class="tb-link" onclick="showHistory()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><path d="M7 15l4-5 3 3 5-7"/></svg><span>我的紀錄</span></button>
+      <div class="tb-avatar-wrap">
+        <button class="tb-avatar" id="tb-avatar" onclick="toggleUserMenu(event)" aria-label="帳號選單">?</button>
+        <div class="user-menu" id="user-menu">
+          <div class="um-head"><div class="um-name" id="um-name"></div><div class="um-mail" id="um-mail"></div></div>
+          <button id="um-register" onclick="closeUserMenu();openGuestRegister()" style="display:none"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"/></svg>註冊並保存進度</button>
+          <button id="um-profile" onclick="closeUserMenu();showProfile()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>帳號設定</button>
+          <button onclick="closeUserMenu();showHistory()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><path d="M7 15l4-5 3 3 5-7"/></svg>我的紀錄</button>
+          <hr>
+          <button onclick="closeUserMenu();changeUser()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><polyline points="10 8 6 12 10 16"/><line x1="6" y1="12" x2="16" y2="12"/></svg>登出</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </header>
 <main>
 
 <!-- ── LOGIN ── -->
 <div id="login-screen" style="display:flex;align-items:center;justify-content:center;min-height:70vh">
   <div class="login-box">
-    <div style="font-size:2.5rem;margin-bottom:12px">📚</div>
-    <h2>美娟華語工作室<br><span style="font-size:.75em;font-weight:700">對外華語教學認證考試平台</span></h2>
-    <p>模擬考系統｜個人學習進度追蹤</p>
-    <div style="font-size:.8rem;color:#5d4037;background:#fffaf0;border:1px dashed #e0c9a0;border-radius:8px;padding:10px 12px;margin:0 0 14px;text-align:left;line-height:1.7">
-      <b>怎麼用：</b>選 1～4 個科目 → 開始模擬考 → 即時看答案與解析，自動記錄錯題與成績。<br>
-      想<b>保存成績/進度</b>請「新建帳號」；只想先試試，可用下方「免註冊試做」。
-    </div>
+    <div class="lg-mark">美</div>
+    <h2>美娟華語工作室</h2>
+    <p class="lg-sub">對外華語教學能力認證考試・模擬練習</p>
+    <p class="lg-hint">練習歷屆考古題，看解析、記錄成績與錯題。</p>
     <div class="login-tabs">
       <button class="login-tab active" id="tab-login" onclick="switchTab('login')">登入</button>
       <button class="login-tab" id="tab-register" onclick="switchTab('register')">新建帳號</button>
@@ -526,9 +671,9 @@ body.dark a { color:#9ec5ff; }
       </div>
     </div>
     <div class="login-error" id="login-error"></div>
-    <button class="login-btn" id="login-submit-btn" onclick="submitLogin()">登入 →</button>
+    <button class="login-btn" id="login-submit-btn" onclick="submitLogin()">登入</button>
     <div id="user-forgot-wrap" style="text-align:center;margin-top:8px">
-      <button type="button" style="background:none;border:none;color:#1976d2;font-size:.8rem;cursor:pointer;text-decoration:underline" onclick="toggleUserForgot()">忘記密碼？</button>
+      <button type="button" class="lg-link" onclick="toggleUserForgot()">忘記密碼？</button>
     </div>
     <div id="user-forgot-box" style="display:none;margin-top:8px;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:12px 14px;font-size:.82rem;color:#5d4037;text-align:left;line-height:1.7">
       <strong>🔑 忘記密碼</strong>
@@ -556,87 +701,74 @@ body.dark a { color:#9ec5ff; }
         <div id="uforg-msg3" style="margin-top:6px;font-size:.8rem"></div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;margin:14px 0 6px;color:#bbb;font-size:.78rem"><span style="flex:1;height:1px;background:#e6ddc9"></span>或<span style="flex:1;height:1px;background:#e6ddc9"></span></div>
-    <button class="login-btn" style="background:#fff;color:#8b1a1a;border:2px solid #c0392b" onclick="enterGuest()">免註冊，直接試做 →</button>
+    <div class="lg-or"><span></span>或<span></span></div>
+    <button class="login-btn ghost" onclick="enterGuest()">免註冊，直接試做</button>
   </div>
 </div>
 
 <!-- ════ SUBJECT SELECT ════ -->
 <div id="subject-screen" style="display:none">
-  <div class="user-bar" id="user-bar">
-    <span>👤</span>
-    <span class="user-bar-name" id="user-bar-name"></span>
-    <button class="user-bar-btn" onclick="showHistory()">📊 我的記錄</button>
-    <button class="user-bar-btn" onclick="showProfile()">👤 帳號</button>
-    <button class="user-bar-btn" id="btn-guest-register" onclick="openGuestRegister()" style="display:none;background:#c0392b;color:#fff;border-color:#c0392b">✍️ 註冊並保存進度</button>
-    <button class="user-bar-btn" onclick="changeUser()">登出</button>
+  <div class="user-bar" id="user-bar" style="display:none"><span class="user-bar-name" id="user-bar-name"></span></div>
+  <div class="home-hello">
+    <div class="home-hello-text"><h2 id="home-hello">歡迎回來</h2><div class="home-sub" id="home-sub"></div></div>
+    <button class="btn-outline" id="btn-guest-register" onclick="openGuestRegister()" style="display:none"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"/></svg>註冊並保存進度</button>
   </div>
   <div id="progress-panel">
-    <div class="prog-title">📈 最近考試紀錄</div>
+    <div class="sec-label">最近成績</div>
     <div class="prog-cards" id="prog-cards"></div>
   </div>
-
-  <h2>選擇練習科目</h2>
-  <p>可單科或多科混合出題，支援依序與隨機兩種模式</p>
-
+  <div class="sec-label">選擇科目<span class="sec-hint">可複選</span></div>
   <div class="subject-grid">
     <div class="subject-card" data-subject="chinese" onclick="toggleSubject(this)">
-      <div class="icon">📜</div>
+      <svg class="subj-check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><polyline points="7.5 12.5 10.5 15.5 16.5 9" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5.5c3-1.5 6-1.5 9 .5 3-2 6-2 9-.5V19c-3-1.5-6-1.5-9 .5-3-2-6-2-9-.5z"/><line x1="12" y1="6" x2="12" y2="19.5"/></svg></div>
       <div class="title">國文</div>
-      <div class="sub">文言文、現代文學、語文知識、閱讀理解</div>
-      <div class="cnt">40 題</div>
+      <div class="sub">文言文、現代文學、語文知識</div>
+      <div class="cnt">0 題</div>
     </div>
     <div class="subject-card" data-subject="culture" onclick="toggleSubject(this)">
-      <div class="icon">🏮</div>
+      <svg class="subj-check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><polyline points="7.5 12.5 10.5 15.5 16.5 9" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="2.5" x2="12" y2="5"/><path d="M8 5h8"/><path d="M7 7.5C5 9 5 15 7 16.5h10c2-1.5 2-7.5 0-9z"/><path d="M8 19h8"/><line x1="12" y1="19" x2="12" y2="21.5"/><line x1="12" y1="7.5" x2="12" y2="16.5"/></svg></div>
       <div class="title">華人社會與文化</div>
-      <div class="sub">節慶禮俗、歷史地理、飲食藝術、當代社會</div>
-      <div class="cnt">35 題</div>
+      <div class="sub">節慶禮俗、歷史地理、當代社會</div>
+      <div class="cnt">0 題</div>
     </div>
     <div class="subject-card" data-subject="linguistics" onclick="toggleSubject(this)">
-      <div class="icon">🔤</div>
+      <svg class="subj-check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><polyline points="7.5 12.5 10.5 15.5 16.5 9" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M9 9h6"/><path d="M12 9v4"/><path d="M10 13h4"/></svg></div>
       <div class="title">漢語語言學</div>
-      <div class="sub">音韻、構詞、語法、語意、語用、習得</div>
-      <div class="cnt">35 題</div>
+      <div class="sub">音韻、構詞、語法、語用</div>
+      <div class="cnt">0 題</div>
     </div>
     <div class="subject-card" data-subject="teaching" onclick="toggleSubject(this)">
-      <div class="icon">🏫</div>
+      <svg class="subj-check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><polyline points="7.5 12.5 10.5 15.5 16.5 9" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="icon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"/><line x1="12" y1="16" x2="8" y2="21"/><line x1="12" y1="16" x2="16" y2="21"/><path d="M7 9l3 3 3-4 4 3"/></svg></div>
       <div class="title">華語文教學</div>
-      <div class="sub">教學法、課程設計、評量、偏誤分析</div>
-      <div class="cnt">35 題</div>
+      <div class="sub">教學法、課程設計、評量</div>
+      <div class="cnt">0 題</div>
     </div>
   </div>
-
-  <div class="yr-filter-wrap">
-    <label>📅 年份篩選（可多選，請至少選一個年份）</label>
-    <div class="yr-filter-row" id="yr-filter-row"></div>
+  <div class="sec-label">練習設定</div>
+  <div class="setup-card">
+    <div class="setup-row"><span class="setup-label">年份</span><div class="yr-filter-row" id="yr-filter-row"></div></div>
+    <div class="setup-row"><span class="setup-label">出題順序</span><div class="seg">
+      <button class="mode-btn active" id="mode-seq" onclick="setMode('sequential')">依序</button>
+      <button class="mode-btn" id="mode-rand" onclick="setMode('random')">隨機</button></div></div>
+    <div class="setup-row"><span class="setup-label">看答案</span><div class="seg">
+      <button class="mode-btn active" id="reveal-instant" onclick="setReveal('instant')">每題立即</button>
+      <button class="mode-btn" id="reveal-end" onclick="setReveal('end')">交卷後</button></div></div>
+    <div class="setup-row"><span class="setup-label">計時</span><div class="seg timer-row">
+      <button class="timer-btn active" onclick="setTimerMode(0,this)">不計時</button>
+      <button class="timer-btn" onclick="setTimerMode(90,this)">1.5 分／題</button>
+      <button class="timer-btn" onclick="setTimerMode(120,this)">2 分／題</button></div></div>
   </div>
-
-  <div class="mode-row">
-    <button class="mode-btn active" id="mode-seq" onclick="setMode('sequential')">依序出題</button>
-    <button class="mode-btn" id="mode-rand" onclick="setMode('random')">隨機出題</button>
+  <div class="start-bar">
+    <div class="start-sum"><div id="start-sum-main">請選擇科目</div><div id="start-sum-sub"></div></div>
+    <button class="btn-review" id="btn-review" onclick="openReviewPicker()" style="display:none"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>錯題複習 <span id="wrong-count">0</span></button>
+    <button class="btn-primary" id="start-btn" onclick="startExam()" disabled>開始模擬考</button>
   </div>
-
-  <div class="yr-filter-wrap" style="margin-bottom:10px">
-    <label>📝 作答方式</label>
-    <div class="mode-row" style="margin-bottom:0">
-      <button class="mode-btn active" id="reveal-instant" onclick="setReveal('instant')">⚡ 一題一答（即時看解析）</button>
-      <button class="mode-btn" id="reveal-end" onclick="setReveal('end')">📋 全部做完再看答案</button>
-    </div>
-  </div>
-
-  <div class="timer-row">
-    <label>⏱ 計時模式：</label>
-    <button class="timer-btn active" onclick="setTimerMode(0,this)">不計時</button>
-    <button class="timer-btn" onclick="setTimerMode(90,this)">1.5 分鐘／題</button>
-    <button class="timer-btn" onclick="setTimerMode(120,this)">2 分鐘／題</button>
-  </div>
-
-  <button class="btn-review" id="btn-review" onclick="openReviewPicker()" style="display:none">📌 錯題複習（<span id="wrong-count">0</span> 題）</button>
-  <button class="btn-primary" id="start-btn" onclick="startExam()" disabled>開始模擬考</button>
-
-  <!-- Official PDF links -->
   <div class="pdf-section">
-    <h3>📄 歷年考古題 PDF（教育部官方）</h3>
+    <h3><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>教育部歷年試題與解答</h3>
     <div class="pdf-grid" id="pdf-links"></div>
   </div>
 </div>
@@ -2268,7 +2400,7 @@ const PDF_PAGES = [
   PDF_PAGES.forEach(p => {
     const a = document.createElement('a');
     a.href = p.url; a.target = '_blank'; a.className = 'pdf-link';
-    a.innerHTML = `<span class="yr">${p.yr} 年</span> 試題＋解答`;
+    a.innerHTML = `<span class="yr">${p.yr}</span><span class="pdf-t">試題與解答</span>`;
     c.appendChild(a);
   });
 })();
@@ -2802,7 +2934,7 @@ function switchTab(tab){
   document.getElementById('tab-register').classList.toggle('active', tab==='register');
   document.getElementById('login-fields').style.display = tab==='login'?'block':'none';
   document.getElementById('pw-confirm-wrap').style.display = tab==='register'?'block':'none';
-  document.getElementById('login-submit-btn').textContent = tab==='register'?'建立帳號 →':'登入 →';
+  document.getElementById('login-submit-btn').textContent = tab==='register'?'建立帳號':'登入';
   const _ow=document.getElementById('otp-login-wrap'); if(_ow) _ow.style.display = tab==='login'?'block':'none';
   const _ob=document.getElementById('otp-login-box'); if(_ob) _ob.style.display='none';
   document.getElementById('login-error').textContent='';
@@ -4643,6 +4775,58 @@ async function saveProfilePassword(){
   };
 })();
 
+</script>
+
+<script>
+// ═══ 學習者網站 v3：頂端列、帳號選單、首頁問候與開始列摘要 ═══
+const _SUBJ_N = {chinese:'國文',culture:'華人社會與文化',linguistics:'漢語語言學',teaching:'華語文教學'};
+function syncLearnerChrome(){
+  const on = !!st.currentUser;
+  const tb = document.getElementById('tb-user'); if(tb) tb.style.display = on ? 'flex' : 'none';
+  if(!on) return;
+  const guest = !!st.isGuest, name = st.currentUser;
+  const av = document.getElementById('tb-avatar'); if(av) av.textContent = guest ? '訪' : String(name).trim().charAt(0).toUpperCase();
+  const un = document.getElementById('um-name'); if(un) un.textContent = guest ? '訪客' : name;
+  const um = document.getElementById('um-mail'); if(um) um.textContent = guest ? '試做中，成績不會保存' : (localStorage.getItem('tocfl_user_email')||'');
+  const ur = document.getElementById('um-register'); if(ur) ur.style.display = guest ? 'flex' : 'none';
+  const up = document.getElementById('um-profile'); if(up) up.style.display = guest ? 'none' : 'flex';
+  const hh = document.getElementById('home-hello'), hs = document.getElementById('home-sub');
+  if(hh) hh.textContent = guest ? '免註冊試做' : (name + '，今天想練哪一科？');
+  if(hs){
+    if(guest){ hs.textContent = '每科約 10 題，成績不會保存。註冊後可練全部題目並保存紀錄。'; }
+    else{
+      let last=null; try{ last = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').find(r=>r.name===name); }catch(e){}
+      hs.textContent = last ? ('最近一次：'+(last.subjects||[]).map(x=>_SUBJ_N[x]||x).join('＋')+' '+last.pct+' 分・'+String(last.date||'').slice(5).replace('-','/')) : '還沒有考試紀錄，選好科目就可以開始。';
+    }
+  }
+  updateStartSummary();
+}
+function updateStartSummary(){
+  const main = document.getElementById('start-sum-main'), sub = document.getElementById('start-sum-sub');
+  if(!main) return;
+  const n = st.selected.length, years = st.selectedYears||[];
+  if(!n){ main.textContent = '請選擇科目'; sub.textContent = '點上面的科目卡片，可以複選'; return; }
+  if(!years.length){ main.textContent = '已選 '+n+' 科'; sub.textContent = '請至少選一個年份'; return; }
+  let total = 0;
+  st.selected.forEach(s=>{ const c = QB[s].filter(q=>years.includes(q.yr)).length; total += st.isGuest ? Math.min(c,10) : c; });
+  const allYears = [...new Set(Object.values(QB).flat().map(q=>q.yr))];
+  main.textContent = '已選 '+n+' 科・'+(years.length===allYears.length ? '全部年份' : years.length+' 個年份');
+  sub.textContent = '共 '+total+' 題';
+}
+function toggleUserMenu(e){ if(e) e.stopPropagation(); const m=document.getElementById('user-menu'); if(m) m.classList.toggle('open'); }
+function closeUserMenu(){ const m=document.getElementById('user-menu'); if(m) m.classList.remove('open'); }
+document.addEventListener('click', e=>{ const m=document.getElementById('user-menu'); if(m && m.classList.contains('open') && !m.contains(e.target)) closeUserMenu(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeUserMenu(); });
+(function(){
+  const wrap = name => { const old = window[name]; if(typeof old!=='function') return; window[name] = function(){ const r = old.apply(this, arguments); try{ syncLearnerChrome(); }catch(e){} return r; }; };
+  ['renderProgressPanel','changeUser','enterGuest'].forEach(wrap);
+  const oldUSB = window.updateStartBtn; window.updateStartBtn = function(){ const r = oldUSB.apply(this, arguments); updateStartSummary(); return r; };
+  const oldUC = window.updateCnts; window.updateCnts = function(){ const r = oldUC.apply(this, arguments); updateStartSummary(); return r; };
+  // 作答中隱藏頂端的「我的紀錄／帳號」入口，避免中途離開
+  const ex = document.getElementById('exam-screen');
+  if(ex) new MutationObserver(()=>{ document.body.classList.toggle('in-exam', ex.style.display!=='none' && ex.style.display!==''); }).observe(ex, {attributes:true, attributeFilter:['style']});
+  updateStartSummary();
+})();
 </script>
 </body>
 </html>
