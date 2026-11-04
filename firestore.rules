@@ -50,7 +50,7 @@ service cloud.firestore {
     // ── 考試紀錄 ──────────────────────────────────────────────
     match /config/examHistory/records/{id} {
       allow get, list: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow create: if isMaster() || (signedIn() && request.resource.data.uid == request.auth.uid);
       allow update: if isMaster()
         || (signedIn() && resource.data.uid == request.auth.uid
             && request.resource.data.uid == request.auth.uid);

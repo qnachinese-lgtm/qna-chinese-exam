@@ -202,6 +202,18 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
       </div>
     </div>
     <!-- 題庫管理（僅主管理員） -->
+    <div id="backup-section" style="display:none;border-top:2px solid #e0e0e0;padding-top:20px;margin-top:24px">
+      <div class="admin-header" style="margin-bottom:12px"><span class="admin-title">📦 資料備份與還原</span></div>
+      <div class="admin-section" id="backup-target"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <button class="admin-add-btn" style="margin:0" onclick="downloadBackup()">📦 下載完整備份</button>
+        <label class="admin-back" style="background:#fff3e0;border:1px solid #ffb74d;cursor:pointer;padding:8px 14px;border-radius:8px">♻️ 從備份還原…
+          <input type="file" accept=".json,application/json" style="display:none" onchange="restoreBackup(this)"></label>
+        <span id="backup-status" style="font-size:.85rem;color:#555"></span>
+      </div>
+      <div class="admin-section" style="margin-top:10px">備份檔會下載到你的電腦，內容包含學習者名單、考試紀錄、訪客紀錄、題庫、管理員名單。建議每週下載一次。還原只會「寫入／覆蓋」備份檔裡有的資料，不會刪除其他資料。</div>
+    </div>
+
     <div id="qb-section" style="border-top:2px solid #e0e0e0;padding-top:20px;margin-top:24px;display:none">
       <div class="admin-header" style="margin-bottom:8px">
         <span class="admin-title">📖 題庫管理</span>
@@ -281,6 +293,13 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
     <label>選項 D</label><textarea id="qb-f-o3" rows="2"></textarea>
     <label>正確答案</label>
     <select id="qb-f-ans"><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select>
+    <label style="margin-top:10px">其他也算對的答案（官方公告「多個答案均可」時才勾選）</label>
+    <div id="qb-f-alt" style="display:flex;gap:16px;margin:4px 0 6px">
+      <label style="margin:0;font-weight:normal"><input type="checkbox" value="0" style="width:auto;display:inline-block;margin-right:4px">A</label>
+      <label style="margin:0;font-weight:normal"><input type="checkbox" value="1" style="width:auto;display:inline-block;margin-right:4px">B</label>
+      <label style="margin:0;font-weight:normal"><input type="checkbox" value="2" style="width:auto;display:inline-block;margin-right:4px">C</label>
+      <label style="margin:0;font-weight:normal"><input type="checkbox" value="3" style="width:auto;display:inline-block;margin-right:4px">D</label>
+    </div>
     <label style="margin-top:14px"><input type="checkbox" id="qb-f-free" style="width:auto;display:inline-block;margin-right:6px;vertical-align:middle">送分題（不論作答一律給分）</label>
     <label>解析（建議格式：第一行「對的答案：…」，其後每行「錯的選項：…」）</label>
     <textarea id="qb-f-exp" rows="8"></textarea>
@@ -308,7 +327,16 @@ const SUBJ_NAMES_ADMIN = {chinese:'國文', linguistics:'漢語語言學', teach
 const SUBJ_ORDER_ADMIN = ['chinese','linguistics','teaching','culture'];
 const MASTER_EMAIL = 'qnachinese@gmail.com';   // 主管理員（永遠有權限、唯一能管理其他管理員）
 
-const FB_CONFIG = {
+// 網址含 "staging" → 測試版資料庫（qna-chinese-staging）；其他網址 → 正式版資料庫
+const IS_STAGING = /staging/i.test(location.hostname);
+const FB_CONFIG = IS_STAGING ? {
+  apiKey: "AIzaSyA7qWp5nbRtA2_7BM_mK-VpVDGXXjMpnRk",
+  authDomain: "qna-chinese-staging.firebaseapp.com",
+  projectId: "qna-chinese-staging",
+  storageBucket: "qna-chinese-staging.firebasestorage.app",
+  messagingSenderId: "393085795342",
+  appId: "1:393085795342:web:656f3f5deb3fd96c4dd05f"
+} : {
   apiKey: "AIzaSyCSgZ9DmLuKIqqbxrVgAcUfy-QJFhzjjp8",
   authDomain: "qna-chinese.firebaseapp.com",
   projectId: "qna-chinese",
@@ -316,6 +344,17 @@ const FB_CONFIG = {
   messagingSenderId: "645044163415",
   appId: "1:645044163415:web:c33d1a22422de3083b6412"
 };
+// 測試版 / 留底版：畫面頂端顯示標記，避免跟正式版搞混
+(function(){
+  const host = location.hostname;
+  const label = IS_STAGING ? '🧪 測試版（測試資料，不影響正式版）' : (/backup/i.test(host) ? '📦 留底版（舊版程式備份，資料與正式版共用）' : '');
+  if(!label) return;
+  const add = () => { if(document.getElementById('env-banner')) return;
+    const b = document.createElement('div'); b.id = 'env-banner'; b.textContent = label;
+    b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:'+(IS_STAGING?'#6a1b9a':'#455a64')+';color:#fff;text-align:center;font-size:13px;padding:5px 8px;font-family:sans-serif;opacity:.92;pointer-events:none';
+    document.body.appendChild(b); };
+  if(document.body) add(); else document.addEventListener('DOMContentLoaded', add);
+})();
 // 後台用獨立的 Firebase app（名稱 'admin'），登入狀態與學習者頁面分開，互不影響
 const _adminApp = firebase.initializeApp(FB_CONFIG, 'admin');
 const auth = _adminApp.auth();
@@ -390,7 +429,20 @@ async function adminLogin(){
   }catch(e){
     _adminLoginAttempt = false;
     err.style.color='#c62828';
-    if(['auth/user-not-found','auth/wrong-password','auth/invalid-credential','auth/invalid-login-credentials'].includes(e.code)){
+    const _bad = ['auth/user-not-found','auth/wrong-password','auth/invalid-credential','auth/invalid-login-credentials'].includes(e.code);
+    if(_bad && IS_STAGING && email===MASTER_EMAIL && confirm('測試版是獨立的資料庫，第一次使用需要建立主管理員帳號。\n要用剛剛輸入的密碼建立嗎？（之後會寄驗證信到 '+email+'）')){
+      try{
+        _adminLoginAttempt = true;
+        const cred = await auth.createUserWithEmailAndPassword(email, pw);
+        try{ await cred.user.sendEmailVerification(); }catch(_){}
+        return;   // onAuthStateChanged 會提示去收驗證信
+      }catch(e2){
+        _adminLoginAttempt = false;
+        err.textContent = e2.code==='auth/email-already-in-use' ? '測試版的主管理員帳號已存在：密碼不正確（可按「忘記密碼？」）' : '建立失敗：'+(e2.code||e2.message);
+        return;
+      }
+    }
+    if(_bad){
       err.textContent='Email 或密碼不正確（新的管理員請先到信箱點「重設密碼」信設定密碼）';
     } else if(e.code==='auth/invalid-email'){ err.textContent='Email 格式不正確';
     } else if(e.code==='auth/too-many-requests'){ err.textContent='嘗試次數過多，請稍後再試';
@@ -468,7 +520,7 @@ function renderQBList(){
   if(!rows.length){ html+='<tr><td colspan="5" style="text-align:center;color:#999;padding:18px">沒有符合的題目</td></tr>'; }
   rows.forEach(o=>{
     const stem=esc(String(o.q.q||'').replace(/<\/?u>/g,'')).slice(0,46);
-    const ansLbl=o.q.free?'送分':(['A','B','C','D'][o.q.ans]||'?');
+    const ansLbl=o.q.free?'送分':[o.q.ans].concat(Array.isArray(o.q.alt)?o.q.alt:[]).map(k=>['A','B','C','D'][k]||'?').join('/');
     html+='<tr><td>'+(o.i+1)+'</td><td>'+esc(o.q.yr)+'</td><td>'+stem+'…</td><td>'+ansLbl+'</td><td><button class="qb-edit-link" onclick="openQBEdit('+o.i+')">編輯</button></td></tr>';
   });
   html+='</tbody></table>';
@@ -486,6 +538,7 @@ function openQBEdit(idx){
   for(let k=0;k<4;k++) document.getElementById('qb-f-o'+k).value=(q.opts&&q.opts[k])||'';
   document.getElementById('qb-f-ans').value=String(q.ans||0);
   document.getElementById('qb-f-free').checked=!!q.free;
+  document.querySelectorAll('#qb-f-alt input').forEach(cb=>{ cb.checked = Array.isArray(q.alt) && q.alt.includes(parseInt(cb.value,10)); });
   document.getElementById('qb-f-exp').value=q.exp||'';
   document.getElementById('qb-delete-btn').style.display=isNew?'none':'inline-block';
   document.getElementById('qb-edit-error').textContent='';
@@ -503,7 +556,8 @@ async function saveQBItem(){
   const exp=document.getElementById('qb-f-exp').value.trim();
   const errEl=document.getElementById('qb-edit-error');
   if(!yr||!qtext||opts.some(o=>!o)){ errEl.style.color='#c62828'; errEl.textContent='年份、題目、四個選項都必須填寫'; return; }
-  const item={yr:yr,q:qtext,opts:opts,ans:ans,exp:exp}; if(free) item.free=true;
+  const alt=[...document.querySelectorAll('#qb-f-alt input:checked')].map(cb=>parseInt(cb.value,10)).filter(k=>k!==ans);
+  const item={yr:yr,q:qtext,opts:opts,ans:ans,exp:exp}; if(free) item.free=true; if(alt.length) item.alt=alt;
   const isNew = idx<0 || idx>=(_qb[sub]||[]).length;
   if(isNew) _qb[sub].push(item); else _qb[sub][idx]=item;
   errEl.style.color='#888'; errEl.textContent='儲存中…';
@@ -554,6 +608,8 @@ function enterPanel(email, role, name){
   document.getElementById('add-learner-btn').style.display = role==='master' ? '' : 'none';
   document.getElementById('admins-section').style.display  = role==='master' ? 'block' : 'none';
   document.getElementById('qb-section').style.display = role==='master' ? 'block' : 'none';
+  const _bk=document.getElementById('backup-section'); if(_bk) _bk.style.display = role==='master' ? 'block' : 'none';
+  const _bt=document.getElementById('backup-target'); if(_bt) _bt.textContent = '目前連線的資料庫：'+FB_CONFIG.projectId+(IS_STAGING?'（測試版）':'（正式版）');
   if(role==='master') loadQBAdmin();
   syncFromCloud();
   renderAdminPanel();
@@ -570,7 +626,19 @@ auth.onAuthStateChanged(async (user)=>{
   const err = document.getElementById('admin-login-err');
   if(!user){ _currentRole=null; _currentEmail=null; showScreen('login'); return; }
   const email = (user.email||'').toLowerCase();
-  if(email === MASTER_EMAIL){ err.textContent=''; enterPanel(email, 'master'); return; }
+  if(email === MASTER_EMAIL){
+    if(IS_STAGING && !user.emailVerified){
+      showScreen('login');
+      if(attempt){
+        try{ await user.sendEmailVerification(); }catch(e){}
+        await auth.signOut();
+        err.style.color='#b8860b';
+        err.textContent='測試版需要先驗證信箱：驗證信已寄到 '+email+'，點信中連結後再登入一次。';
+      }
+      return;
+    }
+    err.textContent=''; enterPanel(email, 'master'); return;
+  }
   // 一般管理員：信箱必須驗證過，且在管理員名單內
   if(!user.emailVerified){
     showScreen('login');
@@ -1200,6 +1268,79 @@ async function saveModal(){
   err.textContent='';
   closeModal();
   setTimeout(syncFromCloud, 500);
+}
+
+
+// ═══════════════════════════════════════════
+//  資料備份與還原（主管理員限定）
+// ═══════════════════════════════════════════
+const BACKUP_COLLECTIONS = ['users', 'config/examHistory/records', 'config/guestHistory/records', 'questionbank'];
+const BACKUP_DOCS = ['config/admins'];
+function _bkStatus(t, c){ const el=document.getElementById('backup-status'); if(el){ el.style.color=c||'#555'; el.textContent=t; } }
+
+async function downloadBackup(){
+  if(_currentRole!=='master'){ alert('只有主管理員能下載備份'); return; }
+  _bkStatus('備份中…');
+  try{
+    const out = { app:'qna-exam-platform', version:1, project:FB_CONFIG.projectId, exportedAt:new Date().toISOString(), collections:{}, docs:{} };
+    let n = 0;
+    for(const p of BACKUP_COLLECTIONS){
+      const snap = await _db.collection(p).get();
+      out.collections[p] = snap.docs.map(d=>({ id:d.id, data:d.data() }));
+      n += snap.docs.length;
+    }
+    for(const p of BACKUP_DOCS){
+      const [c, id] = [p.slice(0, p.lastIndexOf('/')), p.slice(p.lastIndexOf('/')+1)];
+      const d = await _db.collection(c).doc(id).get();
+      out.docs[p] = d.exists ? d.data() : null;
+    }
+    const pad = x=>String(x).padStart(2,'0'); const t = new Date();
+    const name = 'qna-備份-'+FB_CONFIG.projectId+'-'+t.getFullYear()+pad(t.getMonth()+1)+pad(t.getDate())+'-'+pad(t.getHours())+pad(t.getMinutes())+'.json';
+    const blob = new Blob([JSON.stringify(out, null, 1)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    _bkStatus('✅ 已下載 '+name+'（共 '+n+' 筆資料）', '#2e7d32');
+    return out;
+  }catch(e){ console.warn(e); _bkStatus('備份失敗：'+(e.code||e.message), '#c62828'); }
+}
+
+async function restoreFromData(data){
+  if(_currentRole!=='master') throw new Error('只有主管理員能還原');
+  if(!data || data.app!=='qna-exam-platform' || !data.collections) throw new Error('這不是本平台的備份檔');
+  let n = 0;
+  for(const [p, docs] of Object.entries(data.collections)){
+    if(!BACKUP_COLLECTIONS.includes(p)) continue;
+    for(const d of docs){ await _db.collection(p).doc(d.id).set(d.data); n++; }
+  }
+  for(const [p, v] of Object.entries(data.docs||{})){
+    if(!BACKUP_DOCS.includes(p) || !v) continue;
+    const [c, id] = [p.slice(0, p.lastIndexOf('/')), p.slice(p.lastIndexOf('/')+1)];
+    await _db.collection(c).doc(id).set(v); n++;
+  }
+  return n;
+}
+
+async function restoreBackup(input){
+  const file = input.files && input.files[0]; input.value = '';
+  if(!file) return;
+  if(_currentRole!=='master'){ alert('只有主管理員能還原'); return; }
+  let data;
+  try{ data = JSON.parse(await file.text()); }catch(e){ alert('檔案讀取失敗，請確認是本平台下載的備份檔'); return; }
+  const cnt = Object.values(data.collections||{}).reduce((s,a)=>s+(a.length||0),0);
+  const msg = '要把備份檔還原到「'+FB_CONFIG.projectId+'」'+(IS_STAGING?'（測試版）':'（正式版）')+' 嗎？\n\n'+
+    '備份來源：'+(data.project||'?')+'，備份時間：'+(data.exportedAt||'?')+'，共 '+cnt+' 筆資料。\n'+
+    '同名的資料會被備份檔覆蓋；備份檔裡沒有的資料不會被刪除。';
+  if(!confirm(msg)) return;
+  if(!IS_STAGING){
+    const t = prompt('⚠️ 你正在還原「正式版」資料庫。\n確定的話請輸入：還原正式版');
+    if(t !== '還原正式版'){ alert('已取消'); return; }
+  }
+  _bkStatus('還原中…（請勿關閉頁面）');
+  try{
+    const n = await restoreFromData(data);
+    _bkStatus('✅ 還原完成，共寫入 '+n+' 筆資料', '#2e7d32');
+    syncFromCloud(); if(typeof loadQBAdmin==='function') loadQBAdmin();
+  }catch(e){ console.warn(e); _bkStatus('還原失敗：'+(e.code||e.message), '#c62828'); }
 }
 
 // 初始：顯示「載入中」直到 Firebase 回報登入狀態
