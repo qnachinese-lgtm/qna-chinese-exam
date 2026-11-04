@@ -114,6 +114,15 @@ service cloud.firestore {
       allow delete: if isMaster() || (signedIn() && resource.data.uid == request.auth.uid);
     }
 
+    // ── 訪客來訪統計：任何人可新增（每位訪客每月一筆，只能有 gid／month／first 三個欄位），只有管理員能看 ──
+    match /guestVisits/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['gid','month','first'])
+        && request.resource.data.gid is string && request.resource.data.month is string;
+      allow read: if isAdmin();
+      allow update: if false;
+      allow delete: if isMaster();
+    }
+
     // 其他未列出的路徑一律拒絕
   }
 }

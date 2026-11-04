@@ -5720,6 +5720,14 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
       const was=(r&&r.style.display==='block')||(b&&b.style.display==='block');
       if(was && fn!=='openReviewPicker'){ if(r) r.style.display='none'; if(b) b.style.display='none'; document.getElementById('subject-screen').style.display='block'; }
       return o.apply(this, arguments); }; });
+  // 訪客來訪統計：按「免註冊，直接試做」就記一筆（同一個瀏覽器每月一筆），讓後台知道每月有多少人來
+  const _eg = window.enterGuest;
+  if(typeof _eg === 'function') window.enterGuest = function(){
+    const r = _eg.apply(this, arguments);
+    try{ if(typeof _db!=='undefined' && _db && typeof getGuestId==='function'){ const g=getGuestId(); const d=new Date(); const m=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+      const key='gv_'+m; if(localStorage.getItem(key)!==g){ _db.collection('guestVisits').doc(g+'_'+m).set({gid:g, month:m, first:Date.now()}).then(()=>{ try{ localStorage.setItem(key,g); }catch(e){} }).catch(()=>{ try{ localStorage.setItem(key,g); }catch(e){} }); } } }catch(e){}
+    return r;
+  };
   // 登出時停止監聽
   const _cu = window.changeUser;
   if(typeof _cu === 'function') window.changeUser = function(){ stopBoardLive(); return _cu.apply(this, arguments); };

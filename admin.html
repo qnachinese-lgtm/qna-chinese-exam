@@ -289,6 +289,19 @@ body { overflow-x:clip; }
 .ab-del { height:30px; padding:0 10px; font-size:13px; }
 .ab-gone { font-size:13px; color:#b0a69b; font-style:italic; }
 .ab-q { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.gm-wrap { margin-bottom:12px; }
+.gm-card { padding:18px 20px; }
+.gm-head { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; }
+.gm-head > div { background:#faf6ef; border-radius:12px; padding:10px 14px; }
+.gm-big { font-size:24px; font-weight:700; } .gm-big small { font-size:13px; font-weight:400; color:var(--muted); }
+.gm-lbl { font-size:12px; color:var(--muted); }
+.gm-row { display:flex; align-items:center; gap:12px; padding:5px 0; font-size:14px; }
+.gm-m { width:96px; flex:0 0 auto; }
+.gm-bar { flex:1; height:8px; background:#f1ebe0; border-radius:4px; overflow:hidden; } .gm-bar span { display:block; height:100%; background:#8b1a1a; border-radius:4px; }
+.gm-n { width:48px; text-align:right; font-weight:700; }
+.gm-s { width:110px; text-align:right; font-size:12px; color:var(--muted); }
+.gm-note { font-size:12px; color:var(--muted); margin-top:10px; line-height:1.7; }
+@media(max-width:820px){ .gm-head { grid-template-columns:repeat(2,1fr); } .gm-s { display:none; } }
 /* 切換分頁時不因捲軸出現/消失而左右跳動 */
 html { scrollbar-gutter:stable; overflow-y:scroll; }
 /* 滑鼠點擊不顯示黑框，鍵盤操作才顯示柔和外框 */
@@ -477,9 +490,10 @@ html { scrollbar-gutter:stable; overflow-y:scroll; }
             <button id="guest-clear-btn" class="btn btn-danger" onclick="clearGuestRecords()" style="display:none"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg>清空紀錄</button>
           </div>
         </div>
+        <div id="guest-months" class="gm-wrap"></div>
         <div id="guest-table-container" class="sec-table">
           <table class="admin-table">
-            <thead><tr><th>訪客</th><th>試做次數</th><th>做過的科目</th><th>最近得分</th><th>最近時間</th></tr></thead>
+            <thead><tr><th>訪客</th><th>第一次來</th><th>交卷次數</th><th>做過的科目</th><th>最近得分</th><th>最近時間</th></tr></thead>
             <tbody id="guest-tbody"></tbody>
           </table>
         </div>
@@ -652,6 +666,7 @@ let _currentEmail = null;
 let _adminEmails = new Set([MASTER_EMAIL]);   // 管理員 email,用來從學習者名單濾掉
 const SUBJ_NAMES = {chinese:'國文',culture:'華人社會與文化',linguistics:'漢語語言學',teaching:'華語文教學'};
 let _guestRecords = [];
+let _guestVisits = [];   // guestVisits：每位訪客每個月一筆（進入試做就記錄，不論有沒有交卷）
 function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 // ═══════════════════════════════════════════
@@ -1039,6 +1054,7 @@ async function syncFromCloud(){
       _guestRecords = gSnap.docs.map(d=>d.data());
       _guestRecords.sort((a,b)=>((b.date||'')+(b.time||'')).localeCompare((a.date||'')+(a.time||'')));
     }catch(eg){ console.warn('讀取訪客紀錄失敗:', eg); _guestRecords=[]; }
+    try{ const vSnap = await _db.collection('guestVisits').get(); _guestVisits = vSnap.docs.map(d=>d.data()); }catch(ev){ console.warn('讀取訪客來訪紀錄失敗:', ev); _guestVisits=[]; }
     renderAdminPanel();
     if(_currentRole==='master') masterMaintenance(histDocs);
   }catch(e){ console.warn('syncFromCloud:', e); }
@@ -1448,46 +1464,54 @@ function updateCleanupBtn(){
 function renderGuestRecords(){
   const tbody=document.getElementById('guest-tbody');
   if(!tbody) return;
-  const recs=_guestRecords||[];
+  const recs=_guestRecords||[], visits=_guestVisits||[];
   const sum=document.getElementById('guest-summary');
-  const t=new Date();
-  const td=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
-  // 依瀏覽器(gid)分組：同一個瀏覽器算同一位訪客
-  const groups=new Map();
-  recs.forEach(r=>{
-    const key = r.gid || ('once_'+(r.ts||((r.date||'')+(r.time||''))));
-    if(!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(r);
-  });
-  const list=[...groups.entries()].map(([gid,arr])=>{
-    arr.sort((a,b)=>((b.date||'')+(b.time||'')).localeCompare((a.date||'')+(a.time||'')));
-    return {gid, arr, latest:arr[0]};
-  });
-  list.sort((a,b)=>((b.latest.date||'')+(b.latest.time||'')).localeCompare((a.latest.date||'')+(a.latest.time||'')));
-  const todayVisitors=list.filter(g=>g.arr.some(r=>r.date===td)).length;
-  if(sum) sum.textContent='共 '+list.length+' 位訪客　今日 '+todayVisitors+' 位';
+  const pad=n=>String(n).padStart(2,'0');
+  const ymOf=ts=>{ const d=new Date(ts); return d.getFullYear()+'-'+pad(d.getMonth()+1); };
+  const recTs=r=>r.ts || (r.date ? new Date((r.date||'')+'T'+((r.time||'00:00:00').slice(0,8))).getTime() : 0);
+  // 每位訪客（同一個瀏覽器＝同一位）：第一次出現時間、每個月是否有來、交卷紀錄
+  const G=new Map();
+  const get=gid=>{ if(!G.has(gid)) G.set(gid,{gid, first:Infinity, months:new Set(), subMonths:new Set(), arr:[]}); return G.get(gid); };
+  visits.forEach(v=>{ if(!v.gid) return; const g=get(v.gid); if(v.first) g.first=Math.min(g.first,v.first); if(v.month) g.months.add(v.month); });
+  recs.forEach(r=>{ const key=r.gid || ('once_'+(r.ts||((r.date||'')+(r.time||'')))); const g=get(key); const ts=recTs(r); if(ts){ g.first=Math.min(g.first,ts); g.months.add(ymOf(ts)); g.subMonths.add(ymOf(ts)); } g.arr.push(r); });
+  // 流水號：依第一次來訪的先後，最早的是 #1
+  const all=[...G.values()].sort((a,b)=>a.first-b.first);
+  all.forEach((g,i)=>{ g.no=i+1; });
+  // 每月統計（最近 6 個月）
+  const now=new Date(); const months=[]; for(let k=0;k<6;k++){ const d=new Date(now.getFullYear(), now.getMonth()-k, 1); months.push(d.getFullYear()+'-'+pad(d.getMonth()+1)); }
+  const mStat=months.map(m=>({m, visit:all.filter(g=>g.months.has(m)).length, sub:all.filter(g=>g.subMonths.has(m)).length, fresh:all.filter(g=>g.first!==Infinity && ymOf(g.first)===m).length}));
+  const mx=Math.max(1,...mStat.map(x=>x.visit));
+  const gm=document.getElementById('guest-months');
+  if(gm) gm.innerHTML='<div class="card gm-card"><div class="gm-head"><div><div class="gm-big">'+mStat[0].visit+' <small>位</small></div><div class="gm-lbl">本月來訪的訪客</div></div><div><div class="gm-big">'+mStat[0].fresh+' <small>位</small></div><div class="gm-lbl">本月新訪客</div></div><div><div class="gm-big">'+mStat[1].visit+' <small>位</small></div><div class="gm-lbl">上個月</div></div><div><div class="gm-big">'+all.length+' <small>位</small></div><div class="gm-lbl">累計訪客</div></div></div>'
+    +'<div class="gm-rows">'+mStat.map(x=>'<div class="gm-row"><span class="gm-m">'+x.m.replace('-',' 年 ')+' 月</span><span class="gm-bar"><span style="width:'+(x.visit/mx*100)+'%"></span></span><span class="gm-n">'+x.visit+' 位</span><span class="gm-s">新 '+x.fresh+'・交卷 '+x.sub+'</span></div>').join('')+'</div>'
+    +'<div class="gm-note">「來訪」＝按了「免註冊，直接試做」；同一個瀏覽器一個月只算一次。這個統計從 2026 年 11 月開始記錄，更早的月份只算有交卷的訪客。</div></div>';
+  if(sum) sum.textContent='累計 '+all.length+' 位訪客';
   const clr=document.getElementById('guest-clear-btn');
-  if(clr) clr.style.display=(_currentRole==='master' && recs.length)?'':'none';
-  if(!list.length){ tbody.innerHTML='<tr><td colspan="5" class="empty-row">還沒有訪客試做紀錄。</td></tr>'; return; }
+  if(clr) clr.style.display=(_currentRole==='master' && (recs.length||visits.length))?'':'none';
+  if(!all.length){ tbody.innerHTML='<tr><td colspan="6" class="empty-row">還沒有訪客。</td></tr>'; return; }
+  const lastTs=g=>Math.max(g.first, ...g.arr.map(recTs));
+  const list=all.slice().sort((a,b)=>lastTs(b)-lastTs(a));
+  const fmt=ts=>{ if(!isFinite(ts)||!ts) return '—'; const d=new Date(ts); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes()); };
   tbody.innerHTML=list.slice(0,300).map(g=>{
-    const r=g.latest;
-    const subjSet=new Set();
-    g.arr.forEach(rec=>(rec.subjects||[]).forEach(x=>subjSet.add(x)));
+    g.arr.sort((a,b)=>recTs(b)-recTs(a));
+    const r=g.arr[0];
+    const subjSet=new Set(); g.arr.forEach(rec=>(rec.subjects||[]).forEach(x=>subjSet.add(x)));
     const subs=[...subjSet].map(s=>SUBJ_NAMES[s]||s).join('、')||'—';
-    const score=(r.correct!=null&&r.total!=null)?(r.pct+'分（'+r.correct+'/'+r.total+'）'):'—';
-    const label='訪客 #'+String(g.gid).slice(-4);
-    return '<tr><td>'+label+'</td><td>'+g.arr.length+' 次</td><td>'+subs+'</td><td>'+score+'</td><td>'+(r.date||'—')+' '+((r.time||'').slice(0,5))+'</td></tr>';
+    const score=(r&&r.correct!=null&&r.total!=null)?(r.pct+'分（'+r.correct+'/'+r.total+'）'):'—';
+    return '<tr><td><b>訪客 #'+g.no+'</b></td><td>'+fmt(g.first).slice(0,10)+'</td><td>'+(g.arr.length?g.arr.length+' 次':'<span style="color:#a99f94">只看沒交卷</span>')+'</td><td>'+subs+'</td><td>'+score+'</td><td>'+fmt(lastTs(g))+'</td></tr>';
   }).join('');
 }
 
 async function clearGuestRecords(){
   if(_currentRole!=='master') return;
-  if(!confirm('確定要清空所有訪客試做紀錄嗎？此動作無法復原。')) return;
+  if(!confirm('確定要清空所有訪客紀錄（含來訪統計與流水號）嗎？此動作無法復原。')) return;
   try{
     const snap=await _db.collection('config').doc('guestHistory').collection('records').get();
     for(const d of snap.docs){ try{ await d.ref.delete(); }catch(e){ console.warn(e); } }
+    const vs=await _db.collection('guestVisits').get();
+    for(const d of vs.docs){ try{ await d.ref.delete(); }catch(e){ console.warn(e); } }
   }catch(e){ console.warn('clearGuestRecords:', e); }
-  _guestRecords=[]; renderGuestRecords();
+  _guestRecords=[]; _guestVisits=[]; renderGuestRecords();
 }
 
 async function cleanupDuplicates(){
