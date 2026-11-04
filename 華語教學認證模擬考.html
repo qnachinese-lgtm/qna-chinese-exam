@@ -667,6 +667,10 @@ body.dark .subject-card.selected .icon { background:#23262b; }
 body.dark #yr-filter-row .yr-btn { background:#2b2f35; color:#c8cbd0; }
 body.dark #yr-filter-row .yr-btn.active { background:#3a2828; border-color:#c0392b; color:#f0a5a0; }
 @media(max-width:720px){ .subject-card .title { font-size:15px; } }
+
+#subject-screen #home-hello { text-align:left; color:var(--ink); font-size:22px; margin:0 0 4px; }
+.prog-card.pass, .prog-card.fail { border-left:1px solid var(--line); }
+body.dark #subject-screen #home-hello { color:#e6e6e6; }
 /* 深色模式 */
 body.dark header.topbar { background:#1b1d21; border-bottom-color:#2e3238; }
 body.dark .tb-sub { border-left-color:#3a3f47; }
@@ -5052,6 +5056,15 @@ function leaveExamNoRecord(){
     }
     return oldStart.apply(this, arguments);
   };
+})();
+
+// 從「我的紀錄」或「帳號設定」回首頁時，重新整理最近成績與問候語
+(function(){
+  ['closeHistory','closeProfile','goHome'].forEach(n=>{ const o=window[n]; if(typeof o!=='function') return;
+    window[n]=function(){ const r=o.apply(this,arguments); try{ renderProgressPanel(); updateWrongReviewBtn(); }catch(e){} return r; }; });
+  const dr=window.deleteHistoryRecord, ch=window.clearHistory;
+  if(dr) window.deleteHistoryRecord=function(){ const r=dr.apply(this,arguments); try{ renderProgressPanel(); }catch(e){} return r; };
+  if(ch) window.clearHistory=function(){ const r=ch.apply(this,arguments); try{ renderProgressPanel(); }catch(e){} return r; };
 })();
 </script>
 </body>
