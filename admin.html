@@ -228,10 +228,10 @@ main { max-width:1080px; padding:0 16px 40px; }
 .admin-login-box h3 { display:flex; align-items:center; justify-content:center; gap:10px; }
 /* 頂端列：和學習者網站一樣，白色橫條橫跨整個畫面 */
 body { overflow-x:clip; }
-.topbar { background:#fffdf9; padding:12px 0 0; }
-.topbar::before { content:''; position:absolute; top:0; bottom:0; left:-100vmax; right:-100vmax; background:#fffdf9; border-bottom:1px solid var(--line); z-index:-1; pointer-events:none; }
-.topbar .tabs { border-bottom:none; }
-.topbar .tab { position:relative; z-index:1; }
+/* 只有品牌那一列是白條（高度與學習者網站相同），分頁留在米色底上 */
+.topbar { background:var(--page); padding:0; }
+.topbar-row { position:relative; min-height:60px; padding:9px 0; margin-bottom:6px; }
+.topbar-row::before { content:''; position:absolute; top:0; bottom:0; left:-100vmax; right:-100vmax; background:#fffdf9; border-bottom:1px solid var(--line); z-index:-1; pointer-events:none; }
 .topbar .icon-btn { background:#fff; }
 /* 切換分頁時不因捲軸出現/消失而左右跳動 */
 html { scrollbar-gutter:stable; overflow-y:scroll; }
