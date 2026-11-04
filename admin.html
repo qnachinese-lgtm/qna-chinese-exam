@@ -214,7 +214,10 @@ main { max-width:1080px; padding:0 16px 40px; }
 .qb-edit-link:hover { border-color:var(--brand); color:var(--brand); opacity:1; }
 /* 備份頁 */
 .backup-card { padding:20px; }
-#qb-status { color:#8a8178; }
+#qb-status { color:#8a8178; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.head-inline { display:flex; align-items:baseline; gap:12px; }
+#qb-subject { width:170px; flex:0 0 170px; }
+#qb-year { width:130px; flex:0 0 130px; }
 .backup-target { font-size:13px; color:var(--muted); margin:0 0 14px; }
 /* 彈窗與登入沿用主色 */
 .modal-btn-primary, .login-btn { background:var(--brand); }
@@ -307,7 +310,7 @@ main { max-width:1080px; padding:0 16px 40px; }
     <section class="page" id="page-qb">
       <div id="qb-section">
         <div class="page-head">
-          <div class="page-head-text"><h2 class="page-title">題庫</h2><div class="page-desc"><span id="qb-status"></span></div></div>
+          <div class="page-head-text head-inline"><h2 class="page-title">題庫</h2><span id="qb-status" class="chip-note"></span></div>
           <div class="page-actions">
             <button class="btn btn-secondary" onclick="importQBFromCode()" title="用考試頁內建題庫覆蓋雲端題庫"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><polyline points="20 4 20 9 15 9"/></svg>從程式碼匯入</button>
             <button class="btn btn-primary" onclick="openQBEdit(-1)"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增題目</button>
@@ -640,7 +643,7 @@ async function loadQBAdmin(){
     _qb={chinese:[],linguistics:[],teaching:[],culture:[]};
     let any=false;
     snap.docs.forEach(d=>{ if(_qb.hasOwnProperty(d.id)){ const it=(d.data()||{}).items; if(Array.isArray(it)){ _qb[d.id]=it; if(it.length) any=true; } } });
-    if(stEl) stEl.textContent = any ? ('雲端題庫共 '+qbCount()+' 題') : '雲端尚無題庫，請先按「從程式碼匯入/重置」建立';
+    if(stEl) stEl.textContent = any ? ('雲端題庫共 '+qbCount()+' 題') : '雲端尚無題庫，請按「從程式碼匯入」建立';
     renderQBList();
   }catch(e){ console.warn('loadQBAdmin',e); if(stEl) stEl.textContent='讀取題庫失敗：'+(e.message||e); }
 }
