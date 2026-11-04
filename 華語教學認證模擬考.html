@@ -3602,159 +3602,85 @@ async function exportPDF(){
   const now = new Date();
   const dateStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
-  // ── 成績單（與網站一致的米色＋深紅設計） ──
-  const pass = pct>=70;
+  // ── 仿教育部考卷格式（黑白、明體），每題附作答結果與解析 ──
   const noAns = st.examResults.filter(r=>r.chosen==null).length;
-  const wrongN = total - st.correct - noAns;
-  const R=52, CIRC=2*Math.PI*R, dash=(pct/100*CIRC).toFixed(1);
-  const ringCol = pass ? '#2e7d32' : '#c0392b';
   const esc2 = t=>String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/&lt;(\/?)u&gt;/g,'<$1u>');
   const subjects = [...new Set(st.examResults.map(r=>r.subject))];
-  const subjNames = subjects.map(s=>SUBJ[s]||s).join('・');
-  const years = [...new Set(st.examResults.map(r=>String(r.yr||'')))].filter(Boolean).sort().reverse().join('、');
-  const subjCards = subjects.map(s=>{
+  const cn = ['一','二','三','四','五','六'];
+  const subjScore = subjects.map(s=>{ const m=st.examResults.filter(r=>r.subject===s); const ok=m.filter(r=>r.correct).length; return `${SUBJ[s]||s} ${ok}/${m.length}`; }).join('　');
+  const sections = subjects.map((s,si)=>{
     const mine = st.examResults.filter(r=>r.subject===s);
-    const ok = mine.filter(r=>r.correct).length;
-    const sp = mine.length?Math.round(ok/mine.length*100):0;
-    return `<div class="subj"><span class="subj-name">${SUBJ[s]||s}</span><span class="bar"><span class="fill${sp>=70?' p':''}" style="width:${sp}%"></span></span><span class="subj-pct">${sp}%</span><span class="subj-cnt">${ok} / ${mine.length}</span></div>`;
-  }).join('');
-  const rows = st.examResults.map((r,i)=>{
-    const acc = acceptedList(r);
-    const res = r.chosen==null ? '<span class="tag t-na">未作答</span>' : (r.correct ? '<span class="tag t-ok">答對</span>' : '<span class="tag t-no">答錯</span>');
-    const opts = (r.opts||[]).map((o,k)=>{
-      const isAns = !r.free && acc.includes(k), isMine = r.chosen===k;
-      const cls = isAns ? 'op ans' : (isMine ? 'op mine' : 'op');
-      const note = (isAns&&isMine) ? '<span class="op-note n-ok">你的答案・正確</span>' : isAns ? '<span class="op-note n-ok">正確答案</span>' : isMine ? '<span class="op-note n-no">你的答案</span>' : '';
-      return `<div class="${cls}"><span class="op-l">${letters[k]}</span><span class="op-t">${esc2(o)}</span>${note}</div>`;
+    const yrs = [...new Set(mine.map(r=>String(r.yr||'')))].filter(Boolean).sort().join('、');
+    const items = mine.map((r,i)=>{
+      const acc = acceptedList(r);
+      const opts = (r.opts||[]).map((o,k)=>`<div class="op${!r.free&&acc.includes(k)?' ok':''}${r.chosen===k&&!r.correct?' no':''}">(${letters[k]})${esc2(o)}</div>`).join('');
+      const mark = r.chosen==null ? '未作答' : (r.correct ? '○ 答對' : '× 答錯');
+      const ansTxt = r.free ? '一律送分' : acc.map(k=>letters[k]).join('、');
+      const exp = String(r.exp||'').trim();
+      return `<div class="q"><div class="qt"><span class="qn">${i+1}.</span><span>${esc2(r.q)}<span class="src">（${esc2(r.yr||'')}年）</span></span></div><div class="ops">${opts}</div>`
+        +`<div class="res"><span>你的答案：<b>${r.chosen==null?'—':letters[r.chosen]}</b></span><span>正確答案：<b>${ansTxt}</b></span><span class="mk ${r.chosen==null?'na':(r.correct?'y':'n')}">${mark}</span></div>`
+        +(exp?`<div class="exp"><b>【解析】</b>${esc2(exp).replace(/\n/g,'<br>')}</div>`:'')+`</div>`;
     }).join('');
-    const exp = String(r.exp||'').trim();
-    const expHtml = exp ? `<div class="exp"><div class="exp-h">解析</div>${esc2(exp).replace(/\n/g,'<br>')}</div>` : '';
-    return `<div class="qitem ${r.correct?'is-ok':'is-no'}"><div class="qi-top"><span class="qi-n">第 ${i+1} 題</span><span class="qi-m">${SUBJ[r.subject]||''}・${esc2(r.yr||'')}</span>${res}</div><div class="qi-q">${esc2(r.q)}</div><div class="ops">${opts}</div>${r.free?'<div class="exp">此題官方一律送分。</div>':''}${expHtml}</div>`;
+    return `<div class="sec"><div class="sec-h">${cn[si]||(si+1)}、科目：${SUBJ[s]||s}<span class="sec-yr">（${yrs} 年試題，共 ${mine.length} 題）</span></div>${items}</div>`;
   }).join('');
 
   const safeUser = (st.currentUser||'未登入');
-  const docTitle = `成績單_${safeUser}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  const docTitle = `模擬考_${safeUser}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
 
   const html = `<!DOCTYPE html><html lang="zh-TW"><head><meta charset="UTF-8">
 <title>${docTitle}</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{background:#f5f0e8}
-  body{font-family:'Noto Serif TC','Microsoft JhengHei',serif;color:#2c2c2c;-webkit-print-color-adjust:exact;print-color-adjust:exact;line-height:1.6}
-  .sheet{width:780px;margin:0 auto;background:#f5f0e8;padding:0 0 28px}
-  .hd{display:flex;align-items:center;gap:12px;padding:20px 32px;background:#fffdf9;border-bottom:1px solid #ece4d6}
-  .mark{width:40px;height:40px;border-radius:11px;background:#8b1a1a;color:#fff;font-size:19px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
-  .brand{font-size:18px;font-weight:700;letter-spacing:1px}
-  .brand-sub{font-size:13px;color:#8a8178;padding-left:12px;border-left:1px solid #ece4d6}
-  .hd-right{margin-left:auto;font-size:13px;color:#8a8178;text-align:right}
-  .title{padding:24px 32px 6px;font-size:22px;font-weight:700}
-  .meta{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:10px 32px 0}
-  .meta div{background:#fff;border:1px solid #ece4d6;border-radius:12px;padding:10px 14px}
-  .meta span{display:block;font-size:12px;color:#8a8178}
-  .meta b{font-size:14px;font-weight:700}
-  .hero{display:flex;align-items:center;gap:26px;margin:14px 32px 0;background:#fff;border:1px solid #ece4d6;border-radius:16px;padding:22px 26px}
-  .ring{position:relative;width:124px;height:124px;flex:0 0 auto}
-  .ring svg{width:124px;height:124px}
-  .ring .num{position:absolute;inset:0;display:flex;align-items:baseline;justify-content:center;padding-top:38px;gap:2px}
-  .ring .num b{font-size:40px;line-height:1;font-weight:800}
-  .ring .num small{font-size:14px;color:#8a8178}
-  .hero-info{flex:1}
-  .verdict{display:inline-block;font-size:15px;font-weight:700;padding:6px 14px;border-radius:8px;margin-bottom:14px}
-  .v-pass{background:#e6f2e8;color:#2e6b38}.v-fail{background:#fdf0d6;color:#8a5a00}
-  .stats{display:flex;gap:10px}
-  .stats div{flex:1;background:#faf6ef;border-radius:10px;padding:8px 12px}
-  .stats span{display:block;font-size:12px;color:#8a8178}
-  .stats b{font-size:18px}
-  .sec-title{font-size:15px;font-weight:700;margin:24px 32px 10px}
-  .card{margin:0 32px;background:#fff;border:1px solid #ece4d6;border-radius:16px;overflow:hidden}
-  .subjects{padding:8px 20px}
-  .subj{display:flex;align-items:center;gap:12px;padding:8px 0;font-size:14px}
-  .subj-name{width:120px;flex:0 0 auto}
-  .bar{flex:1;height:8px;background:#f1ebe0;border-radius:4px;overflow:hidden;display:block}
-  .fill{display:block;height:100%;background:#c0392b;border-radius:4px}
-  .fill.p{background:#2e7d32}
-  .subj-pct{width:44px;text-align:right;font-weight:700}
-  .subj-cnt{width:56px;text-align:right;font-size:12px;color:#8a8178}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  thead{display:table-header-group}
-  th{background:#faf6ef;color:#8a8178;font-weight:600;padding:9px 12px;text-align:left;font-size:12px;border-bottom:1px solid #ece4d6}
-  td{padding:11px 12px;border-bottom:1px solid #f3eee5;vertical-align:top}
-  tbody tr:last-child td{border-bottom:none}
-  tr{page-break-inside:avoid}
-  .c-num{width:40px;color:#a99f94;text-align:center}
-  .c-q{line-height:1.7}
-  .q-meta{font-size:11px;color:#a99f94;margin-bottom:2px}
-  .c-mine{width:70px;text-align:center}
-  .c-ans{width:170px}
-  .c-res{width:64px;text-align:center}
-  .c-ok{color:#2e6b38}.c-no{color:#a3261e}
-  .ans-txt{font-size:12px;color:#8a8178;margin-top:2px;line-height:1.5}
-  .muted{color:#b0a69b}
-  .tag{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;white-space:nowrap}
-  .t-ok{background:#e6f2e8;color:#2e6b38}.t-no{background:#fdf1f0;color:#a3261e}.t-na{background:#f4efe6;color:#8a8178}
-  .legend{display:none}
-  .sec-sub{font-size:12px;font-weight:400;color:#8a8178;margin-left:10px}
-  .qlist{margin:0 32px;display:flex;flex-direction:column;gap:10px}
-  .qitem{background:#fff;border:1px solid #ece4d6;border-radius:14px;padding:16px 20px;page-break-inside:avoid}
-  .qi-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-  .qi-n{font-size:14px;font-weight:700}
-  .qi-m{font-size:12px;color:#a99f94}
-  .qi-top .tag{margin-left:auto}
-  .qi-q{font-size:14px;line-height:1.8;margin-bottom:10px}
-  .ops{display:flex;flex-direction:column;gap:6px}
-  .op{display:flex;align-items:flex-start;gap:10px;padding:7px 10px;border:1px solid #f1ebe0;border-radius:9px;font-size:13px;line-height:1.7}
-  .op-l{flex:0 0 22px;height:22px;border-radius:50%;background:#f4efe6;color:#8a8178;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
-  .op-t{flex:1}
-  .op-note{flex:0 0 auto;font-size:11px;font-weight:600;padding:1px 7px;border-radius:5px;margin-top:2px}
-  .op.ans{border-color:#bcdcc3;background:#f3faf4}.op.ans .op-l{background:#2e7d32;color:#fff}
-  .op.mine{border-color:#f0c4be;background:#fdf4f3}.op.mine .op-l{background:#c0392b;color:#fff}
-  .n-ok{background:#e6f2e8;color:#2e6b38}.n-no{background:#fdf1f0;color:#a3261e}
-  .exp{margin-top:10px;background:#faf6ef;border-radius:10px;padding:10px 14px;font-size:13px;line-height:1.85;color:#3a3a3a}
-  .exp-h{font-size:12px;font-weight:700;color:#8b1a1a;margin-bottom:2px}
-  .ft{margin:18px 32px 0;font-size:11px;color:#a99f94;display:flex;justify-content:space-between}
-  @page{size:A4;margin:10mm}
-  @media print{.sheet{width:auto}}
+  html,body{background:#fff}
+  body{font-family:'Noto Serif TC','PMingLiU','MingLiU','Microsoft JhengHei',serif;color:#000;line-height:1.75;font-size:15px}
+  .sheet{width:760px;margin:0 auto;padding:6px 8px 10px;background:#fff}
+  .hd{text-align:center;padding-bottom:10px}
+  .hd h1{font-size:21px;font-weight:700;letter-spacing:1px}
+  .hd .sub{font-size:14px;margin-top:2px}
+  .meta{border:1px solid #000;display:grid;grid-template-columns:1.2fr 1.4fr 1fr;font-size:14px;margin:6px 0 4px}
+  .meta div{padding:5px 10px;border-right:1px solid #000}
+  .meta div:last-child{border-right:none}
+  .meta2{border:1px solid #000;border-top:none;padding:5px 10px;font-size:14px}
+  .note{font-size:13px;margin:8px 0 2px}
+  .sec{margin-top:14px}
+  .sec-h{font-size:16px;font-weight:700;margin:6px 0 8px}
+  .sec-yr{font-size:13px;font-weight:400;margin-left:4px}
+  .q{padding:6px 0 10px;border-bottom:1px dashed #999;page-break-inside:avoid}
+  .qt{display:flex;gap:4px}
+  .qn{flex:0 0 auto;min-width:26px}
+  .src{font-size:12px;color:#555;margin-left:4px}
+  .ops{padding-left:30px}
+  .op{padding:1px 0}
+  .op.ok{font-weight:700;text-decoration:underline;text-underline-offset:3px}
+  .op.no{text-decoration:line-through;color:#555}
+  .res{display:flex;gap:22px;margin:6px 0 0 30px;font-size:14px}
+  .mk.y{font-weight:700}.mk.n{font-weight:700}.mk.na{color:#555}
+  .exp{margin:6px 0 0 30px;padding:8px 12px;border:1px solid #000;font-size:13.5px;line-height:1.8}
+  .ft{margin-top:14px;font-size:12px;color:#555;text-align:center}
+  u{text-underline-offset:3px}
 </style></head><body>
 <div class="sheet">
-  <div class="hd"><div class="mark">美</div><div class="brand">美娟華語工作室</div><div class="brand-sub">對外華語教學能力認證考試・模擬練習</div><div class="hd-right">${dateStr}</div></div>
-  <div class="title">模擬考成績單</div>
-  <div class="meta">
-    <div><span>學習者</span><b>${esc2(safeUser)}</b></div>
-    <div><span>科目</span><b>${esc2(subjNames)}</b></div>
-    <div><span>年份</span><b>${esc2(years||'—')}</b></div>
-    <div><span>總題數</span><b>${total} 題</b></div>
-  </div>
-  <div class="hero">
-    <div class="ring">
-      <svg viewBox="0 0 124 124"><circle cx="62" cy="62" r="${R}" fill="none" stroke="#f1ebe0" stroke-width="11"/>${pct>0?`<circle cx="62" cy="62" r="${R}" fill="none" stroke="${ringCol}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${dash} ${CIRC.toFixed(1)}" transform="rotate(-90 62 62)"/>`:''}</svg>
-      <div class="num"><b>${pct}</b><small>分</small></div>
-    </div>
-    <div class="hero-info">
-      <div class="verdict ${pass?'v-pass':'v-fail'}">${pass?'達到通過標準':'還差 '+(70-pct)+' 分達到通過標準（70 分）'}</div>
-      <div class="stats"><div><span>答對</span><b>${st.correct}</b></div><div><span>答錯</span><b>${wrongN}</b></div><div><span>未作答</span><b>${noAns}</b></div></div>
-    </div>
-  </div>
-  <div class="sec-title">各科表現</div>
-  <div class="card subjects">${subjCards}</div>
-  <div class="sec-title">作答明細<span class="sec-sub">每題列出四個選項與解析，綠色為正確答案，紅色為你選錯的答案</span></div>
-  <div class="qlist">${rows}</div>
-  <div class="legend"></div>
-  <div class="ft"><span>美娟華語工作室・模擬考成績單</span><span>qna-exam-platform.vercel.app</span></div>
+  <div class="hd"><h1>美娟華語工作室　對外華語教學能力認證考試模擬練習</h1><div class="sub">試題・作答結果・解析</div></div>
+  <div class="meta"><div>學習者：${esc2(safeUser)}</div><div>作答時間：${dateStr}</div><div>總題數：${total} 題</div></div>
+  <div class="meta2">得分：<b>${pct} 分</b>（答對 ${st.correct} 題、答錯 ${total-st.correct-noAns} 題、未作答 ${noAns} 題）　${subjects.length>1?subjScore:''}</div>
+  <div class="note">※ 粗體加底線為正確答案；刪除線為你選錯的選項。題目後括號為原試題年份。</div>
+  ${sections}
+  <div class="ft">本文件由美娟華語工作室模擬考系統產生　qna-exam-platform.vercel.app</div>
 </div>
 </body></html>`;
 
-  // 用隱藏 iframe 渲染成績單，再轉成 PDF 直接下載（不跳列印視窗）；失敗則退回列印
+  // 用隱藏 iframe 渲染，再切成 A4 頁面並加上頁碼「（第 n 頁，共 N 頁）」
   const btn=document.querySelector('.btn-pdf'); const btnTxt=btn?btn.textContent:'';
   if(btn){ btn.disabled=true; btn.textContent='產生中…'; }
   const restoreBtn=()=>{ if(btn){ btn.disabled=false; btn.textContent=btnTxt; } };
-  const fallbackPrint=()=>{ const w=window.open('','_blank'); if(!w){ alert('請允許彈出視窗以下載／列印成績單'); return; } w.document.write(html); w.document.close(); w.focus(); setTimeout(()=>{ try{w.print();}catch(e){} },500); };
+  const fallbackPrint=()=>{ const w=window.open('','_blank'); if(!w){ alert('請允許彈出視窗以下載／列印'); return; } w.document.write(html); w.document.close(); w.focus(); setTimeout(()=>{ try{w.print();}catch(e){} },500); };
   try{
     await _lazyScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
     await _lazyScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
   }catch(e){ restoreBtn(); fallbackPrint(); return; }
   if(typeof html2canvas==='undefined' || !(window.jspdf && window.jspdf.jsPDF)){ restoreBtn(); fallbackPrint(); return; }
   const ifr=document.createElement('iframe');
-  ifr.style.cssText='position:fixed;left:-9999px;top:0;width:820px;height:100px;border:0;background:#fff';
+  ifr.style.cssText='position:fixed;left:-9999px;top:0;width:800px;height:100px;border:0;background:#fff';
   document.body.appendChild(ifr);
   const idoc=ifr.contentDocument||ifr.contentWindow.document;
   idoc.open(); idoc.write(html); idoc.close();
@@ -3764,48 +3690,41 @@ async function exportPDF(){
   try{
     ifr.style.height=(target.scrollHeight+40)+'px';
     await new Promise(r=>setTimeout(r,150));
-    const canvas=await html2canvas(target,{scale:2,backgroundColor:'#ffffff',useCORS:true,windowWidth:820,width:target.scrollWidth,height:target.scrollHeight});
+    const canvas=await html2canvas(target,{scale:2,backgroundColor:'#ffffff',useCORS:true,windowWidth:800,width:target.scrollWidth,height:target.scrollHeight});
     const { jsPDF }=window.jspdf;
-    const imgWmm=210;
-    const fullHmm=canvas.height*imgWmm/canvas.width;
-    if(fullHmm<=5000){
-      // 單一連續頁面：高度剛好等於內容 → 無分頁切痕、無頁間空白
-      const pdf=new jsPDF({orientation:'p',unit:'mm',format:[imgWmm, fullHmm]});
-      pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,imgWmm,fullHmm);
-      pdf.save(docTitle+'.pdf');
-    } else {
-      // 內容超長才退回 A4 多頁，且只在列與列間隙換頁
-      const pdf=new jsPDF('p','mm','a4');
-      const sheetW=target.offsetWidth || target.scrollWidth;
-      const sc=canvas.width/sheetW;
-      const pageCssH=sheetW*297/210;
-      const totalCss=target.scrollHeight;
-      const sheetTop=target.getBoundingClientRect().top;
-      const atoms=idoc.querySelectorAll('.hd,.title,.meta,.hero,.sec-title,.subj,.qitem,.ft');
-      let cuts=[0];
-      atoms.forEach(el=>{ const bt=el.getBoundingClientRect().bottom - sheetTop; if(bt>0) cuts.push(bt); });
-      cuts.push(totalCss);
-      cuts=Array.from(new Set(cuts.map(v=>Math.round(v)))).sort((a,b)=>a-b).filter(v=>v>=0 && v<=totalCss);
-      const pages=[]; let start=0, guard=0;
-      while(start<totalCss-1 && guard++<300){
-        let end=start+pageCssH;
-        if(end>=totalCss){ end=totalCss; }
-        else { let best=start; for(const c of cuts){ if(c>start+8 && c<=end) best=c; } end=(best>start)?best:end; }
-        pages.push([start,end]); start=end;
-      }
-      if(!pages.length) pages.push([0,totalCss]);
-      const tmp=document.createElement('canvas'); const tctx=tmp.getContext('2d');
-      for(let i=0;i<pages.length;i++){
-        const sPx=Math.round(pages[i][0]*sc), ePx=Math.round(pages[i][1]*sc), hPx=Math.max(1,ePx-sPx);
-        tmp.width=canvas.width; tmp.height=hPx;
-        tctx.fillStyle='#ffffff'; tctx.fillRect(0,0,tmp.width,tmp.height);
-        tctx.drawImage(canvas,0,sPx,canvas.width,hPx,0,0,canvas.width,hPx);
-        if(i>0) pdf.addPage();
-        pdf.addImage(tmp.toDataURL('image/jpeg',0.92),'JPEG',0,0,210,hPx*210/canvas.width);
-      }
-      pdf.save(docTitle+'.pdf');
+    const pdf=new jsPDF('p','mm','a4');
+    const M=14, contentW=210-2*M, contentH=297-2*M-8;       // 左右上 14mm，下方留頁碼
+    const sheetW=target.offsetWidth||target.scrollWidth;
+    const sc=canvas.width/sheetW;                               // canvas px / css px
+    const pageCssH=sheetW*contentH/contentW;
+    const totalCss=target.scrollHeight;
+    const sheetTop=target.getBoundingClientRect().top;
+    let cuts=[0];
+    idoc.querySelectorAll('.hd,.meta,.meta2,.note,.sec-h,.q,.ft').forEach(el=>{ const bt=el.getBoundingClientRect().bottom-sheetTop; if(bt>0) cuts.push(bt); });
+    cuts.push(totalCss);
+    cuts=Array.from(new Set(cuts.map(v=>Math.round(v)))).sort((x,y)=>x-y);
+    const pages=[]; let start=0, guard=0;
+    while(start<totalCss-1 && guard++<500){
+      let end=start+pageCssH;
+      if(end>=totalCss) end=totalCss;
+      else { let best=start; for(const c of cuts){ if(c>start+8 && c<=end) best=c; } end=(best>start)?best:end; }
+      pages.push([start,end]); start=end;
     }
-  }catch(e){ fallbackPrint(); }
+    const N=pages.length;
+    const pxPerMm=canvas.width/contentW;
+    const pg=document.createElement('canvas'); const g=pg.getContext('2d');
+    pg.width=Math.round(210*pxPerMm); pg.height=Math.round(297*pxPerMm);
+    for(let i=0;i<N;i++){
+      const sPx=Math.round(pages[i][0]*sc), hPx=Math.max(1,Math.round(pages[i][1]*sc)-sPx);
+      g.fillStyle='#ffffff'; g.fillRect(0,0,pg.width,pg.height);
+      g.drawImage(canvas,0,sPx,canvas.width,hPx,Math.round(M*pxPerMm),Math.round(M*pxPerMm),canvas.width,hPx);
+      g.fillStyle='#000'; g.font=Math.round(3.6*pxPerMm)+"px 'Noto Serif TC','PMingLiU','Microsoft JhengHei',serif"; g.textAlign='center';
+      g.fillText('（第 '+(i+1)+' 頁，共 '+N+' 頁）', pg.width/2, pg.height-Math.round(9*pxPerMm));
+      if(i>0) pdf.addPage();
+      pdf.addImage(pg.toDataURL('image/jpeg',0.9),'JPEG',0,0,210,297);
+    }
+    pdf.save(docTitle+'.pdf');
+  }catch(e){ console.warn(e); fallbackPrint(); }
   if(ifr.parentNode) ifr.parentNode.removeChild(ifr);
   restoreBtn();
 }
