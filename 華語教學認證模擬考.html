@@ -870,6 +870,9 @@ body.dark .yr-filter-row > *, body.dark .yr-filter-row .yr { color:#e6e6e6; }
 #btn-guest-register { height:40px; padding:0 16px; border:1px solid var(--line); background:#fff; color:var(--ink); font-weight:600; border-radius:10px; white-space:nowrap; flex:0 0 auto; }
 #btn-guest-register .ico { color:var(--brand); }
 #btn-guest-register:hover { border-color:#d9b9b3; background:#fffaf8; }
+/* 開始列固定在科目、年份下方，不再黏在畫面底部跟著捲動 */
+.start-bar { position:static !important; box-shadow:none !important; }
+#btn-review { white-space:nowrap; }
 /* ════════ 我的紀錄 v3 ════════ */
 #history-screen { padding:22px 0 30px; }
 .hist-header { gap:12px; margin-bottom:18px; }
@@ -3539,7 +3542,7 @@ function updateWrongReviewBtn(){
   const wrongs = getWrongQs();
   const showReview = localStorage.getItem('tocfl_showreview')!=='0';   // 首頁是否顯示錯題複習
   if(wrongs.length && showReview){
-    btn.style.display='block';
+    btn.style.display='inline-flex';
     if(cnt) cnt.textContent = wrongs.length;
   } else {
     btn.style.display='none';
