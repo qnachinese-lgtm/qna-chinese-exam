@@ -95,6 +95,25 @@ service cloud.firestore {
       allow write: if isMaster();
     }
 
+    // ── 排行榜：每人一筆（只存遮名後的名字與成績摘要，不存信箱），所有人可看，只有本人能寫 ──
+    match /leaderboard/{uid} {
+      allow read: if true;
+      allow create, update: if signedIn() && uid == request.auth.uid
+        && request.resource.data.uid == request.auth.uid
+        && !('email' in request.resource.data);
+      allow delete: if isMaster() || (signedIn() && uid == request.auth.uid);
+    }
+
+    // ── 留言板：所有人可看；登入者可留言／回覆（1～1000 字）；本人或主管理員可刪除 ──
+    match /board/{id} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000;
+      allow update: if false;
+      allow delete: if isMaster() || (signedIn() && resource.data.uid == request.auth.uid);
+    }
+
     // 其他未列出的路徑一律拒絕
   }
 }

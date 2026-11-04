@@ -874,6 +874,53 @@ body.dark .yr-filter-row > *, body.dark .yr-filter-row .yr { color:#e6e6e6; }
 .start-bar { position:static !important; box-shadow:none !important; }
 #btn-review { white-space:nowrap; }
 .tb-count { min-width:20px; height:20px; padding:0 6px; border-radius:10px; background:var(--brand-soft); color:var(--brand); font-size:12px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }
+
+/* ════════ 排行榜、留言板 ════════ */
+#rank-screen, #board-screen { padding:22px 0 40px; }
+.rk-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px; }
+.rk-tab { height:44px; border:1px solid var(--line); background:#fff; border-radius:11px; font:inherit; font-size:15px; font-weight:600; color:var(--ink); cursor:pointer; }
+.rk-tab.on { border-color:var(--brand); background:var(--brand-soft); color:var(--brand); }
+.rk-sub { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+.rk-seg { display:inline-flex; background:#efe8dc; border-radius:10px; padding:3px; gap:2px; }
+.rk-seg button { height:32px; padding:0 14px; border:none; background:none; border-radius:8px; font:inherit; font-size:13px; color:var(--muted); cursor:pointer; white-space:nowrap; }
+.rk-seg button.on { background:#fff; color:var(--brand); font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.06); }
+.rk-card { background:#fff; border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+.rk-row { display:flex; align-items:center; gap:14px; padding:12px 20px; border-bottom:1px solid #f3eee5; }
+.rk-row:last-child { border-bottom:none; }
+.rk-row.me { background:#fffaf8; }
+.rk-no { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; background:#f4efe6; color:var(--muted); flex:0 0 auto; }
+.rk-no.n1 { background:#c9a227; color:#fff; } .rk-no.n2 { background:#a8a8a8; color:#fff; } .rk-no.n3 { background:#b87333; color:#fff; }
+.rk-name { flex:1; font-size:15px; font-weight:600; min-width:0; }
+.rk-me { margin-left:8px; font-size:11px; font-weight:600; background:var(--brand); color:#fff; border-radius:5px; padding:1px 6px; vertical-align:2px; }
+.rk-extra { font-size:12px; color:var(--muted); }
+.rk-val { font-size:13px; color:var(--muted); white-space:nowrap; } .rk-val b { font-size:18px; color:var(--ink); }
+.rk-note { font-size:12px; color:var(--muted); margin-top:12px; line-height:1.7; }
+.bd-compose, .bd-login { background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px; margin-bottom:16px; }
+.bd-login { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:14px; color:var(--muted); }
+.bd-compose textarea, .bd-reply-box textarea { width:100%; box-sizing:border-box; min-height:84px; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font:inherit; font-size:15px; line-height:1.7; resize:vertical; outline:none; background:#fff; }
+.bd-compose textarea:focus, .bd-reply-box textarea:focus { border-color:var(--brand); }
+.bd-row { display:flex; align-items:center; gap:10px; margin-top:10px; }
+.bd-who { font-size:13px; color:var(--muted); }
+.bd-msg { flex:1; font-size:13px; color:#b3261e; text-align:right; }
+.bd-row .md-btn { height:38px; font-size:14px; }
+.bd-count { font-size:13px; color:var(--muted); margin:0 0 10px 2px; }
+.bd-thread { background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px; margin-bottom:12px; }
+.bd-post { display:flex; gap:12px; }
+.bd-av { width:36px; height:36px; border-radius:50%; background:var(--brand-soft); color:var(--brand); display:flex; align-items:center; justify-content:center; font-weight:700; flex:0 0 auto; }
+.bd-post.reply .bd-av { width:30px; height:30px; font-size:13px; background:#f4efe6; color:var(--muted); }
+.bd-main { flex:1; min-width:0; }
+.bd-meta { display:flex; align-items:baseline; gap:10px; font-size:13px; color:var(--muted); }
+.bd-meta b { font-size:14px; color:var(--ink); }
+.bd-text { font-size:15px; line-height:1.8; margin-top:4px; word-break:break-word; }
+.bd-acts { display:flex; gap:4px; margin-top:4px; }
+.bd-acts button { background:none; border:none; padding:4px 8px 4px 0; font:inherit; font-size:13px; color:var(--muted); cursor:pointer; }
+.bd-acts button:hover { color:var(--brand); }
+.bd-replies { margin:10px 0 0 48px; padding-left:14px; border-left:2px solid #f1ebe0; display:flex; flex-direction:column; gap:12px; }
+.bd-reply-box { margin-top:8px; }
+.bd-gone { font-size:13px; color:#b0a69b; font-style:italic; }
+body.dark .rk-tab, body.dark .rk-card, body.dark .bd-compose, body.dark .bd-login, body.dark .bd-thread, body.dark .bd-compose textarea, body.dark .bd-reply-box textarea { background:#1f2226; border-color:#3a3f47; color:#e6e6e6; }
+body.dark .rk-name, body.dark .rk-val b, body.dark .bd-meta b, body.dark .bd-text { color:#e6e6e6; }
+@media(max-width:640px){ .rk-row { padding:12px 14px; gap:10px; } .bd-replies { margin-left:20px; } .rk-tab { font-size:14px; } }
 /* ════════ 我的紀錄 v3 ════════ */
 #history-screen { padding:22px 0 30px; }
 .hist-header { gap:12px; margin-bottom:18px; }
@@ -5394,6 +5441,228 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
   right.appendChild(fab);
   inner.appendChild(right);
   if(panel) inner.appendChild(panel);
+})();
+</script>
+<script>
+// ════════ 排行榜 ＋ 留言板 ════════
+(function(){
+  const SN = {chinese:'國文',culture:'華人社會與文化',linguistics:'漢語語言學',teaching:'華語文教學'};
+  const SUBJS = ['chinese','culture','linguistics','teaching'];
+  const MIN_Q = 10;          // 單科至少 10 題才列入該科最高分（避免只做 1 題就 100 分）
+  const MIN_AVG = 3;         // 平均分數至少考 3 次才列入
+  const ICO = d => '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>';
+  const esc = t => String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const uid = () => { try{ return (typeof _auth!=='undefined' && _auth && _auth.currentUser) ? _auth.currentUser.uid : null; }catch(e){ return null; } };
+
+  // 名字部分遮住：美娟 → 美＊、王小明 → 王＊明、Amy → A＊y
+  function maskName(n){
+    n = String(n||'').replace(/[（(].*?[)）]/g,'').trim() || '同學';
+    const a = Array.from(n);
+    if(a.length<=1) return a[0]+'＊';
+    if(a.length===2) return a[0]+'＊';
+    return a[0]+'＊'.repeat(Math.min(a.length-2,2))+a[a.length-1];
+  }
+  window.maskName = maskName;
+
+  function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function weekKey(d){ const t=new Date(d); const day=(t.getDay()+6)%7; t.setDate(t.getDate()-day); return 'W'+ymd(t); }   // 週一為一週開始
+  function monthKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+  function recDate(r){ const p=String(r.date||'').split('-'); return p.length===3 ? new Date(+p[0],+p[1]-1,+p[2]) : null; }
+
+  // ── 由自己的紀錄算出排行榜摘要 ──
+  function summarize(recs, filter){
+    const out = {count:0, best:{}, sum:0};
+    recs.forEach(r=>{
+      if(filter && !filter(r)) return;
+      out.count++; out.sum += (r.pct||0);
+      const stt = r.stats||{};
+      SUBJS.forEach(s=>{ const o=stt[s]; if(o && o.total>=MIN_Q){ const p=Math.round(o.correct/o.total*100); if(!(s in out.best) || p>out.best[s]) out.best[s]=p; } });
+    });
+    return out;
+  }
+  let _lastPushed = '';
+  let _pushTimer = null;
+  function pushMyBoard(){
+    clearTimeout(_pushTimer);
+    _pushTimer = setTimeout(async ()=>{
+      try{
+        const id = uid(); if(!id || typeof _db==='undefined' || !_db || st.isGuest || !st.currentUser) return;
+        const recs = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').filter(r=>r.name===st.currentUser);
+        const now = new Date(), wk = weekKey(now), mo = monthKey(now);
+        const all = summarize(recs);
+        const w = summarize(recs, r=>{ const d=recDate(r); return d && weekKey(d)===wk; });
+        const m = summarize(recs, r=>{ const d=recDate(r); return d && monthKey(d)===mo; });
+        const data = { uid:id, name:maskName(st.currentUser), count:all.count, best:all.best,
+          avg: all.count ? Math.round(all.sum/all.count) : 0,
+          wk:{k:wk, count:w.count, best:w.best}, mo:{k:mo, count:m.count, best:m.best} };
+        const sig = JSON.stringify(data);
+        if(sig === _lastPushed) return;
+        await _db.collection('leaderboard').doc(id).set(Object.assign({updatedAt:Date.now()}, data));
+        _lastPushed = sig;
+      }catch(e){ console.warn('leaderboard:', e); }
+    }, 1500);
+  }
+  window.pushMyBoard = pushMyBoard;
+  // 成績有變動時（交卷、刪紀錄、其他裝置同步）都會重畫首頁 → 順便更新排行榜
+  const _rpp = window.renderProgressPanel;
+  if(typeof _rpp === 'function') window.renderProgressPanel = function(){ const r=_rpp.apply(this, arguments); pushMyBoard(); return r; };
+
+  // ── 畫面切換 ──
+  const SCREENS = ['subject-screen','history-screen','profile-screen','rank-screen','board-screen','result-screen'];
+  function openScreen(id){
+    SCREENS.forEach(x=>{ const el=document.getElementById(x); if(el) el.style.display = (x===id)?'block':'none'; });
+    window.scrollTo(0,0);
+  }
+  function backHome(){
+    stopBoardLive();
+    openScreen('subject-screen');
+    if(typeof renderProgressPanel==='function') renderProgressPanel();
+  }
+  window.closeCommunity = backHome;
+
+  // ── HTML ──
+  const main = document.querySelector('main');
+  if(main && !document.getElementById('rank-screen')){
+    main.insertAdjacentHTML('beforeend', `
+<div id="rank-screen" style="display:none">
+  <div class="hist-header">
+    <button class="hist-back" onclick="closeCommunity()">${ICO('<polyline points="15 5 8 12 15 19"/>')}返回</button>
+    <span class="hist-title">排行榜</span>
+  </div>
+  <div class="rk-tabs" id="rk-tabs"></div>
+  <div class="rk-sub" id="rk-sub"></div>
+  <div id="rk-list"></div>
+  <div class="rk-note">名字會部分遮住保護隱私。單科須一次作答 ${MIN_Q} 題以上才列入該科最高分；平均分數須考 ${MIN_AVG} 次以上才列入。</div>
+</div>
+<div id="board-screen" style="display:none">
+  <div class="hist-header">
+    <button class="hist-back" onclick="closeCommunity()">${ICO('<polyline points="15 5 8 12 15 19"/>')}返回</button>
+    <span class="hist-title">留言板</span>
+  </div>
+  <div id="bd-compose"></div>
+  <div id="bd-list"></div>
+</div>`);
+  }
+  // 頂端列加入「排行榜」「留言板」
+  const tbu = document.getElementById('tb-user');
+  if(tbu && !document.getElementById('tb-rank')){
+    tbu.insertAdjacentHTML('afterbegin',
+      '<button class="tb-link" id="tb-rank" onclick="showRank()">'+ICO('<path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/>')+'<span>排行榜</span></button>'
+     +'<button class="tb-link" id="tb-board" onclick="showBoard()">'+ICO('<path d="M4 5h16v11H9l-5 4z"/>')+'<span>留言板</span></button>');
+  }
+
+  // ── 排行榜 ──
+  let _rkData = [], _rkTab = 'best', _rkPeriod = 'all', _rkSubj = 'chinese';
+  window.showRank = async function(){
+    openScreen('rank-screen');
+    document.getElementById('rk-list').innerHTML = '<div class="hist-empty">讀取中…</div>';
+    try{
+      if(st.currentUser && !st.isGuest) pushMyBoard();
+      const snap = await _db.collection('leaderboard').get();
+      _rkData = snap.docs.map(d=>d.data()).filter(x=>x && x.name);
+    }catch(e){ console.warn(e); _rkData = []; }
+    renderRank();
+  };
+  window.rkSet = function(k,v){ if(k==='tab') _rkTab=v; if(k==='period') _rkPeriod=v; if(k==='subj') _rkSubj=v; renderRank(); };
+  function renderRank(){
+    const tabs = [['best','各科最高分'],['count','練習次數'],['avg','平均分數']];
+    document.getElementById('rk-tabs').innerHTML = tabs.map(([k,t])=>'<button class="rk-tab'+(_rkTab===k?' on':'')+'" onclick="rkSet(\'tab\',\''+k+'\')">'+t+'</button>').join('');
+    let sub = '';
+    if(_rkTab!=='avg') sub += '<div class="rk-seg">'+[['all','全部'],['wk','本週'],['mo','本月']].map(([k,t])=>'<button class="'+(_rkPeriod===k?'on':'')+'" onclick="rkSet(\'period\',\''+k+'\')">'+t+'</button>').join('')+'</div>';
+    if(_rkTab==='best') sub += '<div class="rk-seg">'+SUBJS.map(s=>'<button class="'+(_rkSubj===s?'on':'')+'" onclick="rkSet(\'subj\',\''+s+'\')">'+SN[s]+'</button>').join('')+'</div>';
+    document.getElementById('rk-sub').innerHTML = sub;
+    const now = new Date(), wk = weekKey(now), mo = monthKey(now), me = uid();
+    const per = x => _rkPeriod==='wk' ? (x.wk && x.wk.k===wk ? x.wk : null) : _rkPeriod==='mo' ? (x.mo && x.mo.k===mo ? x.mo : null) : x;
+    let rows = [];
+    if(_rkTab==='best') rows = _rkData.map(x=>{ const p=per(x); const v=p&&p.best?p.best[_rkSubj]:undefined; return v==null?null:{x, v, unit:'分'}; }).filter(Boolean);
+    if(_rkTab==='count') rows = _rkData.map(x=>{ const p=per(x); const v=p?p.count:0; return v>0?{x, v, unit:'次'}:null; }).filter(Boolean);
+    if(_rkTab==='avg') rows = _rkData.filter(x=>(x.count||0)>=MIN_AVG).map(x=>({x, v:x.avg||0, unit:'分', extra:'考 '+x.count+' 次'}));
+    rows.sort((a,b)=>b.v-a.v);
+    rows = rows.slice(0,20);
+    const el = document.getElementById('rk-list');
+    if(!rows.length){ el.innerHTML = '<div class="hist-empty">'+(_rkPeriod==='wk'?'這週':_rkPeriod==='mo'?'這個月':'')+'還沒有人上榜，快去考一次吧！</div>'; return; }
+    let rank=0, prev=null;
+    el.innerHTML = '<div class="rk-card">'+rows.map((r,i)=>{ if(r.v!==prev){ rank=i+1; prev=r.v; }
+      const mine = me && r.x.uid===me;
+      return '<div class="rk-row'+(mine?' me':'')+'"><span class="rk-no n'+Math.min(rank,4)+'">'+rank+'</span><span class="rk-name">'+esc(r.x.name)+(mine?'<span class="rk-me">你</span>':'')+'</span>'+(r.extra?'<span class="rk-extra">'+r.extra+'</span>':'')+'<span class="rk-val"><b>'+r.v+'</b> '+r.unit+'</span></div>';
+    }).join('')+'</div>';
+  }
+
+  // ── 留言板 ──
+  let _bdUnsub = null, _bdPosts = [], _bdReplyTo = null;
+  function stopBoardLive(){ if(_bdUnsub){ try{ _bdUnsub(); }catch(e){} _bdUnsub=null; } }
+  window.showBoard = function(){
+    openScreen('board-screen');
+    renderCompose();
+    document.getElementById('bd-list').innerHTML = '<div class="hist-empty">讀取中…</div>';
+    stopBoardLive();
+    try{
+      _bdUnsub = _db.collection('board').onSnapshot(snap=>{
+        _bdPosts = snap.docs.map(d=>Object.assign({id:d.id}, d.data()));
+        renderBoard();
+      }, e=>{ console.warn(e); document.getElementById('bd-list').innerHTML='<div class="hist-empty">留言讀取失敗，請稍後再試。</div>'; });
+    }catch(e){ console.warn(e); }
+  };
+  function canPost(){ return !!(st.currentUser && !st.isGuest && uid()); }
+  function renderCompose(){
+    const el = document.getElementById('bd-compose');
+    el.innerHTML = canPost()
+      ? '<div class="bd-compose"><textarea id="bd-text" maxlength="1000" placeholder="想問的問題、讀書心得、對網站的建議都可以留言…"></textarea><div class="bd-row"><span class="bd-who">以「'+esc(st.currentUser)+'」留言</span><span id="bd-msg" class="bd-msg"></span><button class="md-btn primary" onclick="bdPost(null)">送出留言</button></div></div>'
+      : '<div class="bd-login">登入後就可以留言和回覆。'+(st.isGuest?'<button class="md-btn" onclick="openGuestRegister()">註冊帳號</button>':'')+'</div>';
+  }
+  function fmtTime(t){ const d=new Date(t||0); const n=new Date(); const pad=x=>String(x).padStart(2,'0');
+    const sameDay = d.toDateString()===n.toDateString();
+    return (sameDay?'今天 ':(d.getFullYear()!==n.getFullYear()?d.getFullYear()+'/':'')+(d.getMonth()+1)+'/'+d.getDate()+' ')+pad(d.getHours())+':'+pad(d.getMinutes()); }
+  function postHtml(p, isReply){
+    const mine = uid() && p.uid===uid();
+    return '<div class="bd-post'+(isReply?' reply':'')+'"><div class="bd-av">'+esc(String(p.name||'?').charAt(0))+'</div><div class="bd-main">'
+      +'<div class="bd-meta"><b>'+esc(p.name||'同學')+'</b>'+'<span>'+fmtTime(p.createdAt)+'</span></div>'
+      +'<div class="bd-text">'+esc(p.text).replace(/\n/g,'<br>')+'</div>'
+      +'<div class="bd-acts">'+(!isReply&&canPost()?'<button onclick="bdReply(\''+p.id+'\')">回覆</button>':'')+(mine?'<button onclick="bdDelete(\''+p.id+'\')">刪除</button>':'')+'</div>'
+      +(!isReply && _bdReplyTo===p.id ? '<div class="bd-reply-box"><textarea id="bd-reply-text" maxlength="1000" placeholder="回覆 '+esc(p.name||'')+'…"></textarea><div class="bd-row"><span id="bd-reply-msg" class="bd-msg"></span><button class="md-btn" onclick="bdReply(null)">取消</button><button class="md-btn primary" onclick="bdPost(\''+p.id+'\')">送出回覆</button></div></div>' : '')
+      +'</div></div>';
+  }
+  function renderBoard(){
+    const tops = _bdPosts.filter(p=>!p.parentId).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    const byParent = {}; _bdPosts.filter(p=>p.parentId).forEach(p=>{ (byParent[p.parentId]=byParent[p.parentId]||[]).push(p); });
+    const ids = new Set(tops.map(p=>p.id));
+    // 原留言已刪除但還有回覆 → 保留回覆，顯示「原留言已刪除」
+    Object.keys(byParent).forEach(pid=>{ if(!ids.has(pid)){ const rs=byParent[pid]; tops.push({id:pid, _gone:true, createdAt:Math.max(...rs.map(r=>r.createdAt||0))}); } });
+    tops.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    const el = document.getElementById('bd-list');
+    if(!tops.length){ el.innerHTML = '<div class="hist-empty">還沒有留言，來當第一個留言的人吧！</div>'; return; }
+    el.innerHTML = '<div class="bd-count">共 '+_bdPosts.length+' 則留言</div>'+tops.map(p=>{
+      const reps = (byParent[p.id]||[]).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+      return '<div class="bd-thread">'+(p._gone?'<div class="bd-gone">原留言已刪除</div>':postHtml(p,false))+(reps.length?'<div class="bd-replies">'+reps.map(r=>postHtml(r,true)).join('')+'</div>':'')+'</div>';
+    }).join('');
+  }
+  window.bdReply = function(id){ _bdReplyTo = id; renderBoard(); if(id){ const t=document.getElementById('bd-reply-text'); if(t) t.focus(); } };
+  window.bdPost = async function(parentId){
+    const ta = document.getElementById(parentId?'bd-reply-text':'bd-text');
+    const msg = document.getElementById(parentId?'bd-reply-msg':'bd-msg');
+    const text = (ta&&ta.value||'').trim();
+    if(!text){ if(msg) msg.textContent='請先輸入內容'; return; }
+    if(!canPost()){ if(msg) msg.textContent='請先登入'; return; }
+    const id = Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+    const data = {uid:uid(), name:st.currentUser, text:text.slice(0,1000), createdAt:Date.now()};
+    if(parentId) data.parentId = parentId;
+    if(msg) msg.textContent='送出中…';
+    try{ await _db.collection('board').doc(id).set(data); if(ta) ta.value=''; if(msg) msg.textContent=''; if(parentId){ _bdReplyTo=null; renderBoard(); } }
+    catch(e){ console.warn(e); if(msg) msg.textContent='送出失敗：'+(e.code==='permission-denied'?'沒有權限，請重新登入':e.message||e); }
+  };
+  window.bdDelete = async function(id){
+    if(!confirm('確定要刪除這則留言嗎？')) return;
+    try{ await _db.collection('board').doc(id).delete(); }catch(e){ alert('刪除失敗：'+(e.message||e)); }
+  };
+  // 從排行榜／留言板直接點「我的紀錄」或「個人資料」時，先把這兩頁收起來
+  ['showHistory','showProfile','openReviewPicker'].forEach(fn=>{ const o=window[fn]; if(typeof o!=='function') return;
+    window[fn]=function(){ const r=document.getElementById('rank-screen'), b=document.getElementById('board-screen');
+      const was=(r&&r.style.display==='block')||(b&&b.style.display==='block');
+      if(was && fn!=='openReviewPicker'){ if(r) r.style.display='none'; if(b) b.style.display='none'; stopBoardLive(); document.getElementById('subject-screen').style.display='block'; }
+      return o.apply(this, arguments); }; });
+  // 登出時停止監聽
+  const _cu = window.changeUser;
+  if(typeof _cu === 'function') window.changeUser = function(){ stopBoardLive(); return _cu.apply(this, arguments); };
 })();
 </script>
 </body>
