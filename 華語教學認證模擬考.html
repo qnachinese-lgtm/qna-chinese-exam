@@ -671,6 +671,23 @@ body.dark #yr-filter-row .yr-btn.active { background:#3a2828; border-color:#c039
 #subject-screen #home-hello { text-align:left; color:var(--ink); font-size:22px; margin:0 0 4px; }
 .prog-card.pass, .prog-card.fail { border-left:1px solid var(--line); }
 body.dark #subject-screen #home-hello { color:#e6e6e6; }
+
+/* 頂端列與內容切齊：設定按鈕放進頂端列 */
+.tb-inner { padding:10px 16px; position:relative; }
+.tb-right { display:flex; align-items:center; gap:6px; }
+header.topbar #settings-fab { position:static; width:36px; height:36px; box-shadow:none; border:1px solid var(--line); background:#fff; flex:0 0 auto; }
+header.topbar #settings-fab:hover { transform:none; border-color:#d9b9b3; }
+header.topbar #settings-panel { position:absolute; top:58px; right:16px; }
+body.dark header.topbar #settings-fab { background:#23262b; border-color:#3a3f47; }
+/* 科目名稱不換行：打勾移到右上角 */
+.subject-card .title { white-space:nowrap; padding-right:0; }
+.subj-check { top:10px; right:10px; margin-top:0; width:18px; height:18px; }
+@media(max-width:720px){
+  .subject-card { grid-template-columns:36px 1fr; column-gap:8px; padding:12px 10px; }
+  .subject-card .icon { width:36px; height:36px; border-radius:10px; }
+  .subject-card .icon .ico { width:19px; height:19px; }
+  .subject-card .title { font-size:14px; }
+}
 /* 深色模式 */
 body.dark header.topbar { background:#1b1d21; border-bottom-color:#2e3238; }
 body.dark .tb-sub { border-left-color:#3a3f47; }
@@ -5120,6 +5137,17 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
   check();
   setInterval(check, 120000);
   document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') check(); });
+})();
+
+// 把右上角設定按鈕與面板移進頂端列，跟內容寬度切齊
+(function(){
+  const inner=document.querySelector('header.topbar .tb-inner'), fab=document.getElementById('settings-fab'), panel=document.getElementById('settings-panel'), user=document.getElementById('tb-user');
+  if(!inner||!fab) return;
+  const right=document.createElement('div'); right.className='tb-right';
+  if(user) right.appendChild(user);
+  right.appendChild(fab);
+  inner.appendChild(right);
+  if(panel) inner.appendChild(panel);
 })();
 </script>
 </body>
