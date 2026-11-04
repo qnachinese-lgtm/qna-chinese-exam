@@ -24,6 +24,18 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
 .admin-table tr:hover td { background:#f8f9ff; }
 .pw-cell { font-family:monospace; color:#555; white-space:nowrap; }
 .admin-section { font-size:.78rem; color:#888; margin-bottom:12px; }
+/* 區塊標題列：標題 + 說明 + 右側按鈕（三個名單區塊用同一格式） */
+.sec { border-top:2px solid #e0e0e0; padding-top:22px; margin-top:26px; }
+.sec-head { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.sec-head .admin-title { flex:1; }
+.sec-desc { font-size:.8rem; color:#888; margin:0 0 12px; min-height:1.2em; }
+.sec-btn { height:36px; padding:0 16px; border-radius:8px; font-size:.88rem; font-weight:600; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; border:1.5px solid transparent; margin:0; }
+.sec-btn.primary { background:linear-gradient(135deg,#4a90d9,#357abd); color:#fff; }
+.sec-btn.primary:hover { opacity:.9; }
+.sec-btn.ghost { background:#fff; color:#357abd; border-color:#bcd3ec; min-width:64px; }
+.sec-btn.ghost:hover { background:#eef5fc; }
+.sec-btn.warn { background:#ff7043; color:#fff; }
+.sec-table { overflow-x:auto; }
 .admin-add-btn { background:linear-gradient(135deg,#4a90d9,#357abd); color:#fff; border:none; border-radius:8px; padding:8px 18px; font-size:.88rem; font-weight:600; cursor:pointer; margin-bottom:16px; }
 .admin-add-btn:hover { opacity:.88; }
 .admin-action-cell { display:flex; gap:6px; flex-wrap:nowrap; align-items:center; white-space:nowrap; }
@@ -156,28 +168,31 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
     <div id="dashboard" style="margin-bottom:28px"></div>
 
     <!-- 學習者名單 -->
-    <div class="admin-header" style="margin-bottom:16px">
+    <div class="sec">
+    <div class="sec-head">
       <span class="admin-title">📚 學習者名單</span>
-      <button id="cleanup-btn" onclick="cleanupDuplicates()" style="display:none;background:#ff7043;color:#fff;border:none;cursor:pointer;padding:8px 14px;border-radius:8px;font-weight:600;margin-right:8px">🧹 清除空殼</button>
-      <button id="add-learner-btn" class="admin-add-btn" style="margin:0 8px 0 0;padding:8px 16px" onclick="openAddModal()">＋ 新增學習者</button>
-      <button id="toggle-learners-btn" class="admin-back" onclick="toggleLearnersTable()" style="background:#4a90e2;color:#fff;border:none;cursor:pointer;padding:8px 16px;border-radius:8px">隱藏</button>
+      <button id="cleanup-btn" class="sec-btn warn" onclick="cleanupDuplicates()" style="display:none">🧹 清除空殼</button>
+      <button id="add-learner-btn" class="sec-btn primary" onclick="openAddModal()">＋ 新增學習者</button>
+      <button id="toggle-learners-btn" class="sec-btn ghost" onclick="toggleLearnersTable()">隱藏</button>
     </div>
-    <div id="learners-table-container" style="overflow-x:auto;margin-bottom:30px">
+    <div class="sec-desc">所有學習者的帳號、登入方式與成績。點名稱可查看個人的詳細學習紀錄。</div>
+    <div id="learners-table-container" class="sec-table">
     <table class="admin-table">
       <thead><tr id="learner-head"></tr></thead>
       <tbody id="admin-tbody"></tbody>
     </table>
     </div>
+    </div>
 
     <!-- 管理員白名單（僅主管理員可見） -->
-    <div id="admins-section" style="border-top:2px solid #e0e0e0;padding-top:20px;display:none">
-      <div class="admin-header" style="margin-bottom:8px">
+    <div id="admins-section" class="sec" style="display:none">
+      <div class="sec-head">
         <span class="admin-title">👤 管理員存取權限</span>
-        <button class="admin-add-btn" style="margin:0" onclick="openAdminAddModal()">＋ 新增管理員帳號</button>
+        <button class="sec-btn primary" onclick="openAdminAddModal()">＋ 新增管理員</button>
+        <button id="toggle-admins-btn" class="sec-btn ghost" onclick="toggleSecTable('admins-table-container',this)">隱藏</button>
       </div>
-      <div class="admin-section">只有主管理員（qnachinese@gmail.com）能新增/刪除其他管理員。其他管理員只能查看學習者資料。</div>
-
-      <div style="overflow-x:auto">
+      <div class="sec-desc">只有主管理員能新增或刪除管理員；其他管理員只能查看學習者資料。</div>
+      <div id="admins-table-container" class="sec-table">
       <table class="admin-table">
         <thead><tr><th>管理員 Email</th><th>角色</th><th style="text-align:center">操作</th></tr></thead>
         <tbody id="admins-tbody"></tbody>
@@ -186,15 +201,15 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
     </div>
 
     <!-- 訪客試做名單 -->
-    <div id="guest-section" style="border-top:2px solid #e0e0e0;padding-top:20px;margin-top:24px">
-      <div class="admin-header" style="margin-bottom:8px">
+    <div id="guest-section" class="sec">
+      <div class="sec-head">
         <span class="admin-title">📝 訪客試做名單</span>
-        <span id="guest-summary" style="font-size:.8rem;color:#888;margin-left:auto"></span>
-        <button id="guest-clear-btn" onclick="clearGuestRecords()" style="display:none;background:#ff7043;color:#fff;border:none;cursor:pointer;padding:8px 14px;border-radius:8px;font-weight:600;margin:0 8px">清空訪客紀錄</button>
-        <button id="toggle-guest-btn" class="admin-back" onclick="toggleGuestTable()" style="background:#4a90e2;color:#fff;border:none;cursor:pointer;padding:8px 16px;border-radius:8px">隱藏</button>
+        <span id="guest-summary" style="font-size:.8rem;color:#888"></span>
+        <button id="guest-clear-btn" class="sec-btn warn" onclick="clearGuestRecords()" style="display:none">清空訪客紀錄</button>
+        <button id="toggle-guest-btn" class="sec-btn ghost" onclick="toggleGuestTable()">隱藏</button>
       </div>
-      <div class="admin-section">同一個瀏覽器視為同一位訪客（匿名，不含個人身分）。清除瀏覽器資料或換裝置會被視為新的訪客。</div>
-      <div id="guest-table-container" style="overflow-x:auto">
+      <div class="sec-desc">同一個瀏覽器視為同一位訪客（匿名，不含個人身分）；清除瀏覽器資料或換裝置會被視為新的訪客。</div>
+      <div id="guest-table-container" class="sec-table">
       <table class="admin-table">
         <thead><tr><th>訪客</th><th>試做次數</th><th>做過的科目</th><th>最近得分</th><th>最近時間</th></tr></thead>
         <tbody id="guest-tbody"></tbody>
@@ -787,6 +802,12 @@ async function sendResetFor(email){
 // ═══════════════════════════════════════════
 //  學習者名單
 // ═══════════════════════════════════════════
+function toggleSecTable(id, btn){
+  const c=document.getElementById(id); if(!c) return;
+  const hidden = c.style.display==='none';
+  c.style.display = hidden ? 'block':'none';
+  btn.textContent = hidden ? '隱藏':'顯示';
+}
 function toggleLearnersTable(){
   const c=document.getElementById('learners-table-container');
   const b=document.getElementById('toggle-learners-btn');
