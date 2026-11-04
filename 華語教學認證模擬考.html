@@ -674,6 +674,12 @@ body.dark #subject-screen #home-hello { color:#e6e6e6; }
 
 /* 頂端列與內容切齊：設定按鈕放進頂端列 */
 .tb-inner { padding:10px 16px; position:relative; }
+/* 與後台同寬（1080）；作答時維持較窄版面，方便閱讀 */
+main, .tb-inner, .nav-inner { max-width:1080px; }
+body.in-exam main, body.in-exam .tb-inner { max-width:880px; }
+html { scrollbar-gutter:stable; overflow-y:scroll; }
+:focus:not(:focus-visible) { outline:none; }
+:focus-visible { outline:2px solid rgba(139,26,26,.35); outline-offset:2px; }
 .tb-right { display:flex; align-items:center; gap:6px; }
 header.topbar #settings-fab { position:static; width:36px; height:36px; box-shadow:none; border:1px solid var(--line); background:#fff; flex:0 0 auto; }
 header.topbar #settings-fab:hover { transform:none; border-color:#d9b9b3; }
