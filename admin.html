@@ -155,9 +155,9 @@ main { max-width:1080px; padding:0 16px 40px; }
 /* 每一頁 */
 .page { display:none; padding-top:22px; }
 .page.active { display:block; }
-.page-head { display:flex; align-items:flex-start; gap:10px; margin-bottom:16px; }
+.page-head { display:flex; align-items:center; gap:10px; margin-bottom:16px; min-height:36px; }
 .page-head-text { flex:1; min-width:0; }
-.page-title { font-size:20px; font-weight:700; margin:0 0 4px; }
+.page-title { font-size:20px; font-weight:700; margin:0; }
 .page-desc { font-size:13px; color:var(--muted); line-height:1.6; }
 .page-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
 /* 按鈕 */
@@ -214,7 +214,6 @@ main { max-width:1080px; padding:0 16px 40px; }
 .qb-edit-link:hover { border-color:var(--brand); color:var(--brand); opacity:1; }
 /* 備份頁 */
 .backup-card { padding:20px; }
-#qb-status:not(:empty)::before { content:'　·　'; }
 #qb-status { color:#8a8178; }
 .backup-target { font-size:13px; color:var(--muted); margin:0 0 14px; }
 /* 彈窗與登入沿用主色 */
@@ -283,14 +282,14 @@ main { max-width:1080px; padding:0 16px 40px; }
 
     <!-- 總覽 -->
     <section class="page" id="page-overview">
-      <div class="page-head"><div class="page-head-text"><h2 class="page-title">總覽</h2><div class="page-desc">全體學習者的作答概況。</div></div></div>
+      <div class="page-head"><div class="page-head-text"><h2 class="page-title">總覽</h2></div></div>
       <div id="dashboard"></div>
     </section>
 
     <!-- 學習者 -->
     <section class="page" id="page-learners">
       <div class="page-head">
-        <div class="page-head-text"><h2 class="page-title">學習者</h2><div class="page-desc">所有學習者的帳號、登入狀態與成績。點名稱可查看個人的詳細學習紀錄。</div></div>
+        <div class="page-head-text"><h2 class="page-title">學習者</h2></div>
         <div class="page-actions">
           <button id="cleanup-btn" class="btn btn-secondary" onclick="cleanupDuplicates()" style="display:none"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4l6 6"/><path d="M12 6l6 6-7 7H5v-6z"/></svg>清除空殼</button>
           <button id="add-learner-btn" class="btn btn-primary" onclick="openAddModal()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增學習者</button>
@@ -308,7 +307,7 @@ main { max-width:1080px; padding:0 16px 40px; }
     <section class="page" id="page-qb">
       <div id="qb-section">
         <div class="page-head">
-          <div class="page-head-text"><h2 class="page-title">題庫</h2><div class="page-desc">新增、修改、刪除題目。題目或選項要畫底線，請用 &lt;u&gt;文字&lt;/u&gt;。<span id="qb-status"></span></div></div>
+          <div class="page-head-text"><h2 class="page-title">題庫</h2><div class="page-desc"><span id="qb-status"></span></div></div>
           <div class="page-actions">
             <button class="btn btn-secondary" onclick="importQBFromCode()" title="用考試頁內建題庫覆蓋雲端題庫"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><polyline points="20 4 20 9 15 9"/></svg>從程式碼匯入</button>
             <button class="btn btn-primary" onclick="openQBEdit(-1)"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增題目</button>
@@ -334,7 +333,7 @@ main { max-width:1080px; padding:0 16px 40px; }
     <section class="page" id="page-guests">
       <div id="guest-section">
         <div class="page-head">
-          <div class="page-head-text"><h2 class="page-title">訪客</h2><div class="page-desc">免註冊試做的紀錄。同一個瀏覽器視為同一位訪客（匿名）；清除瀏覽器資料或換裝置會被視為新的訪客。</div></div>
+          <div class="page-head-text"><h2 class="page-title">訪客</h2></div>
           <div class="page-actions">
             <span id="guest-summary" class="chip-note"></span>
             <button id="guest-clear-btn" class="btn btn-danger" onclick="clearGuestRecords()" style="display:none"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg>清空紀錄</button>
@@ -353,7 +352,7 @@ main { max-width:1080px; padding:0 16px 40px; }
     <section class="page" id="page-admins">
       <div id="admins-section">
         <div class="page-head">
-          <div class="page-head-text"><h2 class="page-title">管理員</h2><div class="page-desc">只有主管理員能新增或刪除管理員；其他管理員只能查看學習者資料。新的管理員第一次登入時，系統會寄驗證信給他。</div></div>
+          <div class="page-head-text"><h2 class="page-title">管理員</h2></div>
           <div class="page-actions"><button class="btn btn-primary" onclick="openAdminAddModal()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增管理員</button></div>
         </div>
         <div id="admins-table-container" class="sec-table">
@@ -369,7 +368,7 @@ main { max-width:1080px; padding:0 16px 40px; }
     <section class="page" id="page-backup">
       <div id="backup-section">
         <div class="page-head">
-          <div class="page-head-text"><h2 class="page-title">資料備份與還原</h2><div class="page-desc">備份檔會下載到你的電腦，內容包含學習者名單、考試紀錄、訪客紀錄、題庫、管理員名單。建議每週下載一次。還原只會寫入或覆蓋備份檔裡有的資料，不會刪除其他資料。</div></div>
+          <div class="page-head-text"><h2 class="page-title">資料備份與還原</h2></div>
         </div>
         <div class="card backup-card">
           <div class="backup-target" id="backup-target"></div>
