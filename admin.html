@@ -270,7 +270,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
     <label>密碼（至少6碼）</label>
     <input type="text" id="newadmin-pw" placeholder="幫他設定的密碼">
     <div class="modal-error" id="newadmin-error"></div>
-    <div style="font-size:.75rem;color:#999;margin-top:6px">建立後把 Email 和密碼給對方；對方會收到驗證信，點連結後才能登入。一般管理員只能查看學習者，不能修改。</div>
+    <div style="font-size:.75rem;color:#999;margin-top:6px">建立後把 Email 和密碼給對方；對方第一次登入時系統才會寄驗證信給他，驗證後就能使用。一般管理員只能查看學習者，不能修改。</div>
     <div class="modal-btns">
       <button class="modal-btn-primary" onclick="addAdmin()">儲存</button>
       <button class="modal-btn-cancel"  onclick="closeAdminAddModal()">取消</button>
@@ -1114,8 +1114,8 @@ async function addAdmin(){   // 彈窗「儲存」：新增或編輯
       if(pw.length<6){ err.textContent='密碼至少 6 碼'; return; }
       err.style.color='#888'; err.textContent='建立中…';
       try{
-        await createAuthAccount(email, pw, true);
-        note = '密碼：'+pw+'\n\n對方會收到一封「驗證信箱」的信，點連結後就能用 Email + 密碼登入。';
+        await createAuthAccount(email, pw, false);   // 不在新增時寄信；對方第一次登入時才寄驗證信
+        note = '密碼：'+pw+'\n\n請把 Email 和密碼給對方。對方第一次登入後台時，系統會寄一封驗證信到他的信箱，點連結驗證後再登入一次就能使用。';
       }catch(e){
         if(e.code!=='auth/email-already-in-use'){ err.style.color='#c62828'; err.textContent='建立失敗：'+(e.code||e.message); return; }
         note = '這個 Email 本來就有帳號，對方請用自己原本的密碼登入（忘記可在登入頁按「忘記密碼」）。剛剛輸入的密碼不會生效。';
