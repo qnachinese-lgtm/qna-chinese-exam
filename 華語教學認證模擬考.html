@@ -688,6 +688,25 @@ body.dark header.topbar #settings-fab { background:#23262b; border-color:#3a3f47
   .subject-card .icon .ico { width:19px; height:19px; }
   .subject-card .title { font-size:14px; }
 }
+
+/* Chrome 自動填入：維持白底 */
+.login-box input:-webkit-autofill, .pf-form input:-webkit-autofill { -webkit-box-shadow:0 0 0 1000px #fff inset; -webkit-text-fill-color:var(--ink); caret-color:var(--ink); }
+body.dark .login-box input:-webkit-autofill { -webkit-box-shadow:0 0 0 1000px #2a2e34 inset; -webkit-text-fill-color:#e6e6e6; }
+/* 沒有錯誤訊息時不佔空間 */
+#login-error:empty { min-height:0; margin:0; }
+#login-error { margin:2px 0 10px; }
+.login-box .pw-wrap { margin-bottom:14px; }
+/* 沒有紀錄時隱藏 */
+#home-sub:empty { display:none; }
+
+/* 進階設定列 */
+button.opt-line { display:flex; align-items:center; gap:6px; width:100%; background:none; border:none; padding:6px 2px; margin:0 0 14px; font:inherit; cursor:pointer; text-align:left; }
+.opt-title { font-size:14px; font-weight:700; color:var(--ink); white-space:nowrap; }
+button.opt-line .ico { width:15px; height:15px; color:var(--muted); transition:transform .2s; flex:0 0 auto; }
+button.opt-line.open .ico { transform:rotate(180deg); }
+button.opt-line .opt-summary { margin-left:8px; font-size:13px; color:#a99f94; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+button.opt-line:hover .opt-title { color:var(--brand); }
+body.dark .opt-title { color:#e6e6e6; }
 /* 深色模式 */
 body.dark header.topbar { background:#1b1d21; border-bottom-color:#2e3238; }
 body.dark .tb-sub { border-left-color:#3a3f47; }
@@ -773,26 +792,26 @@ body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark 
       <button class="login-tab" id="tab-register" onclick="switchTab('register')">新建帳號</button>
     </div>
     <div id="login-fields">
-      <input type="email" id="user-email-input" placeholder="Gmail 電郵地址"
+      <input type="email" id="user-email-input" placeholder="Gmail 電郵地址" autocomplete="username" name="username"
         onkeydown="if(event.key==='Enter')document.getElementById('user-pw-input').focus()" oninput="resetLoginError()">
       <div class="pw-wrap">
-        <input type="password" id="user-pw-input" placeholder="密碼"
+        <input type="password" id="user-pw-input" placeholder="密碼" autocomplete="current-password" name="password"
           onkeydown="if(event.key==='Enter')submitLogin()">
         <button type="button" class="pw-toggle" onclick="togglePwVisible('user-pw-input',this)" aria-label="顯示密碼" title="顯示密碼"><svg class="ico-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="ico-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-7-11-7a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>
       </div>
     </div>
     <div id="pw-confirm-wrap" style="display:none">
-      <input type="email" id="user-email-input-reg" placeholder="Gmail 電郵地址"
+      <input type="email" id="user-email-input-reg" placeholder="Gmail 電郵地址" autocomplete="username" name="new-username"
         onkeydown="if(event.key==='Enter')document.getElementById('user-name-input').focus()" oninput="resetLoginError()">
-      <input type="text" id="user-name-input" placeholder="學習者名稱" maxlength="20"
+      <input type="text" id="user-name-input" placeholder="學習者名稱" maxlength="20" autocomplete="nickname" name="nickname"
         onkeydown="if(event.key==='Enter')document.getElementById('user-pw-input-reg').focus()">
       <div class="pw-wrap">
-        <input type="password" id="user-pw-input-reg" placeholder="密碼"
+        <input type="password" id="user-pw-input-reg" placeholder="密碼" autocomplete="new-password" name="new-password"
           onkeydown="if(event.key==='Enter')document.getElementById('user-pw-confirm').focus()">
         <button type="button" class="pw-toggle" onclick="togglePwVisible('user-pw-input-reg',this)" aria-label="顯示密碼" title="顯示密碼"><svg class="ico-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="ico-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-7-11-7a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>
       </div>
       <div class="pw-wrap">
-        <input type="password" id="user-pw-confirm" placeholder="確認密碼"
+        <input type="password" id="user-pw-confirm" placeholder="確認密碼" autocomplete="new-password" name="new-password-confirm"
           onkeydown="if(event.key==='Enter')submitLogin()">
         <button type="button" class="pw-toggle" onclick="togglePwVisible('user-pw-confirm',this)" aria-label="顯示密碼" title="顯示密碼"><svg class="ico-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="ico-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-7-11-7a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>
       </div>
@@ -877,10 +896,10 @@ body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark 
   </div>
   <div class="sec-label">選擇年份<span class="sec-hint">可複選，一年約一份考卷</span><button type="button" class="yr-all" id="yr-all-slot">全選</button></div>
   <div class="yr-plain"><div class="yr-filter-row" id="yr-filter-row"></div></div>
-  <div class="opt-line">
+  <button type="button" class="opt-line" id="opt-toggle" onclick="toggleOptions()">
+    <span class="opt-title">進階設定</span><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
     <span class="opt-summary" id="opt-summary"></span>
-    <button type="button" class="opt-toggle" id="opt-toggle" onclick="toggleOptions()">調整<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
-  </div>
+  </button>
   <div class="opt-panel" id="opt-panel" style="display:none">
     <div class="setup-card">
     <div class="setup-row"><span class="setup-label">出題順序</span><div class="seg">
@@ -4901,6 +4920,7 @@ function syncLearnerChrome(){
   const tb = document.getElementById('tb-user'); if(tb) tb.style.display = on ? 'flex' : 'none';
   if(!on) return;
   const guest = !!st.isGuest, name = st.currentUser;
+  try{ const pp=document.getElementById('progress-panel'); const has=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').some(r=>r.name===name); if(pp) pp.style.display = (has && !guest) ? 'block' : 'none'; }catch(e){}
   const av = document.getElementById('tb-avatar'); if(av) av.textContent = guest ? '訪' : String(name).trim().charAt(0).toUpperCase();
   const un = document.getElementById('um-name'); if(un) un.textContent = guest ? '訪客' : name;
   const um = document.getElementById('um-mail'); if(um) um.textContent = guest ? '試做中，成績不會保存' : (localStorage.getItem('tocfl_user_email')||'');
@@ -4912,7 +4932,7 @@ function syncLearnerChrome(){
     if(guest){ hs.textContent = '每科約 10 題，成績不會保存。註冊後可練全部題目並保存紀錄。'; }
     else{
       let last=null; try{ last = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').find(r=>r.name===name); }catch(e){}
-      hs.textContent = last ? ('最近一次：'+(last.subjects||[]).map(x=>_SUBJ_N[x]||x).join('＋')+' '+last.pct+' 分・'+String(last.date||'').slice(5).replace('-','/')) : '還沒有考試紀錄，選好科目就可以開始。';
+      hs.textContent = last ? ('最近一次：'+(last.subjects||[]).map(x=>_SUBJ_N[x]||x).join('＋')+' '+last.pct+' 分・'+String(last.date||'').slice(5).replace('-','/')) : '';
     }
   }
   updateStartSummary();
@@ -4975,12 +4995,12 @@ function updateOptSummary(){
   const ys = st.selectedYears||[];
   const yTxt = !ys.length ? '未選年份' : (ys.length===all.length ? '全部' : (ys.length<=3 ? ys.slice().sort((a,b)=>b-a).join('、') : ys.length+' 個年份'));
   const t = (typeof _timerSecsPerQ!=='undefined') ? _timerSecsPerQ : 0;
-  el.textContent = '其他設定：'+(st.mode==='random'?'隨機出題':'依序出題')+'・'+(st.revealMode==='end'?'交卷看答案':'逐題看答案')+'・'+(t? '每題 '+t+' 秒' : '不限時間');
+  el.textContent = (st.mode==='random'?'隨機出題':'依序出題')+'・'+(st.revealMode==='end'?'交卷看答案':'逐題看答案')+'・'+(t? '每題 '+t+' 秒' : '不限時間');
 }
 function toggleOptions(){
   const p=document.getElementById('opt-panel'), b=document.getElementById('opt-toggle');
   const open = p.style.display==='none'; p.style.display = open ? 'block' : 'none';
-  b.classList.toggle('open', open); b.firstChild.textContent = open ? '收起' : '調整';
+  b.classList.toggle('open', open);
 }
 (function(){
   ['setMode','setReveal','setTimerMode'].forEach(n=>{ const o=window[n]; if(typeof o!=='function') return; window[n]=function(){ const r=o.apply(this,arguments); updateOptSummary(); return r; }; });
@@ -5112,30 +5132,31 @@ window.syncMyHistory = async function(){
 window.syncFromCloud = function(){ return window.syncMyHistory(); };
 (function(){ const o=window.changeUser; window.changeUser=function(){ if(_histUnsub){ _histUnsub(); _histUnsub=null; _histUid=null; } return o.apply(this, arguments); }; })();
 
-// ═══ 網站改版提醒：偵測到新版本時，在底部提示「重新載入」（不自動重整，避免打斷作答）═══
+// ═══ 安靜自動更新：偵測到新版本時，等到「安全的時候」（不在作答、沒有在輸入、沒有開彈窗）自動重新載入 ═══
 (function(){
-  let base = null, shown = false;
+  let base = null, pending = false;
+  function isSafe(){
+    const a = document.activeElement;
+    if(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.value) return false;
+    if(document.body.classList.contains('in-exam')) return false;
+    const ex = document.getElementById('exam-screen'); if(ex && ex.style.display && ex.style.display!=='none') return false;
+    const busy = [...document.querySelectorAll('[id$="-overlay"]')].some(o=>o.style.display && o.style.display!=='none');
+    return !busy;
+  }
+  function tryReload(){ if(pending && isSafe()) location.reload(); }
   async function check(){
-    if(shown) return;
+    if(pending){ tryReload(); return; }
     try{
       const r = await fetch(location.pathname, {method:'HEAD', cache:'no-store'});
       const tag = r.headers.get('etag') || r.headers.get('last-modified') || r.headers.get('content-length');
       if(!tag) return;
       if(base === null){ base = tag; return; }
-      if(tag !== base) show();
+      if(tag !== base){ pending = true; tryReload(); }
     }catch(e){}
   }
-  function show(){
-    shown = true;
-    const b = document.createElement('div'); b.id = 'new-version-bar';
-    b.style.cssText = 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:100000;display:flex;align-items:center;gap:12px;background:#2c2c2c;color:#fff;padding:10px 12px 10px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:14px;max-width:calc(100vw - 24px)';
-    b.innerHTML = '<span>網站有新版本</span><button style="border:none;background:#8b1a1a;color:#fff;border-radius:8px;padding:7px 14px;font:inherit;font-weight:700;cursor:pointer">重新載入</button><button aria-label="關閉" style="border:none;background:none;color:#bbb;font-size:18px;cursor:pointer;padding:0 4px">×</button>';
-    b.children[1].onclick = () => location.reload();
-    b.children[2].onclick = () => b.remove();
-    document.body.appendChild(b);
-  }
   check();
-  setInterval(check, 120000);
+  setInterval(check, 60000);
+  setInterval(tryReload, 5000);
   document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') check(); });
 })();
 
