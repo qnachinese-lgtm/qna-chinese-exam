@@ -293,6 +293,13 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
     <label>選項 D</label><textarea id="qb-f-o3" rows="2"></textarea>
     <label>正確答案</label>
     <select id="qb-f-ans"><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select>
+    <label style="margin-top:10px">其他也算對的答案（官方公告「多個答案均可」時才勾選）</label>
+    <div id="qb-f-alt" style="display:flex;gap:16px;margin:4px 0 6px">
+      <label style="margin:0;font-weight:normal"><input type="checkbox" value="0" style="width:auto;display:inline-block;margin-right:4px">A</label>
+      <label style="margin:0;font-weight:normal"><input type="checkbox" value="1" style="width:auto;display:inline-block;margin-right:4px">B</label>
+      <label style="margin:0;font-weight:normal"><input type="checkbox" value="2" style="width:auto;display:inline-block;margin-right:4px">C</label>
+      <label style="margin:0;font-weight:normal"><input type="checkbox" value="3" style="width:auto;display:inline-block;margin-right:4px">D</label>
+    </div>
     <label style="margin-top:14px"><input type="checkbox" id="qb-f-free" style="width:auto;display:inline-block;margin-right:6px;vertical-align:middle">送分題（不論作答一律給分）</label>
     <label>解析（建議格式：第一行「對的答案：…」，其後每行「錯的選項：…」）</label>
     <textarea id="qb-f-exp" rows="8"></textarea>
@@ -513,7 +520,7 @@ function renderQBList(){
   if(!rows.length){ html+='<tr><td colspan="5" style="text-align:center;color:#999;padding:18px">沒有符合的題目</td></tr>'; }
   rows.forEach(o=>{
     const stem=esc(String(o.q.q||'').replace(/<\/?u>/g,'')).slice(0,46);
-    const ansLbl=o.q.free?'送分':(['A','B','C','D'][o.q.ans]||'?');
+    const ansLbl=o.q.free?'送分':[o.q.ans].concat(Array.isArray(o.q.alt)?o.q.alt:[]).map(k=>['A','B','C','D'][k]||'?').join('/');
     html+='<tr><td>'+(o.i+1)+'</td><td>'+esc(o.q.yr)+'</td><td>'+stem+'…</td><td>'+ansLbl+'</td><td><button class="qb-edit-link" onclick="openQBEdit('+o.i+')">編輯</button></td></tr>';
   });
   html+='</tbody></table>';
@@ -531,6 +538,7 @@ function openQBEdit(idx){
   for(let k=0;k<4;k++) document.getElementById('qb-f-o'+k).value=(q.opts&&q.opts[k])||'';
   document.getElementById('qb-f-ans').value=String(q.ans||0);
   document.getElementById('qb-f-free').checked=!!q.free;
+  document.querySelectorAll('#qb-f-alt input').forEach(cb=>{ cb.checked = Array.isArray(q.alt) && q.alt.includes(parseInt(cb.value,10)); });
   document.getElementById('qb-f-exp').value=q.exp||'';
   document.getElementById('qb-delete-btn').style.display=isNew?'none':'inline-block';
   document.getElementById('qb-edit-error').textContent='';
@@ -548,7 +556,8 @@ async function saveQBItem(){
   const exp=document.getElementById('qb-f-exp').value.trim();
   const errEl=document.getElementById('qb-edit-error');
   if(!yr||!qtext||opts.some(o=>!o)){ errEl.style.color='#c62828'; errEl.textContent='年份、題目、四個選項都必須填寫'; return; }
-  const item={yr:yr,q:qtext,opts:opts,ans:ans,exp:exp}; if(free) item.free=true;
+  const alt=[...document.querySelectorAll('#qb-f-alt input:checked')].map(cb=>parseInt(cb.value,10)).filter(k=>k!==ans);
+  const item={yr:yr,q:qtext,opts:opts,ans:ans,exp:exp}; if(free) item.free=true; if(alt.length) item.alt=alt;
   const isNew = idx<0 || idx>=(_qb[sub]||[]).length;
   if(isNew) _qb[sub].push(item); else _qb[sub][idx]=item;
   errEl.style.color='#888'; errEl.textContent='儲存中…';
