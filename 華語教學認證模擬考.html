@@ -3219,6 +3219,7 @@ async function shareResult(){
   const pass=pct>=70;
   const text='我在「美娟華語工作室」對外華語教學認證模擬考【'+subjs+'】拿了 '+pct+' 分！一起來練習：'+url;
   const sbtn=document.querySelector('.btn-share'); const solabel=sbtn?sbtn.textContent:''; if(sbtn){ sbtn.disabled=true; sbtn.textContent='產生中…'; }
+  window._shareData={file:null, text, url}; renderShareOverlay('', text, true);
   let file=null;
   try{
     await _lazyScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
@@ -3244,18 +3245,22 @@ async function shareResult(){
     if(blob) file=new File([blob],'qna-score.png',{type:'image/png'});
   }catch(e){ file=null; }
   if(sbtn){ sbtn.disabled=false; sbtn.textContent=solabel; }
-  // 先顯示成績卡預覽，讓使用者自己選：下載圖片／複製文字／分享（手機）
   window._shareData={file, text, url};
-  const imgUrl = file ? URL.createObjectURL(file) : '';
+  renderShareOverlay(file ? URL.createObjectURL(file) : '', text, false);
+}
+// 分享視窗：按下「分享成績」立刻出現（先顯示產生中），圖片好了再補上
+function renderShareOverlay(imgUrl, text, loading){
   let ov=document.getElementById('share-overlay');
   if(!ov){ ov=document.createElement('div'); ov.id='share-overlay'; ov.onclick=e=>{ if(e.target===ov) ov.style.display='none'; };
     ov.style.cssText='display:none;position:fixed;inset:0;background:rgba(40,28,20,.45);z-index:2000;align-items:center;justify-content:center;padding:16px';
     document.body.appendChild(ov); }
   const canShare = !!navigator.share && /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+  const body = loading ? '<div style="height:200px;display:flex;align-items:center;justify-content:center;background:#faf6ef;border-radius:12px;color:#8a8178;font-size:14px">成績卡產生中，請稍等…</div>'
+    : (imgUrl?'<img src="'+imgUrl+'" alt="成績卡" style="width:100%;border-radius:12px;border:1px solid #ece4d6;display:block">':'<div class="md-desc">成績卡圖片產生失敗，仍可複製文字分享。</div>');
   ov.innerHTML='<div class="md-box" style="max-width:560px"><div class="md-head"><div><div class="md-title">分享成績</div><div class="md-desc">下載成績卡圖片，或複製文字，貼到 LINE、Facebook 給朋友。</div></div><button class="md-x" onclick="document.getElementById(\'share-overlay\').style.display=\'none\'" aria-label="關閉"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button></div>'
-    +'<div class="md-body">'+(imgUrl?'<img src="'+imgUrl+'" alt="成績卡" style="width:100%;border-radius:12px;border:1px solid #ece4d6;display:block">':'<div class="md-desc">成績卡圖片產生失敗，仍可複製文字分享。</div>')
-    +'<div style="margin-top:12px;font-size:13px;color:#8a8178;background:#faf6ef;border-radius:10px;padding:10px 12px;line-height:1.7">'+text.replace(/</g,'&lt;')+'</div><div id="share-msg" class="md-ok" style="margin-top:10px"></div></div>'
-    +'<div class="md-foot">'+(canShare?'<button class="md-btn" onclick="shareNative()">分享…</button>':'')+'<button class="md-btn" onclick="shareCopy()">複製文字</button>'+(imgUrl?'<button class="md-btn primary" onclick="shareDownload()">下載圖片</button>':'')+'</div></div>';
+    +'<div class="md-body">'+body
+    +'<div style="margin-top:12px;font-size:13px;color:#8a8178;background:#faf6ef;border-radius:10px;padding:10px 12px;line-height:1.7">'+String(text||'').replace(/</g,'&lt;')+'</div><div id="share-msg" class="md-ok" style="margin-top:10px"></div></div>'
+    +'<div class="md-foot">'+(canShare&&!loading?'<button class="md-btn" onclick="shareNative()">分享…</button>':'')+'<button class="md-btn" onclick="shareCopy()">複製文字</button>'+(!loading&&imgUrl?'<button class="md-btn primary" onclick="shareDownload()">下載圖片</button>':'')+'</div></div>';
   ov.style.display='flex';
 }
 function shareDownload(){ const d=window._shareData||{}; if(!d.file) return; const a=document.createElement('a'); a.href=URL.createObjectURL(d.file); a.download='美娟華語工作室_成績卡.png'; a.click(); const m=document.getElementById('share-msg'); if(m) m.textContent='圖片已下載。'; }
