@@ -613,6 +613,38 @@ button:focus:not(:focus-visible) { outline:none; }
 .seg .mode-btn, .seg .timer-btn { width:76px; padding:6px 0; text-align:center; }
 .setup-label { flex:0 0 72px; }
 @media(max-width:400px){ .seg .mode-btn, .seg .timer-btn { width:68px; font-size:13px; } }
+
+/* 帳號設定 */
+#profile-screen { padding:4px 0 30px; }
+.pf-head { display:flex; align-items:center; gap:10px; margin:0 0 18px; }
+.pf-back { display:inline-flex; align-items:center; gap:2px; height:36px; padding:0 10px 0 4px; border:none; background:none; border-radius:9px; font:inherit; font-size:14px; color:var(--muted); cursor:pointer; }
+.pf-back .ico { width:18px; height:18px; }
+.pf-back:hover { background:#f4efe6; color:var(--ink); }
+.pf-title { font-size:22px; font-weight:700; margin:0; }
+.pf-card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:4px 20px; max-width:640px; }
+.pf-row { display:flex; align-items:center; gap:14px; min-height:60px; border-top:1px solid #f3eee5; }
+.pf-card > .pf-row:first-child { border-top:none; }
+.pf-label { flex:0 0 80px; font-size:14px; color:var(--muted); }
+.pf-value { flex:1; min-width:0; font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pf-dots { letter-spacing:2px; color:#a99f94; }
+.pf-edit { height:32px; padding:0 14px; border:1px solid var(--line); background:#fff; border-radius:8px; font:inherit; font-size:13px; color:var(--ink); cursor:pointer; }
+.pf-edit:hover, .pf-edit.on { border-color:#d9b9b3; color:var(--brand); }
+.pf-form { padding:4px 0 18px 94px; }
+.pf-form label { display:block; font-size:13px; color:var(--muted); margin:10px 0 6px; }
+.pf-form input { width:100%; max-width:360px; height:42px; padding:0 12px; border:1.5px solid #e6dccb; border-radius:10px; font:inherit; font-size:15px; outline:none; }
+.pf-form input:focus { border-color:var(--brand); }
+.pf-btns { display:flex; gap:8px; margin-top:12px; }
+.pf-cancel, .pf-save { height:38px; padding:0 18px; border-radius:9px; font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+.pf-cancel { background:#fff; border:1px solid var(--line); color:var(--ink); }
+.pf-save { background:var(--brand); border:1px solid var(--brand); color:#fff; }
+.pf-save:hover { background:var(--brand-h); }
+.pf-form .profile-msg { text-align:left; margin-top:8px; min-height:0; }
+@media(max-width:560px){ .pf-form { padding-left:0; } .pf-label { flex-basis:68px; } }
+body.dark .pf-card, body.dark .pf-edit, body.dark .pf-cancel { background:#23262b; border-color:#3a3f47; color:#e6e6e6; }
+body.dark .pf-row { border-top-color:#31353b; }
+body.dark .pf-form input { background:#2a2e34; border-color:#3a3f47; color:#e6e6e6; }
+
+.pf-lock { font-size:12px; color:#b5aa9e; white-space:nowrap; }
 /* 深色模式 */
 body.dark header.topbar { background:#1b1d21; border-bottom-color:#2e3238; }
 body.dark .tb-sub { border-left-color:#3a3f47; }
@@ -4302,49 +4334,32 @@ function renderQReview(){
   if(!document.getElementById('profile-screen')){
     main.insertAdjacentHTML('beforeend', `
 <div id="profile-screen" style="display:none">
-  <div class="profile-header">
-    <button class="profile-back" onclick="closeProfile()">← 返回</button>
-    <span class="profile-title">👤 帳號設定</span>
+  <div class="pf-head">
+    <button class="pf-back" onclick="closeProfile()" aria-label="返回"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg>返回</button>
+    <h2 class="pf-title">帳號設定</h2>
   </div>
-
-  <div class="profile-section">
-    <h3>基本資料</h3>
-    <div class="profile-info-row">
-      <span class="profile-info-label">帳號名稱</span>
-      <span class="profile-info-value" id="profile-name"></span>
+  <div class="pf-card">
+    <div class="pf-row"><span class="pf-label">帳號名稱</span><span class="pf-value" id="profile-name"></span></div>
+    <div class="pf-row"><span class="pf-label">登入信箱</span><span class="pf-value" id="profile-email-display"></span><span class="pf-lock">不可更改</span></div>
+    <div class="pf-row"><span class="pf-label">備份信箱</span><span class="pf-value" id="profile-backup-display">未設定</span><button type="button" class="pf-edit" id="pf-edit-email" onclick="pfOpen('email')">設定</button></div>
+    <div class="pf-form" id="pf-form-email" style="display:none">
+      <label for="profile-backup-input">備份信箱（登入信箱收不到信時，方便老師聯絡你）</label>
+      <input type="email" id="profile-backup-input" placeholder="another@email.com">
+      <input type="hidden" id="profile-email-input">
+      <div class="profile-msg" id="profile-email-msg"></div>
+      <div class="pf-btns"><button type="button" class="pf-cancel" onclick="pfClose('email')">取消</button><button type="button" class="pf-save" onclick="saveBackupEmail()">儲存</button></div>
     </div>
-    <div class="profile-info-row">
-      <span class="profile-info-label">電子信箱</span>
-      <span class="profile-info-value" id="profile-email-display"></span>
+    <div class="pf-row"><span class="pf-label">密碼</span><span class="pf-value pf-dots">••••••••</span><button type="button" class="pf-edit" id="pf-edit-pw" onclick="pfOpen('pw')">修改</button></div>
+    <div class="pf-form" id="pf-form-pw" style="display:none">
+      <label for="profile-pw-old">目前密碼</label>
+      <input type="password" id="profile-pw-old" placeholder="請輸入目前密碼" autocomplete="current-password">
+      <label for="profile-pw-new">新密碼</label>
+      <input type="password" id="profile-pw-new" placeholder="至少 6 個字元" autocomplete="new-password">
+      <label for="profile-pw-confirm">確認新密碼</label>
+      <input type="password" id="profile-pw-confirm" placeholder="再輸入一次新密碼" autocomplete="new-password">
+      <div class="profile-msg" id="profile-pw-msg"></div>
+      <div class="pf-btns"><button type="button" class="pf-cancel" onclick="pfClose('pw')">取消</button><button type="button" class="pf-save" onclick="saveProfilePassword()">儲存</button></div>
     </div>
-  </div>
-
-  <div class="profile-section">
-    <h3>更改電子信箱</h3>
-    <div class="profile-field">
-      <label>新信箱</label>
-      <input type="email" id="profile-email-input" placeholder="your@email.com">
-    </div>
-    <button class="profile-save-btn" onclick="saveProfileEmail()">儲存信箱</button>
-    <div class="profile-msg" id="profile-email-msg"></div>
-  </div>
-
-  <div class="profile-section">
-    <h3>更改密碼</h3>
-    <div class="profile-field">
-      <label>目前密碼</label>
-      <input type="password" id="profile-pw-old" placeholder="請輸入目前密碼">
-    </div>
-    <div class="profile-field">
-      <label>新密碼</label>
-      <input type="password" id="profile-pw-new" placeholder="請輸入新密碼（至少6字元）">
-    </div>
-    <div class="profile-field">
-      <label>確認新密碼</label>
-      <input type="password" id="profile-pw-confirm" placeholder="再次輸入新密碼">
-    </div>
-    <button class="profile-save-btn" onclick="saveProfilePassword()">更新密碼</button>
-    <div class="profile-msg" id="profile-pw-msg"></div>
   </div>
 </div>`);
   }
@@ -4363,7 +4378,7 @@ function renderQReview(){
 //  PROFILE (學習者專區)
 // ════════════════════════════════════════════════
 function showProfile(){
-  if(st.isGuest){ alert('訪客模式沒有個人帳號。請點右上角紅色「✍️ 註冊並保存進度」即可建立帳號。'); return; }
+  if(st.isGuest){ alert('訪客模式沒有個人帳號。請點右上角的頭像，選「註冊並保存進度」建立帳號。'); return; }
   const screens = ['subject-screen','history-screen','exam-screen','result-screen'];
   screens.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
   const screen = document.getElementById('profile-screen');
@@ -4929,6 +4944,62 @@ function toggleOptions(){
   // 年份預設全選
   if(!st.selectedYears || !st.selectedYears.length){ const ys=[...new Set(Object.values(QB).flat().map(q=>String(q.yr)))].sort((a,b)=>b-a); st.selectedYears = ys.length ? [ys[0]] : []; }
   buildYrFilter(); updateOptSummary();
+})();
+
+
+// 備份信箱：存在自己的學習者資料（users 文件的 backupEmail 欄位）
+async function _myProfileRef(){
+  const u = _auth && _auth.currentUser; if(!u || !_db) return null;
+  const snap = await _db.collection('users').where('uid','==',u.uid).get();
+  return snap.empty ? null : snap.docs[0];
+}
+async function loadBackupEmail(){
+  const el=document.getElementById('profile-backup-display'), b=document.getElementById('pf-edit-email');
+  if(!el) return;
+  try{ const d=await _myProfileRef(); const v = d && d.data().backupEmail;
+    el.textContent = v || '未設定'; el.classList.toggle('pf-dots', !v);
+    if(b && !b.classList.contains('on')) b.textContent = v ? '修改' : '設定';
+    const inp=document.getElementById('profile-backup-input'); if(inp) inp.value = v || '';
+  }catch(e){ console.warn('loadBackupEmail', e); }
+}
+async function saveBackupEmail(){
+  const inp=document.getElementById('profile-backup-input'), m=document.getElementById('profile-email-msg');
+  const v=(inp.value||'').trim().toLowerCase();
+  const login=(localStorage.getItem('tocfl_user_email')||'').toLowerCase();
+  if(v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){ m.className='profile-msg err'; m.textContent='信箱格式不正確'; return; }
+  if(v && v===login){ m.className='profile-msg err'; m.textContent='備份信箱要跟登入信箱不一樣'; return; }
+  try{
+    const d=await _myProfileRef(); if(!d){ m.className='profile-msg err'; m.textContent='請重新登入後再試'; return; }
+    await d.ref.update({backupEmail: v ? v : firebase.firestore.FieldValue.delete()});
+    m.className='profile-msg ok'; m.textContent = v ? '✅ 已儲存備份信箱' : '✅ 已清除備份信箱';
+    await loadBackupEmail();
+    setTimeout(()=>pfClose('email'), 1200);
+  }catch(e){ m.className='profile-msg err'; m.textContent='儲存失敗，請稍後再試'; }
+}
+(function(){ const sp=window.showProfile; window.showProfile=function(){ const r=sp.apply(this,arguments); loadBackupEmail(); return r; }; })();
+
+// 帳號設定：點「修改」才展開表單
+function pfOpen(which){
+  const other = which==='email' ? 'pw' : 'email';
+  pfClose(other);
+  const f=document.getElementById('pf-form-'+which), b=document.getElementById('pf-edit-'+which);
+  const open = f.style.display==='none';
+  if(!open){ pfClose(which); return; }
+  f.style.display='block'; b.classList.add('on'); b.textContent='收起';
+  const first=f.querySelector('input'); if(first) setTimeout(()=>first.focus(),30);
+}
+function pfClose(which){
+  const f=document.getElementById('pf-form-'+which), b=document.getElementById('pf-edit-'+which);
+  if(!f) return;
+  f.style.display='none'; if(b){ b.classList.remove('on'); b.textContent = (which==='email' && /未設定/.test((document.getElementById('profile-backup-display')||{}).textContent||'')) ? '設定' : '修改'; }
+  if(which==='pw') ['profile-pw-old','profile-pw-new','profile-pw-confirm'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
+  const m=document.getElementById(which==='pw'?'profile-pw-msg':'profile-email-msg'); if(m){ m.textContent=''; m.className='profile-msg'; }
+}
+(function(){
+  const sp=window.showProfile; if(typeof sp==='function') window.showProfile=function(){ const r=sp.apply(this,arguments); pfClose('email'); pfClose('pw'); return r; };
+  ['saveProfilePassword','saveProfileEmail'].forEach(n=>{ const o=window[n]; if(typeof o!=='function') return;
+    window[n]=async function(){ const r=await o.apply(this,arguments); const which=n==='saveProfilePassword'?'pw':'email'; const m=document.getElementById(which==='pw'?'profile-pw-msg':'profile-email-msg');
+      if(m && /ok/.test(m.className) && which==='pw'){ setTimeout(()=>{ pfClose('pw'); const pm=document.getElementById('profile-pw-msg'); }, 1800); } return r; }; });
 })();
 </script>
 </body>
