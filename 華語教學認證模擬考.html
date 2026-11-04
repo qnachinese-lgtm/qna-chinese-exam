@@ -561,6 +561,35 @@ body.in-exam .tb-user { display:none !important; }
   .start-bar .btn-primary { flex:1; }
   .home-hello { flex-wrap:wrap; }
 }
+
+/* 年份格子、考古題格子：同一套整齊格線 */
+.yr-row { align-items:flex-start; }
+.yr-row .setup-label { display:flex; flex-direction:column; gap:4px; padding-top:7px; }
+.yr-all { background:none; border:none; padding:0; font:inherit; font-size:12px; color:var(--brand); cursor:pointer; text-align:left; }
+.yr-all:hover { text-decoration:underline; }
+#yr-filter-row { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:6px; }
+#yr-filter-row .yr-btn { border-radius:9px; padding:7px 0; text-align:center; font-size:14px; }
+.pdf-section h3 { margin-bottom:12px; }
+.pdf-note { font-weight:400; font-size:12px; color:#a99f94; margin-left:6px; }
+#pdf-links { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:6px; }
+#pdf-links .pdf-link { justify-content:center; align-items:center; gap:5px; padding:8px 0; border-radius:9px; font-size:14px; }
+#pdf-links .pdf-link .ico { width:13px; height:13px; color:#b5aa9e; }
+#pdf-links .pdf-link:hover .ico { color:var(--brand); }
+@media(max-width:720px){
+  #yr-filter-row, #pdf-links { grid-template-columns:repeat(4,minmax(0,1fr)); width:100%; }
+  .yr-row .setup-label { flex-direction:row; align-items:baseline; gap:10px; padding-top:0; }
+}
+
+/* 步驟編號 */
+.sec-label { display:flex; align-items:center; gap:8px; font-size:15px; color:var(--ink); letter-spacing:.5px; }
+.sec-label .sec-hint { font-size:13px; margin-left:0; }
+.sec-label .yr-all { margin-left:auto; font-size:13px; }
+.step { width:24px; height:24px; border-radius:50%; border:1.5px solid #d9b9b3; color:var(--brand); background:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex:0 0 auto; transition:all .15s; }
+.step.done { background:var(--brand); border-color:var(--brand); color:#fff; }
+.yr-card { padding:14px 16px; }
+body.dark .sec-label { color:#e6e6e6; }
+body.dark .step { background:#23262b; border-color:#6b3a36; color:#f0a5a0; }
+body.dark .step.done { background:#c0392b; border-color:#c0392b; color:#fff; }
 /* 深色模式 */
 body.dark header.topbar { background:#1b1d21; border-bottom-color:#2e3238; }
 body.dark .tb-sub { border-left-color:#3a3f47; }
@@ -717,7 +746,7 @@ body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark 
     <div class="sec-label">最近成績</div>
     <div class="prog-cards" id="prog-cards"></div>
   </div>
-  <div class="sec-label">選擇科目<span class="sec-hint">可複選</span></div>
+  <div class="sec-label"><span class="step" id="step-1">1</span>選擇科目<span class="sec-hint">可複選</span></div>
   <div class="subject-grid">
     <div class="subject-card" data-subject="chinese" onclick="toggleSubject(this)">
       <svg class="subj-check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><polyline points="7.5 12.5 10.5 15.5 16.5 9" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -748,9 +777,10 @@ body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark 
       <div class="cnt">0 題</div>
     </div>
   </div>
-  <div class="sec-label">練習設定</div>
+  <div class="sec-label"><span class="step" id="step-2">2</span>選擇年份<span class="sec-hint">可複選</span><button type="button" class="yr-all" id="yr-all-slot">全選</button></div>
+  <div class="setup-card yr-card"><div class="yr-filter-row" id="yr-filter-row"></div></div>
+  <div class="sec-label"><span class="step done" id="step-3">3</span>練習設定<span class="sec-hint">不改也可以，直接用預設</span></div>
   <div class="setup-card">
-    <div class="setup-row"><span class="setup-label">年份</span><div class="yr-filter-row" id="yr-filter-row"></div></div>
     <div class="setup-row"><span class="setup-label">出題順序</span><div class="seg">
       <button class="mode-btn active" id="mode-seq" onclick="setMode('sequential')">依序</button>
       <button class="mode-btn" id="mode-rand" onclick="setMode('random')">隨機</button></div></div>
@@ -763,12 +793,12 @@ body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark 
       <button class="timer-btn" onclick="setTimerMode(120,this)">2 分／題</button></div></div>
   </div>
   <div class="start-bar">
-    <div class="start-sum"><div id="start-sum-main">請選擇科目</div><div id="start-sum-sub"></div></div>
+    <div class="start-sum"><div id="start-sum-main">第 1 步：選擇科目</div><div id="start-sum-sub"></div></div>
     <button class="btn-review" id="btn-review" onclick="openReviewPicker()" style="display:none"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>錯題複習 <span id="wrong-count">0</span></button>
     <button class="btn-primary" id="start-btn" onclick="startExam()" disabled>開始模擬考</button>
   </div>
   <div class="pdf-section">
-    <h3><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>教育部歷年試題與解答</h3>
+    <h3><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg>教育部歷年試題與解答<span class="pdf-note">點年份開啟官方網站</span></h3>
     <div class="pdf-grid" id="pdf-links"></div>
   </div>
 </div>
@@ -2400,7 +2430,7 @@ const PDF_PAGES = [
   PDF_PAGES.forEach(p => {
     const a = document.createElement('a');
     a.href = p.url; a.target = '_blank'; a.className = 'pdf-link';
-    a.innerHTML = `<span class="yr">${p.yr}</span><span class="pdf-t">試題與解答</span>`;
+    a.innerHTML = `<span class="yr">${p.yr}</span><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6"/><line x1="20" y1="4" x2="11" y2="13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>`; a.title = p.yr+' 年試題與解答（教育部網站）'; a.rel = 'noopener';
     c.appendChild(a);
   });
 })();
@@ -4805,8 +4835,10 @@ function updateStartSummary(){
   const main = document.getElementById('start-sum-main'), sub = document.getElementById('start-sum-sub');
   if(!main) return;
   const n = st.selected.length, years = st.selectedYears||[];
-  if(!n){ main.textContent = '請選擇科目'; sub.textContent = '點上面的科目卡片，可以複選'; return; }
-  if(!years.length){ main.textContent = '已選 '+n+' 科'; sub.textContent = '請至少選一個年份'; return; }
+  const s1=document.getElementById('step-1'), s2=document.getElementById('step-2');
+  if(s1) s1.classList.toggle('done', n>0); if(s2) s2.classList.toggle('done', years.length>0);
+  if(!n){ main.textContent = '第 1 步：選擇科目'; sub.textContent = '點上面的科目卡片，可以複選'; return; }
+  if(!years.length){ main.textContent = '第 2 步：選擇年份'; sub.textContent = '已選 '+n+' 科，再選至少一個年份（或按「全選」）'; return; }
   let total = 0;
   st.selected.forEach(s=>{ const c = QB[s].filter(q=>years.includes(q.yr)).length; total += st.isGuest ? Math.min(c,10) : c; });
   const allYears = [...new Set(Object.values(QB).flat().map(q=>q.yr))];
@@ -4827,6 +4859,29 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeUserMenu(); 
   if(ex) new MutationObserver(()=>{ document.body.classList.toggle('in-exam', ex.style.display!=='none' && ex.style.display!==''); }).observe(ex, {attributes:true, attributeFilter:['style']});
   updateStartSummary();
 })();
+
+// 年份選擇 v3：新的在前、整齊格子、「全選／清除」放在標籤下
+window.buildYrFilter = function(){
+  const row = document.getElementById('yr-filter-row'), slot = document.getElementById('yr-all-slot');
+  if(!row) return;
+  const allYears = [...new Set(Object.values(QB).flat().map(q=>String(q.yr)))].sort((a,b)=>b-a);
+  st.selectedYears = (Array.isArray(st.selectedYears)?st.selectedYears:[]).map(String).filter(y=>allYears.includes(y));
+  const refresh = () => {
+    const allSel = allYears.length>0 && st.selectedYears.length===allYears.length;
+    if(slot) slot.textContent = allSel ? '清除' : '全選';
+    row.querySelectorAll('.yr-btn').forEach(b=>b.classList.toggle('active', st.selectedYears.includes(b.dataset.yr)));
+    updateCnts(); updateStartBtn();
+  };
+  row.innerHTML = '';
+  allYears.forEach(yr=>{
+    const b = document.createElement('button'); b.type='button'; b.className='yr-btn'; b.textContent=yr; b.dataset.yr=yr;
+    b.onclick = () => { st.selectedYears = st.selectedYears.includes(yr) ? st.selectedYears.filter(y=>y!==yr) : st.selectedYears.concat(yr); refresh(); };
+    row.appendChild(b);
+  });
+  if(slot) slot.onclick = () => { st.selectedYears = (st.selectedYears.length===allYears.length) ? [] : [...allYears]; refresh(); };
+  refresh();
+};
+buildYrFilter();
 </script>
 </body>
 </html>
