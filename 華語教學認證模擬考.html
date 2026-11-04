@@ -805,6 +805,58 @@ body.dark #result-screen .result-score { color:#e6e6e6; }
   #exam-screen .question-card { padding:18px 16px; }
 }
 
+/* ════════ 共用彈出視窗 v3 ════════ */
+#qreview-overlay, #review-picker-overlay, #guest-reg-overlay { background:rgba(40,28,20,.45) !important; backdrop-filter:blur(2px); }
+.md-box { background:#fff !important; border-radius:18px !important; width:100%; max-height:90vh; display:flex; flex-direction:column; overflow:hidden !important; padding:0 !important; box-shadow:0 20px 60px rgba(60,30,20,.25) !important; }
+.md-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:20px 22px 14px; border-bottom:1px solid #f1ebe0; }
+.md-title { font-size:18px; font-weight:700; color:var(--ink); display:flex; align-items:baseline; gap:8px; }
+.md-sub { font-size:13px; font-weight:400; color:var(--muted); }
+.md-desc { font-size:13px; color:var(--muted); margin-top:4px; line-height:1.6; }
+.md-tags { display:flex; gap:6px; margin-top:8px; }
+.md-x { flex:0 0 auto; width:34px; height:34px; border-radius:9px; border:1px solid var(--line); background:#fff; color:var(--muted); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+.md-x .ico { width:16px; height:16px; }
+.md-x:hover { color:var(--brand); border-color:#d9b9b3; }
+.md-body { padding:18px 22px; overflow-y:auto; flex:1; }
+.md-foot { display:flex; gap:10px; justify-content:flex-end; padding:14px 22px; border-top:1px solid #f1ebe0; background:#fcfaf6; }
+.md-btn { height:42px; padding:0 18px; border-radius:10px; border:1px solid var(--line); background:#fff; font:inherit; font-size:15px; font-weight:600; color:var(--ink); cursor:pointer; white-space:nowrap; }
+.md-btn:hover:not(:disabled) { border-color:#d9b9b3; }
+.md-btn:disabled { opacity:.4; cursor:default; }
+.md-btn.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
+.md-btn.primary:hover { background:var(--brand-h); }
+.md-form label { display:block; font-size:14px; font-weight:600; color:var(--ink); margin:12px 0 6px; }
+.md-form label:first-of-type { margin-top:0; }
+.md-form input { width:100%; box-sizing:border-box; height:44px; padding:0 12px; border:1px solid var(--line); border-radius:10px; font:inherit; font-size:15px; background:#fff; outline:none; }
+.md-form input:focus { border-color:var(--brand); }
+.md-ok { font-size:13px; color:#2e6b38; }
+.md-ok:not(:empty) { background:#e6f2e8; border-radius:8px; padding:8px 12px; margin-bottom:12px; }
+.md-err { font-size:13px; color:#b3261e; min-height:18px; margin-top:10px; }
+/* 錯題複習 */
+.rp-list { display:flex; flex-direction:column; gap:8px; }
+.rp-item { display:flex; justify-content:space-between; align-items:center; width:100%; height:52px; padding:0 16px; background:#fff; border:1px solid var(--line); border-radius:12px; font:inherit; font-size:15px; font-weight:600; color:var(--ink); cursor:pointer; }
+.rp-item:hover { border-color:var(--brand); background:#fffaf8; }
+.rp-n { font-size:13px; font-weight:600; color:var(--brand); background:var(--brand-soft); padding:3px 10px; border-radius:6px; }
+/* 逐題看答案 */
+.qrev-q { background:none !important; padding:0 !important; font-size:16px !important; line-height:1.9 !important; color:var(--ink); margin:0 0 16px !important; white-space:pre-wrap; }
+.qrev-opts { display:flex; flex-direction:column; gap:8px; }
+.qrev-opt { display:flex !important; align-items:flex-start; gap:12px; margin:0 !important; padding:12px 14px !important; border:1px solid var(--line) !important; border-radius:12px !important; background:#fff !important; font-size:15px !important; line-height:1.7; cursor:default !important; }
+.qrev-opt .opt-letter { flex:0 0 28px; }
+.qrev-opt.opt-correct, .qrev-opt.opt-chosen-correct { border-color:#9fcca8 !important; background:#f3faf4 !important; font-weight:400 !important; }
+.qrev-opt.opt-correct .opt-letter, .qrev-opt.opt-chosen-correct .opt-letter { background:#2e7d32; color:#fff; }
+.qrev-opt.opt-wrong { border-color:#f0b9b3 !important; background:#fdf4f3 !important; }
+.qrev-opt.opt-wrong .opt-letter { background:#c0392b; color:#fff; }
+.qrev-mine { margin-left:auto; flex:0 0 auto; font-size:12px; color:var(--muted); background:#f4efe6; border-radius:6px; padding:2px 8px; align-self:center; }
+.qrev-result { text-align:left !important; margin:16px 0 0 !important; padding:10px 14px !important; border-radius:10px !important; font-size:14px; }
+.qrev-result.ok { background:#e6f2e8 !important; color:#2e6b38 !important; }
+.qrev-result.ng { background:#fdf1f0 !important; color:#a3261e !important; }
+.qrev-exp { margin-top:12px; font-size:14px; line-height:1.9; color:#3a3a3a; white-space:pre-line; background:#faf6ef; border-radius:10px; padding:12px 14px; }
+body.dark .md-box { background:#1f2226 !important; }
+body.dark .md-foot { background:#1b1d21; border-top-color:#2e3238; }
+body.dark .md-head { border-bottom-color:#2e3238; }
+body.dark .md-btn, body.dark .md-x, body.dark .rp-item, body.dark .qrev-opt, body.dark .md-form input { background:#23262b !important; border-color:#3a3f47 !important; color:#e6e6e6; }
+body.dark .md-title, body.dark .qrev-q, body.dark .md-form label { color:#e6e6e6; }
+body.dark .qrev-exp { background:#23262b; color:#e6e6e6; }
+@media(max-width:640px){ .md-head, .md-body, .md-foot { padding-left:16px; padding-right:16px; } .md-foot .md-btn { flex:1; } }
+
 /* ════════ 我的紀錄 v3 ════════ */
 #history-screen { padding:22px 0 30px; }
 .hist-header { gap:12px; margin-bottom:18px; }
@@ -3149,20 +3201,26 @@ async function shareResult(){
   const pct=total>0?Math.round((st.correct/total)*100):0;
   const subjs=[...new Set(st.examResults.map(r=>r.subject))].map(s=>SUBJ_NAMES[s]||s).join('、')||'模擬考';
   const pass=pct>=70;
-  const text='我在「美娟華語工作室」對外華語教學認證模擬考【'+subjs+'】拿了 '+pct+' 分'+(pass?' 🎉':' 💪')+'！一起來練習 👉 '+url;
+  const text='我在「美娟華語工作室」對外華語教學認證模擬考【'+subjs+'】拿了 '+pct+' 分！一起來練習：'+url;
   const sbtn=document.querySelector('.btn-share'); const solabel=sbtn?sbtn.textContent:''; if(sbtn){ sbtn.disabled=true; sbtn.textContent='產生中…'; }
   let file=null;
   try{
     await _lazyScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
     const card=document.createElement('div');
-    card.style.cssText="position:fixed;left:-9999px;top:0;width:600px;height:315px;background:linear-gradient(135deg,#8b1a1a,#6d1414);color:#fff;font-family:'Microsoft JhengHei','PingFang TC',sans-serif;padding:34px;box-sizing:border-box;overflow:hidden";
-    card.innerHTML="<div style='font-size:15px;letter-spacing:3px;opacity:.85;font-weight:600'>美娟華語工作室</div>"
-      +"<div style='font-size:23px;font-weight:800;margin:8px 0 2px'>對外華語教學認證 模擬考</div>"
-      +"<div style='font-size:14px;opacity:.85;margin-bottom:14px'>"+subjs+"</div>"
-      +"<div style='font-size:74px;font-weight:900;line-height:1'>"+pct+"<span style='font-size:26px'> 分</span></div>"
-      +"<div style='display:inline-block;margin-top:12px;padding:7px 20px;border-radius:30px;font-size:16px;font-weight:800;background:"+(pass?'#e8f5e9':'#fff3e0')+";color:"+(pass?'#1b7a3d':'#8b1a1a')+"'>"+(pass?'🎉 通過':'💪 繼續加油')+"　答對 "+st.correct+"/"+total+"</div>"
-      +"<div style='position:absolute;bottom:20px;right:34px;font-size:13px;opacity:.9'>qna-exam-platform.vercel.app</div>"
-      +"<div style='position:absolute;bottom:20px;left:34px;font-size:30px'>📚</div>";
+    card.style.cssText="position:fixed;left:-9999px;top:0;width:600px;height:315px;background:#f5f0e8;color:#2c2c2c;font-family:'Noto Serif TC','Microsoft JhengHei','PingFang TC',serif;box-sizing:border-box;overflow:hidden";
+    const C=2*Math.PI*58, ring=(C*pct/100).toFixed(1), rc=pass?'#2e7d32':'#c0392b';
+    card.innerHTML="<div style='height:64px;background:#fffdf9;border-bottom:1px solid #ece4d6;display:flex;align-items:center;gap:12px;padding:0 32px'>"
+      +"<div style='width:36px;height:36px;border-radius:10px;background:#8b1a1a;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px'>美</div>"
+      +"<div style='font-size:18px;font-weight:700;letter-spacing:1px'>美娟華語工作室</div>"
+      +"<div style='font-size:13px;color:#8a8178;padding-left:12px;border-left:1px solid #ece4d6'>對外華語教學能力認證考試・模擬練習</div></div>"
+      +"<div style='display:flex;align-items:center;gap:30px;padding:30px 36px'>"
+      +"<div style='position:relative;width:150px;height:150px;flex:0 0 auto'><svg width='150' height='150' viewBox='0 0 150 150'><circle cx='75' cy='75' r='58' fill='none' stroke='#ece4d6' stroke-width='12'/><circle cx='75' cy='75' r='58' fill='none' stroke='"+rc+"' stroke-width='12' stroke-linecap='round' stroke-dasharray='"+ring+" "+C.toFixed(1)+"' transform='rotate(-90 75 75)'/></svg>"
+      +"<div style='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:2px'><span style='font-size:48px;font-weight:800;line-height:1'>"+pct+"</span><span style='font-size:16px;color:#8a8178;margin-top:18px'>分</span></div></div>"
+      +"<div><div style='font-size:14px;color:#8a8178;margin-bottom:6px'>模擬考成績</div>"
+      +"<div style='font-size:22px;font-weight:700;margin-bottom:12px'>"+subjs+"</div>"
+      +"<div style='display:inline-block;padding:6px 14px;border-radius:8px;font-size:15px;font-weight:700;background:"+(pass?'#e6f2e8':'#fdf0d6')+";color:"+(pass?'#2e6b38':'#8a5a00')+"'>"+(pass?'達到通過標準':'持續練習中')+"</div>"
+      +"<div style='font-size:14px;color:#8a8178;margin-top:10px'>答對 "+st.correct+" / "+total+" 題</div></div></div>"
+      +"<div style='position:absolute;bottom:16px;right:32px;font-size:12px;color:#a99f94'>qna-exam-platform.vercel.app</div>";
     document.body.appendChild(card);
     const canvas=await html2canvas(card,{scale:2,backgroundColor:null});
     document.body.removeChild(card);
@@ -3480,21 +3538,15 @@ function openReviewPicker(){
   if(!wrongs.length){ alert('目前沒有錯題記錄'); return; }
   const counts={};
   wrongs.forEach(w=>{ counts[w.subject]=(counts[w.subject]||0)+1; });
-  const ICON={chinese:'📜',culture:'🏮',linguistics:'🔤',teaching:'🏫'};
   const order=['chinese','culture','linguistics','teaching'];
   const subjBtns = order.filter(s=>counts[s]).map(s=>
-    '<button onclick="startReviewMode(\''+s+'\')" style="display:flex;justify-content:space-between;align-items:center;width:100%;padding:14px 16px;background:#faf6ee;border:1.5px solid #e7dcc6;border-radius:12px;font-size:1rem;font-weight:600;color:#5a3a1a;cursor:pointer">'
-      +'<span>'+(ICON[s]||'')+' '+SUBJ_NAMES[s]+'</span>'
-      +'<span style="background:#8b1a1a;color:#fff;font-size:.8rem;padding:2px 10px;border-radius:20px">'+counts[s]+' 題</span></button>'
+    '<button class="rp-item" onclick="startReviewMode(\''+s+'\')"><span>'+SUBJ_NAMES[s]+'</span><span class="rp-n">'+counts[s]+' 題</span></button>'
   ).join('');
   const box=document.getElementById('review-picker-box');
   box.innerHTML =
-    '<h3 style="font-size:1.2rem;color:#8b1a1a;font-weight:800;margin:0 0 4px">📌 錯題複習</h3>'
-    +'<p style="color:#888;font-size:.9rem;margin:0 0 18px">選擇要複習的科目：</p>'
-    +'<div style="display:flex;flex-direction:column;gap:10px">'+subjBtns
-    +'<button onclick="startReviewMode(\'all\')" style="width:100%;padding:14px;background:linear-gradient(135deg,#e53935,#b71c1c);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer">📚 全部錯題（'+wrongs.length+' 題）</button>'
-    +'</div>'
-    +'<button onclick="closeReviewPicker()" style="width:100%;padding:10px;margin-top:14px;background:none;border:none;color:#888;font-size:.95rem;cursor:pointer">取消</button>';
+    '<div class="md-head"><div><div class="md-title">錯題複習</div><div class="md-desc">選擇要複習的科目，作答後會立刻看到解析。</div></div><button class="md-x" onclick="closeReviewPicker()" aria-label="關閉"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button></div>'
+    +'<div class="md-body"><div class="rp-list">'+subjBtns+'</div></div>'
+    +'<div class="md-foot"><button class="md-btn" onclick="closeReviewPicker()">取消</button><button class="md-btn primary" onclick="startReviewMode(\'all\')">全部錯題（'+wrongs.length+' 題）</button></div>';
   document.getElementById('review-picker-overlay').style.display='flex';
 }
 
@@ -3535,8 +3587,8 @@ async function exportPDF(){
   const dateStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
   // ── Build an elegant, print-ready 成績單 (score report) ──
-  const scoreColor = pct>=70 ? '#1b7a3d' : (pct>=50 ? '#b8860b' : '#c0392b');
-  const passText   = pct>=70 ? '🎉 通過' : (pct>=50 ? '📈 接近通過' : '📚 繼續加油');
+  const scoreColor = pct>=70 ? '#2e7d32' : '#c0392b';
+  const passText   = pct>=70 ? '達到通過標準' : ('還差 '+(70-pct)+' 分達到通過標準');
   const R=54, CIRC=2*Math.PI*R, dash=(pct/100*CIRC).toFixed(1);
 
   const subjects = [...new Set(st.examResults.map(r=>r.subject))];
@@ -3565,20 +3617,19 @@ async function exportPDF(){
   html,body{background:#e8e2d6}
   body{font-family:'Microsoft JhengHei','PingFang TC','Noto Sans TC',sans-serif;color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact;line-height:1.5}
   .sheet{max-width:780px;margin:0 auto;background:#fff}
-  .hd{background:linear-gradient(135deg,#8b1a1a,#6d1414);color:#fff;padding:26px 34px 22px;position:relative}
-  .hd::after{content:'';position:absolute;left:0;right:0;bottom:0;height:4px;background:linear-gradient(90deg,#c9a227,#e7cd6b,#c9a227)}
-  .brand{font-size:13px;letter-spacing:3px;opacity:.85;font-weight:600}
+  .hd{background:#fffdf9;color:var(--ink);padding:24px 34px 20px;position:relative;border-bottom:1px solid #ece4d6}
+  .brand{font-size:14px;letter-spacing:1px;font-weight:700;color:var(--ink)}
   .hd h1{font-family:'Noto Serif TC','Microsoft JhengHei',serif;font-size:25px;font-weight:800;margin:6px 0 2px}
-  .hd .sub{font-size:13px;opacity:.82}
-  .seal{position:absolute;top:24px;right:30px;font-size:40px;opacity:.92}
-  .meta{display:flex;flex-wrap:wrap;gap:6px 28px;padding:14px 34px;font-size:13px;color:var(--mute);border-bottom:1px solid #efe7d7;background:#faf6ee}
+  .hd .sub{font-size:13px;color:var(--mute)}
+  .seal{position:absolute;top:24px;right:30px;width:46px;height:46px;border-radius:12px;background:var(--red);color:#fff;font-family:'Noto Serif TC',serif;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .meta{display:flex;flex-wrap:wrap;gap:6px 28px;padding:14px 34px;font-size:13px;color:var(--mute);border-bottom:1px solid #efe7d7;background:#fff}
   .meta b{color:var(--ink);font-weight:600}
   .hero{display:flex;align-items:center;gap:28px;padding:24px 34px 18px;page-break-inside:avoid}
   .hero-info{flex:1}
   .verdict{display:inline-block;font-size:15px;font-weight:800;padding:6px 16px;border-radius:30px;margin-bottom:8px}
   .hero-line{font-size:14px;color:var(--mute)}
   .hero-line b{font-size:17px;color:var(--ink)}
-  .sec-title{font-family:'Noto Serif TC',serif;font-size:15px;font-weight:800;color:var(--red);margin:10px 34px 8px;padding-left:10px;border-left:4px solid #c9a227}
+  .sec-title{font-family:'Noto Serif TC',serif;font-size:15px;font-weight:800;color:var(--ink);margin:14px 34px 10px}
   .subjects{padding:0 34px}
   .subj{margin-bottom:11px;page-break-inside:avoid}
   .subj-head{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
@@ -3588,7 +3639,7 @@ async function exportPDF(){
   .wrap{padding:0 34px}
   table{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px}
   thead{display:table-header-group}
-  th{background:var(--red);color:#fff;font-weight:600;padding:8px;text-align:left;font-size:12px}
+  th{background:#faf6ef;color:var(--mute);font-weight:600;padding:8px;text-align:left;font-size:12px;border-bottom:1px solid #ece4d6}
   td{padding:8px;border-bottom:1px solid #eee;vertical-align:top}
   tr{page-break-inside:avoid}
   tbody tr.ok{background:#f4faf5}
@@ -3610,7 +3661,7 @@ async function exportPDF(){
 </style></head><body>
 <div class="sheet">
   <div class="hd">
-    <div class="seal">📚</div>
+    <div class="seal">美</div>
     <div class="brand">美娟華語工作室</div>
     <h1>對外華語教學能力認證考試</h1>
     <div class="sub">模擬考成績單 · Mock Exam Report</div>
@@ -3630,7 +3681,7 @@ async function exportPDF(){
       </svg>
     </div>
     <div class="hero-info">
-      <div class="verdict" style="background:${pct>=70?'#e8f5e9':'#fdecea'};color:${scoreColor}">${passText}</div>
+      <div class="verdict" style="background:${pct>=70?'#e6f2e8':'#fdf0d6'};color:${pct>=70?'#2e6b38':'#8a5a00'};border-radius:8px">${passText}</div>
       <div class="hero-line">答對 <b>${st.correct}</b> 題　答錯 <b>${st.wrong}</b> 題　共 <b>${total}</b> 題</div>
       <div class="hero-line" style="margin-top:4px">通過標準：70 分</div>
     </div>
@@ -4500,26 +4551,28 @@ function renderQReview(){
       if(i===r.chosen && !isAcceptedAns(r,r.chosen)) cls+=' opt-wrong';
       if(i===r.chosen && isAcceptedAns(r,r.chosen)) cls+=' opt-chosen-correct';
     }
-    optsHtml+=`<button class="${cls}" disabled><span style="font-weight:700;margin-right:6px">${letters[i]}</span>${opt}</button>`;
+    optsHtml+=`<div class="${cls}"><span class="opt-letter">${letters[i]}</span><span>${uH(opt)}</span>${i===r.chosen?'<span class="qrev-mine">你的答案</span>':''}</div>`;
   });
-  const resultCls = r.correct ? 'qrev-result ok' : 'qrev-result ng';
-  const resultTxt = r.correct
-    ? (r.free ? '✅ 官方送分題' : `✅ 答對！正確答案：${ansLettersText(r)}`)
-    : `❌ 答錯！正確答案：${ansLettersText(r)}`;
+  const ok=!!r.correct;
+  const resultTxt = r.chosen==null ? `沒有作答・正確答案是 ${ansLettersText(r)}`
+    : ok ? (r.free ? '答對了・此題官方一律送分' : `答對了・正確答案是 ${ansLettersText(r)}`)
+    : `答錯了・你選 ${letters[r.chosen]||'?'}，正確答案是 ${ansLettersText(r)}`;
+  const exp=String(r.exp||'');
   box.innerHTML=`
-    <div class="qrev-nav-row">
-      <span style="font-weight:700">📖 題目複習</span>
-      <span class="qrev-meta">第 ${_qRevQIdx+1} / ${total} 題</span>
+    <div class="md-head">
+      <div><div class="md-title">第 ${_qRevQIdx+1} 題<span class="md-sub">共 ${total} 題</span></div>
+        <div class="md-tags"><span class="subj-tag">${SUBJ_NAMES[r.subject]||r.subject||''}</span>${r.yr?`<span class="yr-tag">${r.yr}</span>`:''}</div></div>
+      <button class="md-x" onclick="closeQReview()" aria-label="關閉"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
     </div>
-    <div class="qrev-meta">科目：${r.subject||''} ｜ 年份：${r.yr||''}</div>
-    <div class="qrev-q">${r.q||''}</div>
-    ${optsHtml}
-    <div class="${resultCls}">${resultTxt}</div>
-    ${r.exp?`<div style="background:#fff8e1;border-radius:8px;padding:10px 12px;font-size:.85rem;color:#5d4037;margin-bottom:10px">💡 ${r.exp}</div>`:''}
-    <div class="qrev-footer">
-      <button class="qrev-btn-nav" onclick="qRevNav(-1)" ${_qRevQIdx===0?'disabled':''}>← 上題</button>
-      <button class="qrev-btn-nav" onclick="qRevNav(1)"  ${_qRevQIdx===total-1?'disabled':''}>下題 →</button>
-      <button class="qrev-btn-close" onclick="closeQReview()">✕ 關閉</button>
+    <div class="md-body">
+      <div class="qrev-q">${uH(r.q||'')}</div>
+      <div class="qrev-opts">${optsHtml}</div>
+      <div class="qrev-result ${ok?'ok':'ng'}">${resultTxt}</div>
+      ${exp?`<div class="qrev-exp">${uH(exp)}</div>`:''}
+    </div>
+    <div class="md-foot">
+      <button class="md-btn" onclick="qRevNav(-1)" ${_qRevQIdx===0?'disabled':''}>← 上一題</button>
+      <button class="md-btn" onclick="qRevNav(1)"  ${_qRevQIdx===total-1?'disabled':''}>下一題 →</button>
     </div>`;
 }
 
@@ -4557,7 +4610,7 @@ function renderQReview(){
   if(!document.getElementById('qreview-overlay')){
     document.body.insertAdjacentHTML('beforeend', `
 <div id="qreview-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:2000;align-items:center;justify-content:center;padding:16px">
-  <div id="qreview-box" style="background:#fff;border-radius:16px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,.25)">
+  <div id="qreview-box" class="md-box" style="max-width:680px">
     <!-- content rendered by renderQReview() -->
   </div>
 </div>`);
@@ -4567,7 +4620,7 @@ function renderQReview(){
   if(!document.getElementById('review-picker-overlay')){
     document.body.insertAdjacentHTML('beforeend', `
 <div id="review-picker-overlay" onclick="if(event.target===this)closeReviewPicker()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center;padding:16px">
-  <div id="review-picker-box" style="background:#fff;border-radius:16px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,.25)"></div>
+  <div id="review-picker-box" class="md-box" style="max-width:420px"></div>
 </div>`);
   }
 
@@ -4575,19 +4628,17 @@ function renderQReview(){
   if(!document.getElementById('guest-reg-overlay')){
     document.body.insertAdjacentHTML('beforeend', `
 <div id="guest-reg-overlay" onclick="if(event.target===this)closeGuestRegister()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;align-items:center;justify-content:center;padding:16px">
-  <div style="background:#fff;border-radius:16px;max-width:380px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;box-shadow:0 8px 40px rgba(0,0,0,.3)">
-    <div style="font-size:1.1rem;font-weight:700;color:#8b1a1a;margin-bottom:6px">✍️ 註冊並保存進度</div>
-    <div style="font-size:.8rem;color:#666;margin-bottom:4px">建立帳號後可做全部題目，並保存這次訪客作答；之後用 Gmail＋密碼登入。</div>
-    <div id="greg-info" style="font-size:.82rem;color:#2e7d32;margin-bottom:12px"></div>
-    <input type="text" id="greg-name" placeholder="帳號名稱" maxlength="40" style="width:100%;margin-bottom:8px;padding:9px;border:1px solid #ccc;border-radius:8px;box-sizing:border-box">
-    <input type="email" id="greg-email" placeholder="Gmail 電郵地址" style="width:100%;margin-bottom:8px;padding:9px;border:1px solid #ccc;border-radius:8px;box-sizing:border-box">
-    <input type="password" id="greg-pw" placeholder="密碼" style="width:100%;margin-bottom:8px;padding:9px;border:1px solid #ccc;border-radius:8px;box-sizing:border-box">
-    <input type="password" id="greg-pw2" placeholder="再次輸入密碼" style="width:100%;margin-bottom:8px;padding:9px;border:1px solid #ccc;border-radius:8px;box-sizing:border-box">
-    <div id="greg-msg" style="font-size:.82rem;color:#c62828;min-height:18px;margin-bottom:8px"></div>
-    <div style="display:flex;gap:10px">
-      <button onclick="closeGuestRegister()" style="flex:1;background:#fff;color:#555;border:1px solid #bbb;border-radius:8px;padding:10px;cursor:pointer">取消</button>
-      <button onclick="submitGuestRegister()" style="flex:2;background:#c0392b;color:#fff;border:none;border-radius:8px;padding:10px;font-weight:700;cursor:pointer">建立並保存 →</button>
+  <div class="md-box" style="max-width:400px">
+    <div class="md-head"><div><div class="md-title">註冊並保存進度</div><div class="md-desc">建立帳號後可以做全部題目，這次訪客作答也會一起保存。</div></div><button class="md-x" onclick="closeGuestRegister()" aria-label="關閉"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button></div>
+    <div class="md-body md-form">
+      <div id="greg-info" class="md-ok"></div>
+      <label>帳號名稱</label><input type="text" id="greg-name" maxlength="40" autocomplete="nickname">
+      <label>登入信箱</label><input type="email" id="greg-email" autocomplete="username" placeholder="例如 name@gmail.com">
+      <label>密碼</label><input type="password" id="greg-pw" autocomplete="new-password" placeholder="至少 6 個字">
+      <label>再輸入一次密碼</label><input type="password" id="greg-pw2" autocomplete="new-password">
+      <div id="greg-msg" class="md-err"></div>
     </div>
+    <div class="md-foot"><button class="md-btn" onclick="closeGuestRegister()">取消</button><button class="md-btn primary" onclick="submitGuestRegister()">建立並保存</button></div>
   </div>
 </div>`);
   }

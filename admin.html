@@ -233,6 +233,52 @@ body { overflow-x:clip; }
 .topbar-row { position:relative; min-height:60px; padding:9px 0; margin-bottom:6px; }
 .topbar-row::before { content:''; position:absolute; top:0; bottom:0; left:-100vmax; right:-100vmax; background:#fffdf9; border-bottom:1px solid var(--line); z-index:-1; pointer-events:none; }
 .topbar .icon-btn { background:#fff; }
+/* 彈出視窗統一 */
+#admin-modal-overlay, #admin-add-overlay, #qb-edit-overlay, #student-detail-overlay { background:rgba(40,28,20,.45) !important; }
+.admin-modal { width:400px; padding:24px; border-radius:18px; box-shadow:0 20px 60px rgba(60,30,20,.25); }
+.admin-modal h3 { font-size:18px; margin:0 0 6px; }
+.admin-modal label { font-size:14px; font-weight:600; color:var(--ink); margin:16px 0 6px; }
+.lb-hint { font-weight:400; color:var(--muted); font-size:12px; margin-left:4px; }
+.admin-modal input { height:44px; padding:0 12px; border:1px solid var(--line); border-radius:10px; font:inherit; font-size:15px; }
+.modal-note { font-size:12px; color:var(--muted); line-height:1.7; margin-top:12px; background:#faf6ef; border-radius:8px; padding:10px 12px; }
+.modal-btns { justify-content:flex-end; margin-top:22px; }
+.modal-btn-primary, .modal-btn-cancel { flex:0 0 auto; height:42px; padding:0 20px; border-radius:10px; font:inherit; font-size:15px; font-weight:600; }
+.modal-btn-cancel { background:#fff; border:1px solid var(--line); color:var(--ink); }
+.modal-btn-cancel:hover { background:#fff; border-color:#d9c7b8; }
+/* 學生詳情 */
+.stu-modal { width:680px; padding:24px 26px; border-radius:18px; box-shadow:0 20px 60px rgba(60,30,20,.25); }
+.sd-head { display:flex; align-items:center; gap:12px; }
+.sd-avatar { width:44px; height:44px; border-radius:50%; background:var(--brand-soft); color:var(--brand); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; flex:0 0 auto; }
+.sd-who { flex:1; min-width:0; }
+.sd-name { font-size:18px; font-weight:700; }
+.sd-mail { font-size:13px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; }
+.sd-x { width:34px; height:34px; border-radius:9px; border:1px solid var(--line); background:#fff; color:var(--muted); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+.sd-x:hover { color:var(--brand); }
+.sd-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:18px 0 4px; }
+.sd-stats > div { background:#faf6ef; border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; gap:2px; }
+.sd-stats b { font-size:20px; }
+.sd-stats span { font-size:12px; color:var(--muted); }
+.sd-empty { color:var(--muted); padding:28px 0 8px; text-align:center; font-size:14px; }
+.stu-sec-title { font-size:14px; color:var(--ink); margin:22px 0 10px; display:flex; align-items:baseline; gap:8px; }
+.sd-sub { font-size:12px; font-weight:400; color:var(--muted); }
+.stu-modal .dash-bars { border:none; padding:0; }
+.stu-rec-table { font-size:14px; border:1px solid var(--line); border-radius:12px; overflow:hidden; border-collapse:separate; border-spacing:0; }
+.stu-rec-table th { background:#faf6ef; color:var(--muted); font-size:13px; padding:9px 12px; border-bottom:1px solid var(--line); }
+.stu-rec-table td { padding:9px 12px; border-bottom:1px solid #f3eee5; }
+.stu-rec-table tr:last-child td { border-bottom:none; }
+.stu-wrong-item { font-size:14px; padding:9px 0; border-bottom:1px solid #f3eee5; line-height:1.7; }
+.stu-wrong-tag { background:var(--brand-soft); color:var(--brand); font-size:12px; padding:2px 8px; }
+/* 總覽圖表 */
+.dash-grid { display:grid; grid-template-columns:3fr 2fr; gap:12px; margin-top:12px; }
+.dash-panel { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px 18px; min-width:0; }
+.dash-panel-title { font-size:14px; font-weight:700; margin-bottom:12px; display:flex; align-items:baseline; gap:8px; }
+.dash-panel-title span { font-size:12px; font-weight:400; color:var(--muted); }
+.dash-svg { width:100%; height:auto; display:block; }
+.dash-panel .dash-bar-row { margin:12px 0; font-size:14px; }
+.dash-panel .dash-bar-name { flex:0 0 112px; }
+.dash-panel .dash-bar { height:10px; background:#f1ebe0; }
+.dash-empty { font-size:13px; color:var(--muted); padding:30px 0; text-align:center; }
+@media(max-width:820px){ .dash-grid { grid-template-columns:1fr; } .sd-stats b { font-size:17px; } }
 /* 切換分頁時不因捲軸出現/消失而左右跳動 */
 html { scrollbar-gutter:stable; overflow-y:scroll; }
 /* 滑鼠點擊不顯示黑框，鍵盤操作才顯示柔和外框 */
@@ -472,14 +518,14 @@ html { scrollbar-gutter:stable; overflow-y:scroll; }
     <input type="hidden" id="modal-idx">
     <label>名稱</label>
     <input type="text" id="modal-name" placeholder="帳號名稱" maxlength="20">
-    <label>密碼（新增時必填，至少6碼；已升級的帳號請用「寄重設密碼信」）</label>
+    <label>密碼 <span class="lb-hint">新增時必填，至少 6 碼</span></label>
     <input type="password" id="modal-pw" placeholder="密碼">
-    <label>Gmail（學習者用它登入）</label>
+    <label>登入信箱</label>
     <input type="email" id="modal-email" placeholder="Gmail 信箱">
     <div class="modal-error" id="modal-error"></div>
     <div class="modal-btns">
-      <button class="modal-btn-primary" onclick="saveModal()">儲存</button>
       <button class="modal-btn-cancel"  onclick="closeModal()">取消</button>
+      <button class="modal-btn-primary" onclick="saveModal()">儲存</button>
     </div>
   </div>
 </div>
@@ -488,17 +534,17 @@ html { scrollbar-gutter:stable; overflow-y:scroll; }
 <div id="admin-add-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center">
   <div class="admin-modal">
     <h3 id="admin-add-title">新增管理員帳號</h3>
-    <label>名稱（顯示用，可自訂）</label>
+    <label>名稱 <span class="lb-hint">顯示用</span></label>
     <input type="text" id="newadmin-name" placeholder="例如：王老師" maxlength="20">
     <label>管理員 Email</label>
     <input type="email" id="newadmin-email" placeholder="對方的 Email">
-    <label>密碼（至少6碼）</label>
+    <label>密碼 <span class="lb-hint">至少 6 碼</span></label>
     <input type="text" id="newadmin-pw" placeholder="幫他設定的密碼">
     <div class="modal-error" id="newadmin-error"></div>
-    <div style="font-size:.75rem;color:#999;margin-top:6px">建立後把 Email 和密碼給對方；對方第一次登入時系統才會寄驗證信給他，驗證後就能使用。一般管理員只能查看學習者，不能修改。</div>
+    <div class="modal-note">建立後把 Email 和密碼給對方；對方第一次登入時系統才會寄驗證信給他，驗證後就能使用。一般管理員只能查看學習者，不能修改。</div>
     <div class="modal-btns">
-      <button class="modal-btn-primary" onclick="addAdmin()">儲存</button>
       <button class="modal-btn-cancel"  onclick="closeAdminAddModal()">取消</button>
+      <button class="modal-btn-primary" onclick="addAdmin()">建立</button>
     </div>
   </div>
 </div>
@@ -1190,13 +1236,26 @@ function renderDashboard(){
     +card('最活躍學生', esc(topName), topCnt?topCnt+' 次':'')
     +card('最需加強', weak, '')
     +'</div>';
+  // 近 30 天每日作答次數
+  const days=[]; for(let k=29;k>=0;k--){ const d=new Date(); d.setDate(d.getDate()-k); days.push(_ymd(d)); }
+  const perDay={}; recs.forEach(r=>{ perDay[r.date]=(perDay[r.date]||0)+1; });
+  const vals=days.map(d=>perDay[d]||0); const mx=Math.max(1,...vals); const tot30=vals.reduce((a,b)=>a+b,0);
+  const W=600,H=150,pl=28,pb=22,pt=10,bw=(W-pl)/30;
+  let svg='<svg viewBox="0 0 '+W+' '+H+'" class="dash-svg">';
+  [0,.5,1].forEach(f=>{ const y=pt+(H-pt-pb)*(1-f); svg+='<line x1="'+pl+'" y1="'+y+'" x2="'+W+'" y2="'+y+'" stroke="#f1ebe0"/><text x="'+(pl-6)+'" y="'+(y+4)+'" text-anchor="end" font-size="10" fill="#a99f94">'+Math.round(mx*f)+'</text>'; });
+  vals.forEach((v,k)=>{ const h=(H-pt-pb)*(v/mx); const x=pl+k*bw+bw*0.18; const y=H-pb-h;
+    svg+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+(bw*0.64).toFixed(1)+'" height="'+Math.max(h,v?2:0).toFixed(1)+'" rx="2" fill="'+(k===29?'#8b1a1a':'#d9b9b3')+'"><title>'+days[k]+'：'+v+' 次</title></rect>';
+    if(k%7===1||k===29) svg+='<text x="'+(pl+k*bw+bw/2).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="#a99f94">'+days[k].slice(5).replace('-','/')+'</text>'; });
+  svg+='</svg>';
+  html+='<div class="dash-grid">'
+    +'<div class="dash-panel"><div class="dash-panel-title">近 30 天作答次數<span>共 '+tot30+' 次</span></div>'+(tot30?svg:'<div class="dash-empty">這 30 天還沒有人作答</div>')+'</div>'
+    +'<div class="dash-panel"><div class="dash-panel-title">各科全體平均正確率</div>';
   if(subjArr.length){
-    html+='<div class="dash-bars"><div style="font-size:.8rem;color:#888;margin-bottom:8px">各科全體平均正確率</div>';
     subjArr.forEach(o=>{ const col=_pctColor(o.pct);
-      html+='<div class="dash-bar-row"><span class="dash-bar-name">'+SUBJ_NAMES_ADMIN[o.s]+'</span><div class="dash-bar"><div class="dash-bar-fill" style="width:'+o.pct+'%;background:'+col+'"></div></div><span class="dash-bar-pct" style="color:'+col+'">'+o.pct+'%</span><span class="dash-bar-cnt">'+o.c+'/'+o.t+'</span></div>';
+      html+='<div class="dash-bar-row"><span class="dash-bar-name">'+SUBJ_NAMES_ADMIN[o.s]+'</span><div class="dash-bar"><div class="dash-bar-fill" style="width:'+o.pct+'%;background:'+col+'"></div></div><span class="dash-bar-pct" style="color:'+col+'">'+o.pct+'%</span></div>';
     });
-    html+='</div>';
-  }
+  } else html+='<div class="dash-empty">還沒有作答資料</div>';
+  html+='</div></div>';
   el.innerHTML=html;
 }
 
@@ -1214,13 +1273,13 @@ function openStudentDetail(i){
   recs.forEach(r=>{ (r.questions||[]).forEach(q=>{ if(q&&q.correct===false&&!q.free){ const k=(q.subject||'')+'|'+(q.yr||'')+'|'+(q.q||''); if(!wm[k])wm[k]={n:0,subject:q.subject,yr:q.yr,q:q.q}; wm[k].n++; } }); });
   const topWrong=Object.values(wm).sort((a,b)=>b.n-a.n).slice(0,8);
 
-  let h='<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">'
-    +'<span style="font-size:1.15rem;font-weight:800;color:#2c3e50">👤 '+esc(name)+'</span>'
-    +'<button onclick="closeStudentDetail()" style="margin-left:auto;background:none;border:none;font-size:1.3rem;cursor:pointer;color:#999;line-height:1">✕</button></div>'
-    +'<div style="font-size:.8rem;color:#888;margin-bottom:6px">'+(acc.email?esc(acc.email)+'　':'')+'考試次數：<b>'+recs.length+'</b> 次</div>';
+  const avgP=recs.length?Math.round(recs.reduce((a,r)=>a+(r.pct||0),0)/recs.length):0;
+  let h='<div class="sd-head"><div class="sd-avatar">'+esc(String(name).slice(0,1))+'</div><div class="sd-who"><div class="sd-name">'+esc(name)+'</div><div class="sd-mail">'+(acc.email?esc(acc.email):'沒有信箱')+'</div></div>'
+    +'<button class="sd-x" onclick="closeStudentDetail()" aria-label="關閉"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button></div>'
+    +'<div class="sd-stats"><div><b>'+recs.length+'</b><span>考試次數</span></div><div><b>'+(recs.length?avgP+' 分':'—')+'</b><span>平均成績</span></div><div><b>'+(recs[0]?(recs[0].pct||0)+' 分':'—')+'</b><span>最近一次</span></div></div>';
 
   if(!recs.length){
-    h+='<div style="color:#999;padding:20px 0;text-align:center">這位學習者尚無作答紀錄</div>';
+    h+='<div class="sd-empty">這位學習者還沒有作答紀錄</div>';
     document.getElementById('student-detail-box').innerHTML=h;
     document.getElementById('student-detail-overlay').style.display='flex';
     return;
@@ -1235,21 +1294,26 @@ function openStudentDetail(i){
     h+='</div>';
   }
 
-  // 進步軌跡
-  if(pts.length){
-    h+='<div class="stu-sec-title">進步軌跡（最近 '+pts.length+' 次，舊 → 新）</div><div class="stu-pills">';
-    pts.forEach(r=>{ const col=_pctColor(r.pct||0); h+='<span class="stu-pill" title="'+esc(r.date||'')+'" style="background:'+col+'">'+(r.pct||0)+'</span>'; });
-    h+='</div>';
+  // 進步軌跡（折線圖）
+  if(pts.length>=2){
+    const W=560,H=120,pl=26,pr=10,pt=10,pb=20,n=pts.length;
+    const X=k=>pl+(W-pl-pr)*(k/(n-1)), Y=v=>pt+(H-pt-pb)*(1-Math.max(0,Math.min(100,v))/100);
+    let svg='<svg viewBox="0 0 '+W+' '+H+'" class="dash-svg">';
+    [0,70,100].forEach(v=>{ svg+='<line x1="'+pl+'" y1="'+Y(v)+'" x2="'+(W-pr)+'" y2="'+Y(v)+'" stroke="'+(v===70?'#e8cf9a':'#f1ebe0')+'"'+(v===70?' stroke-dasharray="4 3"':'')+'/><text x="'+(pl-6)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="10" fill="#a99f94">'+v+'</text>'; });
+    svg+='<path d="'+pts.map((r,k)=>(k?'L':'M')+X(k).toFixed(1)+' '+Y(r.pct||0).toFixed(1)).join(' ')+'" fill="none" stroke="#8b1a1a" stroke-width="2" stroke-linejoin="round"/>';
+    pts.forEach((r,k)=>{ svg+='<circle cx="'+X(k).toFixed(1)+'" cy="'+Y(r.pct||0).toFixed(1)+'" r="3.5" fill="#fff" stroke="#8b1a1a" stroke-width="2"><title>'+esc(r.date||'')+'：'+(r.pct||0)+' 分</title></circle>'; });
+    svg+='</svg>';
+    h+='<div class="stu-sec-title">成績變化<span class="sd-sub">最近 '+n+' 次，虛線為通過標準 70 分</span></div>'+svg;
   }
 
   // 每次作答
-  h+='<div class="stu-sec-title">每次作答紀錄</div><table class="stu-rec-table"><thead><tr><th>日期時間</th><th>科目</th><th>年份</th><th>成績</th></tr></thead><tbody>';
+  h+='<div class="stu-sec-title">每次作答紀錄</div><table class="stu-rec-table"><thead><tr><th>日期</th><th>科目</th><th>年份</th><th style="text-align:right">成績</th></tr></thead><tbody>';
   recs.forEach(r=>{ const col=_pctColor(r.pct||0);
     const subs=(r.subjects||[]).map(s=>SUBJ_NAMES_ADMIN[s]||s).join('、');
     const yrs=(r.years||[]).join('、');
-    h+='<tr><td style="white-space:nowrap">'+esc(r.date||'')+'<br><span style="color:#aaa;font-size:.72rem">'+esc(r.time||'')+'</span></td>'
+    h+='<tr><td style="white-space:nowrap">'+esc(r.date||'')+' <span style="color:#a99f94">'+esc(String(r.time||'').slice(0,5))+'</span></td>'
       +'<td>'+esc(subs)+'</td><td style="color:#888">'+esc(yrs)+'</td>'
-      +'<td style="white-space:nowrap"><b style="color:'+col+'">'+(r.pct||0)+' 分</b> <span style="color:#999;font-size:.75rem">('+(r.correct||0)+'/'+(r.total||0)+')</span></td></tr>';
+      +'<td style="white-space:nowrap;text-align:right"><b style="color:'+col+'">'+(r.pct||0)+' 分</b> <span style="color:#a99f94;font-size:12px">'+(r.correct||0)+'/'+(r.total||0)+'</span></td></tr>';
   });
   h+='</tbody></table>';
 
