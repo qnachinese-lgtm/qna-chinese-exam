@@ -3709,7 +3709,16 @@ function renderProgressPanel(){
 // ═══════════════════════════════════════════
 //  FIREBASE INTEGRATION (cloud sync)
 // ═══════════════════════════════════════════
-const FB_CONFIG = {
+// 網址含 "staging" → 測試版資料庫（qna-chinese-staging）；其他網址 → 正式版資料庫
+const IS_STAGING = /staging/i.test(location.hostname);
+const FB_CONFIG = IS_STAGING ? {
+  apiKey: "AIzaSyA7qWp5nbRtA2_7BM_mK-VpVDGXXjMpnRk",
+  authDomain: "qna-chinese-staging.firebaseapp.com",
+  projectId: "qna-chinese-staging",
+  storageBucket: "qna-chinese-staging.firebasestorage.app",
+  messagingSenderId: "393085795342",
+  appId: "1:393085795342:web:656f3f5deb3fd96c4dd05f"
+} : {
   apiKey: "AIzaSyCSgZ9DmLuKIqqbxrVgAcUfy-QJFhzjjp8",
   authDomain: "qna-chinese.firebaseapp.com",
   projectId: "qna-chinese",
@@ -3717,6 +3726,17 @@ const FB_CONFIG = {
   messagingSenderId: "645044163415",
   appId: "1:645044163415:web:c33d1a22422de3083b6412"
 };
+// 測試版 / 留底版：畫面頂端顯示標記，避免跟正式版搞混
+(function(){
+  const host = location.hostname;
+  const label = IS_STAGING ? '🧪 測試版（測試資料，不影響正式版）' : (/backup/i.test(host) ? '📦 留底版（舊版程式備份，資料與正式版共用）' : '');
+  if(!label) return;
+  const add = () => { if(document.getElementById('env-banner')) return;
+    const b = document.createElement('div'); b.id = 'env-banner'; b.textContent = label;
+    b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:'+(IS_STAGING?'#6a1b9a':'#455a64')+';color:#fff;text-align:center;font-size:13px;padding:5px 8px;font-family:sans-serif;opacity:.92;pointer-events:none';
+    document.body.appendChild(b); };
+  if(document.body) add(); else document.addEventListener('DOMContentLoaded', add);
+})();
 
 let _db = null;
 
