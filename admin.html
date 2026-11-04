@@ -146,7 +146,6 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
       <button class="admin-back" onclick="adminLogout()">← 登出</button>
       <span class="admin-title">⚙️ 管理者後臺</span>
       <span id="role-badge" class="role-badge role-admin"></span>
-      <button id="add-learner-btn" class="admin-add-btn" style="margin:0" onclick="openAddModal()">＋ 新增學習者帳號</button>
     </div>
     <div id="who-am-i" style="font-size:.8rem;color:#888;margin-bottom:16px"></div>
 
@@ -160,6 +159,7 @@ main { max-width:880px; margin:0 auto; padding:28px 16px; }
     <div class="admin-header" style="margin-bottom:16px">
       <span class="admin-title">📚 學習者名單</span>
       <button id="cleanup-btn" onclick="cleanupDuplicates()" style="display:none;background:#ff7043;color:#fff;border:none;cursor:pointer;padding:8px 14px;border-radius:8px;font-weight:600;margin-right:8px">🧹 清除空殼</button>
+      <button id="add-learner-btn" class="admin-add-btn" style="margin:0 8px 0 0;padding:8px 16px" onclick="openAddModal()">＋ 新增學習者</button>
       <button id="toggle-learners-btn" class="admin-back" onclick="toggleLearnersTable()" style="background:#4a90e2;color:#fff;border:none;cursor:pointer;padding:8px 16px;border-radius:8px">隱藏</button>
     </div>
     <div id="learners-table-container" style="overflow-x:auto;margin-bottom:30px">
