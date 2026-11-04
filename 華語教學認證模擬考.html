@@ -3617,10 +3617,16 @@ async function exportPDF(){
   }).join('');
   const rows = st.examResults.map((r,i)=>{
     const acc = acceptedList(r);
-    const res = r.chosen==null ? '<span class="tag t-na">未答</span>' : (r.correct ? '<span class="tag t-ok">答對</span>' : '<span class="tag t-no">答錯</span>');
-    const mine = r.chosen==null ? '<span class="muted">—</span>' : `<b class="${r.correct?'c-ok':'c-no'}">${letters[r.chosen]}</b>`;
-    const ans = r.free ? '<span class="muted">送分</span>' : `<b class="c-ok">${acc.map(k=>letters[k]).join('、')}</b><div class="ans-txt">${esc2(String(r.opts[acc[0]]||'').replace(/<\/?u>/g,''))}</div>`;
-    return `<tr><td class="c-num">${i+1}</td><td class="c-q"><div class="q-meta">${SUBJ[r.subject]||''}・${esc2(r.yr||'')}</div>${esc2(r.q)}</td><td class="c-mine">${mine}</td><td class="c-ans">${ans}</td><td class="c-res">${res}</td></tr>`;
+    const res = r.chosen==null ? '<span class="tag t-na">未作答</span>' : (r.correct ? '<span class="tag t-ok">答對</span>' : '<span class="tag t-no">答錯</span>');
+    const opts = (r.opts||[]).map((o,k)=>{
+      const isAns = !r.free && acc.includes(k), isMine = r.chosen===k;
+      const cls = isAns ? 'op ans' : (isMine ? 'op mine' : 'op');
+      const note = (isAns&&isMine) ? '<span class="op-note n-ok">你的答案・正確</span>' : isAns ? '<span class="op-note n-ok">正確答案</span>' : isMine ? '<span class="op-note n-no">你的答案</span>' : '';
+      return `<div class="${cls}"><span class="op-l">${letters[k]}</span><span class="op-t">${esc2(o)}</span>${note}</div>`;
+    }).join('');
+    const exp = String(r.exp||'').trim();
+    const expHtml = exp ? `<div class="exp"><div class="exp-h">解析</div>${esc2(exp).replace(/\n/g,'<br>')}</div>` : '';
+    return `<div class="qitem ${r.correct?'is-ok':'is-no'}"><div class="qi-top"><span class="qi-n">第 ${i+1} 題</span><span class="qi-m">${SUBJ[r.subject]||''}・${esc2(r.yr||'')}</span>${res}</div><div class="qi-q">${esc2(r.q)}</div><div class="ops">${opts}</div>${r.free?'<div class="exp">此題官方一律送分。</div>':''}${expHtml}</div>`;
   }).join('');
 
   const safeUser = (st.currentUser||'未登入');
@@ -3684,6 +3690,24 @@ async function exportPDF(){
   .tag{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:6px;white-space:nowrap}
   .t-ok{background:#e6f2e8;color:#2e6b38}.t-no{background:#fdf1f0;color:#a3261e}.t-na{background:#f4efe6;color:#8a8178}
   .legend{display:none}
+  .sec-sub{font-size:12px;font-weight:400;color:#8a8178;margin-left:10px}
+  .qlist{margin:0 32px;display:flex;flex-direction:column;gap:10px}
+  .qitem{background:#fff;border:1px solid #ece4d6;border-radius:14px;padding:16px 20px;page-break-inside:avoid}
+  .qi-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .qi-n{font-size:14px;font-weight:700}
+  .qi-m{font-size:12px;color:#a99f94}
+  .qi-top .tag{margin-left:auto}
+  .qi-q{font-size:14px;line-height:1.8;margin-bottom:10px}
+  .ops{display:flex;flex-direction:column;gap:6px}
+  .op{display:flex;align-items:flex-start;gap:10px;padding:7px 10px;border:1px solid #f1ebe0;border-radius:9px;font-size:13px;line-height:1.7}
+  .op-l{flex:0 0 22px;height:22px;border-radius:50%;background:#f4efe6;color:#8a8178;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .op-t{flex:1}
+  .op-note{flex:0 0 auto;font-size:11px;font-weight:600;padding:1px 7px;border-radius:5px;margin-top:2px}
+  .op.ans{border-color:#bcdcc3;background:#f3faf4}.op.ans .op-l{background:#2e7d32;color:#fff}
+  .op.mine{border-color:#f0c4be;background:#fdf4f3}.op.mine .op-l{background:#c0392b;color:#fff}
+  .n-ok{background:#e6f2e8;color:#2e6b38}.n-no{background:#fdf1f0;color:#a3261e}
+  .exp{margin-top:10px;background:#faf6ef;border-radius:10px;padding:10px 14px;font-size:13px;line-height:1.85;color:#3a3a3a}
+  .exp-h{font-size:12px;font-weight:700;color:#8b1a1a;margin-bottom:2px}
   .ft{margin:18px 32px 0;font-size:11px;color:#a99f94;display:flex;justify-content:space-between}
   @page{size:A4;margin:10mm}
   @media print{.sheet{width:auto}}
@@ -3709,13 +3733,8 @@ async function exportPDF(){
   </div>
   <div class="sec-title">各科表現</div>
   <div class="card subjects">${subjCards}</div>
-  <div class="sec-title">作答明細</div>
-  <div class="card">
-    <table>
-      <thead><tr><th class="c-num">#</th><th>題目</th><th class="c-mine">你的作答</th><th class="c-ans">正確答案</th><th class="c-res">結果</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-  </div>
+  <div class="sec-title">作答明細<span class="sec-sub">每題列出四個選項與解析，綠色為正確答案，紅色為你選錯的答案</span></div>
+  <div class="qlist">${rows}</div>
   <div class="legend"></div>
   <div class="ft"><span>美娟華語工作室・模擬考成績單</span><span>qna-exam-platform.vercel.app</span></div>
 </div>
@@ -3759,7 +3778,7 @@ async function exportPDF(){
       const pageCssH=sheetW*297/210;
       const totalCss=target.scrollHeight;
       const sheetTop=target.getBoundingClientRect().top;
-      const atoms=idoc.querySelectorAll('.hd,.meta,.hero,.sec-title,.subj,thead tr,tbody tr,.legend,.ft');
+      const atoms=idoc.querySelectorAll('.hd,.title,.meta,.hero,.sec-title,.subj,.qitem,.ft');
       let cuts=[0];
       atoms.forEach(el=>{ const bt=el.getBoundingClientRect().bottom - sheetTop; if(bt>0) cuts.push(bt); });
       cuts.push(totalCss);
