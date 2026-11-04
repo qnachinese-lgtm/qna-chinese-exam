@@ -933,6 +933,17 @@ body.dark .rk-name, body.dark .rk-val b, body.dark .bd-meta b, body.dark .bd-tex
 .disc-panel .bd-compose textarea { min-height:64px; }
 .disc-panel .hist-empty { padding:16px; font-size:13px; }
 body.dark .disc-btn { background:#23262b; border-color:#3a3f47; color:#e6e6e6; }
+.reg-invite { margin-top:10px; }
+.reg-note { font-size:13px; color:#8a5a00; background:#fdf0d6; border-radius:8px; padding:8px 12px; margin-top:10px; }
+#pending-screen { padding:60px 0; }
+.pend-card { max-width:460px; margin:0 auto; background:#fff; border:1px solid var(--line); border-radius:18px; padding:32px 28px; text-align:center; }
+.pend-ico { width:56px; height:56px; border-radius:50%; background:#fdf0d6; color:#8a5a00; display:flex; align-items:center; justify-content:center; margin:0 auto 14px; }
+.pend-ico .ico { width:28px; height:28px; }
+.pend-title { font-size:20px; font-weight:700; margin-bottom:8px; }
+.pend-sub { font-size:14px; color:var(--muted); line-height:1.8; }
+.pend-msg { font-size:13px; color:#8a5a00; min-height:20px; margin-top:12px; }
+.pend-acts { display:flex; gap:10px; justify-content:center; margin-top:8px; }
+#tb-user.is-pending .tb-link { display:none; }
 /* ════════ 我的紀錄 v3 ════════ */
 #history-screen { padding:22px 0 30px; }
 .hist-header { gap:12px; margin-bottom:18px; }
@@ -1134,6 +1145,8 @@ body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark 
           onkeydown="if(event.key==='Enter')submitLogin()">
         <button type="button" class="pw-toggle" onclick="togglePwVisible('user-pw-confirm',this)" aria-label="顯示密碼" title="顯示密碼"><svg class="ico-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="ico-hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-7-11-7a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>
       </div>
+      <input type="text" id="user-invite-input" class="reg-invite" placeholder="邀請碼（請向老師索取）" autocomplete="off" style="display:none">
+      <div id="reg-closed-note" class="reg-note" style="display:none">目前暫停開放註冊，已有帳號的同學請直接登入。</div>
     </div>
     <div class="login-error" id="login-error"></div>
     <button class="login-btn" id="login-submit-btn" onclick="submitLogin()">登入</button>
@@ -4669,6 +4682,7 @@ function renderQReview(){
       <label>登入信箱</label><input type="email" id="greg-email" autocomplete="username" placeholder="例如 name@gmail.com">
       <label>密碼</label><input type="password" id="greg-pw" autocomplete="new-password" placeholder="至少 6 個字">
       <label>再輸入一次密碼</label><input type="password" id="greg-pw2" autocomplete="new-password">
+      <div id="greg-invite-wrap" style="display:none"><label>邀請碼</label><input type="text" id="greg-invite" autocomplete="off" placeholder="請向老師索取"></div>
       <div id="greg-msg" class="md-err"></div>
     </div>
     <div class="md-foot"><button class="md-btn" onclick="closeGuestRegister()">取消</button><button class="md-btn primary" onclick="submitGuestRegister()">建立並保存</button></div>
@@ -4943,8 +4957,15 @@ function initFirebase(){
 
 // ── 註冊（一般註冊與訪客轉註冊共用）──
 // 回傳 {ok:true, profile} 或 {ok:false, msg}
-async function registerLearnerCore(email, name, pw){
+async function getRegPublic(){
+  try{ const d = await _db.collection('config').doc('regPublic').get(); return d.exists ? (d.data()||{}) : {}; }catch(e){ return {}; }
+}
+async function registerLearnerCore(email, name, pw, invite){
   if(!_auth || !_db) return {ok:false, msg:'無法連線，請檢查網路後再試'};
+  const reg = await getRegPublic();
+  if(reg.open === false) return {ok:false, msg:'目前暫停開放註冊，請洽老師'};
+  invite = String(invite||'').trim();
+  if(reg.inviteRequired && !invite) return {ok:false, msg:'請輸入邀請碼（請向老師索取）'};
   if(pw.length < 6) return {ok:false, msg:'密碼至少需要 6 個字元'};
   if(name === '訪客') return {ok:false, msg:'這個名稱不能使用，請換一個'};
   if(/[\/]/.test(name)) return {ok:false, msg:'名稱不能包含「/」'};
@@ -4972,11 +4993,13 @@ async function registerLearnerCore(email, name, pw){
       if(r.ok) return {ok:true, profile:r.profile, existing:true};
     }
     const profile = {name, email, uid:user.uid, createdAt:new Date().toISOString(), method:'email'};
+    if(reg.inviteRequired) profile.invite = invite;
+    if(reg.approval) profile.status = 'pending';
     try{
       await _db.collection('users').doc(name).set(profile);
     }catch(e){
       try{ await user.delete(); }catch(_){ try{ await _auth.signOut(); }catch(__){} }
-      return {ok:false, msg:'建立失敗（名稱可能剛被別人使用），請換一個名稱再試'};
+      return {ok:false, msg: reg.inviteRequired ? '邀請碼不正確，請向老師確認後再試' : '建立失敗（名稱可能剛被別人使用），請換一個名稱再試'};
     }
     return {ok:true, profile:Object.assign({}, profile, {_docId:name})};
   } finally { _authBusy = false; }
@@ -4999,7 +5022,7 @@ async function submitLogin(){
     if(!pw) return fail('請輸入密碼');
     if(pw !== pw2) return fail('兩次密碼不一致');
     info('建立中…');
-    const r = await registerLearnerCore(email, name, pw);
+    const r = await registerLearnerCore(email, name, pw, (document.getElementById('user-invite-input')||{}).value);
     if(!r.ok) return fail(r.msg);
     ['user-email-input-reg','user-name-input','user-pw-input-reg','user-pw-confirm'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
     switchTab('login');
@@ -5059,7 +5082,7 @@ async function submitGuestRegister(){
   if(!pw){ m.textContent='請輸入密碼'; return; }
   if(pw!==pw2){ m.textContent='兩次密碼不一致'; return; }
   m.style.color='#888'; m.textContent='建立中…';
-  const r = await registerLearnerCore(email, name, pw);
+  const r = await registerLearnerCore(email, name, pw, (document.getElementById('greg-invite')||{}).value);
   if(!r.ok){ m.style.color='#c62828'; m.textContent=r.msg; return; }
   const realName = r.profile.name;
 
@@ -5728,6 +5751,45 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
       const key='gv_'+m; if(localStorage.getItem(key)!==g){ _db.collection('guestVisits').doc(g+'_'+m).set({gid:g, month:m, first:Date.now()}).then(()=>{ try{ localStorage.setItem(key,g); }catch(e){} }).catch(()=>{ try{ localStorage.setItem(key,g); }catch(e){} }); } } }catch(e){}
     return r;
   };
+  // ── 註冊控制：依後台設定顯示邀請碼欄位／暫停註冊提示；待核准帳號先不能考試 ──
+  async function applyRegUI(){
+    if(typeof _db==='undefined' || !_db || typeof getRegPublic!=='function') return;
+    const reg = await getRegPublic(); window._regCfg = reg;
+    const inv=document.getElementById('user-invite-input'); if(inv) inv.style.display = reg.inviteRequired ? '' : 'none';
+    const gw=document.getElementById('greg-invite-wrap'); if(gw) gw.style.display = reg.inviteRequired ? '' : 'none';
+    const note=document.getElementById('reg-closed-note'); if(note) note.style.display = reg.open===false ? '' : 'none';
+  }
+  window.applyRegUI = applyRegUI;
+  setTimeout(applyRegUI, 800);
+  ['switchTab','openGuestRegister'].forEach(fn=>{ const o=window[fn]; if(typeof o!=='function') return; window[fn]=function(){ const r=o.apply(this, arguments); applyRegUI(); return r; }; });
+  if(main && !document.getElementById('pending-screen')){
+    main.insertAdjacentHTML('beforeend', '<div id="pending-screen" style="display:none"><div class="pend-card"><div class="pend-ico">'+ICO('<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>')+'</div><div class="pend-title">帳號審核中</div><div class="pend-sub">你的帳號已經建立，老師核准後就可以開始練習。<br>核准後回到這裡按「重新檢查」即可。</div><div class="pend-msg" id="pend-msg"></div><div class="pend-acts"><button class="md-btn" onclick="changeUser()">登出</button><button class="md-btn primary" onclick="recheckPending()">重新檢查</button></div></div></div>');
+  }
+  let _pendDoc = null;
+  function showPending(on){
+    const ps=document.getElementById('pending-screen'), ss=document.getElementById('subject-screen');
+    if(ps) ps.style.display = on ? 'block' : 'none';
+    if(on && ss) ss.style.display='none';
+    st._pending = !!on;
+    const tb=document.getElementById('tb-user'); if(tb) tb.classList.toggle('is-pending', !!on);
+  }
+  const _el = window.enterLearner;
+  if(typeof _el === 'function') window.enterLearner = function(profile){
+    const r = _el.apply(this, arguments);
+    if(profile && profile.status==='pending'){ _pendDoc = profile._docId || profile.name; showPending(true); } else showPending(false);
+    return r;
+  };
+  window.recheckPending = async function(){
+    const m=document.getElementById('pend-msg'); if(m) m.textContent='檢查中…';
+    try{ const d=await _db.collection('users').doc(_pendDoc||st.currentUser).get(); const p=d.exists?d.data():{};
+      if(p.status==='pending'){ if(m) m.textContent='還在等待老師核准，請稍後再試。'; return; }
+      showPending(false); document.getElementById('subject-screen').style.display='block'; if(typeof renderProgressPanel==='function') renderProgressPanel();
+    }catch(e){ if(m) m.textContent='檢查失敗，請稍後再試。'; }
+  };
+  const _se2 = window.startExam;
+  if(typeof _se2 === 'function') window.startExam = function(){ if(st._pending){ alert('帳號還在審核中，老師核准後才能開始練習。'); return; } return _se2.apply(this, arguments); };
+  const _cu0 = window.changeUser;
+  if(typeof _cu0 === 'function') window.changeUser = function(){ showPending(false); return _cu0.apply(this, arguments); };
   // 登出時停止監聽
   const _cu = window.changeUser;
   if(typeof _cu === 'function') window.changeUser = function(){ stopBoardLive(); return _cu.apply(this, arguments); };

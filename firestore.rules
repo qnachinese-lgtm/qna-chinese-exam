@@ -34,6 +34,19 @@ service cloud.firestore {
         && data.get('uid', '') == '' && data.get('email', '') == myEmail();
     }
 
+    // 註冊控制（後台設定）：config/regPublic 存「是否開放／要不要邀請碼／要不要審核」，config/regSecret 存邀請碼
+    function regCfg() {
+      return exists(/databases/$(database)/documents/config/regPublic)
+        ? get(/databases/$(database)/documents/config/regPublic).data : {};
+    }
+    function regOK(d) {
+      return regCfg().get('open', true) == true
+        && (regCfg().get('inviteRequired', false) == false
+            || d.get('invite', '') == get(/databases/$(database)/documents/config/regSecret).data.get('code', '__none__'))
+        && (regCfg().get('approval', false) == false || d.get('status', '') == 'pending')
+        && (!('status' in d) || d.status == 'pending');
+    }
+
     // ── 學習者帳號 users/{名稱} ───────────────────────────────
     match /users/{name} {
       // get：查名稱是否已被使用（不存在才讀得到）、本人、可認領的本人、管理員
@@ -44,11 +57,13 @@ service cloud.firestore {
       allow create: if isMaster()
         || (signedIn() && request.resource.data.uid == request.auth.uid
             && request.resource.data.email == myEmail()
-            && !('pw' in request.resource.data));
+            && !('pw' in request.resource.data)
+            && regOK(request.resource.data));
       // 更新：主管理員；本人（uid 不可改、不得存密碼）；本人認領舊帳號
       allow update: if isMaster()
         || (owns(resource.data) && request.resource.data.uid == request.auth.uid
-            && !('pw' in request.resource.data))
+            && !('pw' in request.resource.data)
+            && request.resource.data.get('status', '') == resource.data.get('status', ''))
         || (canClaim(resource.data) && request.resource.data.uid == request.auth.uid
             && request.resource.data.email == myEmail()
             && !('pw' in request.resource.data));
@@ -88,6 +103,10 @@ service cloud.firestore {
     // ── 舊版管理員密碼與驗證碼（已停用）──────────────────────────
     match /config/admin     { allow read, write: if isMaster(); }
     match /config/admin_otp { allow read, write: if isMaster(); }
+
+    // ── 註冊設定：公開部分所有人可讀（註冊頁要知道要不要邀請碼），邀請碼只有主管理員看得到 ──
+    match /config/regPublic { allow read: if true; allow write: if isMaster(); }
+    match /config/regSecret { allow read, write: if isMaster(); }
 
     // ── 題庫：所有人可讀，主管理員可改 ───────────────────────────
     match /questionbank/{doc} {

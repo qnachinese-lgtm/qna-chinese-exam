@@ -302,6 +302,22 @@ body { overflow-x:clip; }
 .gm-s { width:110px; text-align:right; font-size:12px; color:var(--muted); }
 .gm-note { font-size:12px; color:var(--muted); margin-top:10px; line-height:1.7; }
 @media(max-width:820px){ .gm-head { grid-template-columns:repeat(2,1fr); } .gm-s { display:none; } }
+.rg-card, .pd-card { padding:16px 18px; margin-bottom:12px; }
+.rg-title { font-size:15px; font-weight:700; display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.rg-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.rg-item { display:flex; gap:10px; align-items:flex-start; background:#faf6ef; border-radius:12px; padding:12px 14px; cursor:pointer; }
+.rg-item input { display:none; }
+.rg-sw { flex:0 0 36px; height:20px; border-radius:10px; background:#d8cfc4; position:relative; margin-top:2px; transition:background .2s; }
+.rg-sw::after { content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:left .2s; }
+.rg-item input:checked + .rg-sw { background:var(--brand); }
+.rg-item input:checked + .rg-sw::after { left:18px; }
+.rg-txt { display:flex; flex-direction:column; gap:2px; font-size:14px; } .rg-txt span { font-size:12px; color:var(--muted); line-height:1.5; }
+.rg-code { display:flex; align-items:center; gap:8px; margin-top:12px; flex-wrap:wrap; font-size:14px; }
+.rg-code input { width:200px; font-family:monospace; letter-spacing:1px; }
+.rg-code.off { opacity:.5; }
+.pd-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-top:1px solid #f3eee5; }
+.pd-who { flex:1; display:flex; flex-direction:column; } .pd-who span { font-size:12px; color:var(--muted); }
+@media(max-width:820px){ .rg-grid { grid-template-columns:1fr; } }
 /* 切換分頁時不因捲軸出現/消失而左右跳動 */
 html { scrollbar-gutter:stable; overflow-y:scroll; }
 /* 滑鼠點擊不顯示黑框，鍵盤操作才顯示柔和外框 */
@@ -444,6 +460,8 @@ html { scrollbar-gutter:stable; overflow-y:scroll; }
           <button id="add-learner-btn" class="btn btn-primary" onclick="openAddModal()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增學習者</button>
         </div>
       </div>
+      <div id="reg-panel" class="master-only"></div>
+      <div id="pending-panel"></div>
       <div id="learners-table-container" class="sec-table">
         <table class="admin-table">
           <thead><tr id="learner-head"></tr></thead>
@@ -1398,9 +1416,59 @@ function openStudentDetail(i){
 }
 function closeStudentDetail(){ const o=document.getElementById('student-detail-overlay'); if(o) o.style.display='none'; }
 
+// ── 註冊控制：開放／關閉、邀請碼、審核制 ──
+let _regPub=null, _regCode='';
+async function loadRegSettings(){
+  try{ const a=await _db.collection('config').doc('regPublic').get(); _regPub=a.exists?(a.data()||{}):{}; }catch(e){ _regPub={}; }
+  if(_currentRole==='master'){ try{ const b=await _db.collection('config').doc('regSecret').get(); _regCode=b.exists?((b.data()||{}).code||''):''; }catch(e){} }
+  renderRegPanel();
+}
+function renderRegPanel(){
+  const el=document.getElementById('reg-panel'); if(!el) return;
+  if(_currentRole!=='master'){ el.innerHTML=''; return; }
+  if(_regPub===null){ el.innerHTML=''; loadRegSettings(); return; }
+  const c=_regPub, open=c.open!==false, inv=!!c.inviteRequired, apr=!!c.approval;
+  const sw=(id,on,label,desc)=>'<label class="rg-item"><input type="checkbox" id="'+id+'"'+(on?' checked':'')+' onchange="saveRegSettings()"><span class="rg-sw"></span><span class="rg-txt"><b>'+label+'</b><span>'+desc+'</span></span></label>';
+  el.innerHTML='<div class="card rg-card"><div class="rg-title">註冊設定<span id="rg-msg" class="chip-note"></span></div><div class="rg-grid">'
+    +sw('rg-open',open,'開放註冊','關閉後無法建立新帳號，已註冊的學生不受影響')
+    +sw('rg-inv',inv,'需要邀請碼','註冊時要輸入下方的邀請碼才能建立帳號')
+    +sw('rg-apr',apr,'需要審核','新帳號要你核准後才能開始考試')
+    +'</div><div class="rg-code'+(inv?'':' off')+'"><span>邀請碼</span><input id="rg-code" class="qb-ctrl" value="'+esc(_regCode)+'" placeholder="例如 QNA2026" maxlength="40"><button class="btn btn-secondary" onclick="saveRegSettings(true)">儲存邀請碼</button><button class="btn btn-secondary" onclick="genRegCode()">隨機產生</button></div></div>';
+}
+function genRegCode(){ const ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c='QNA-'; for(let i=0;i<6;i++) c+=ch[Math.floor(Math.random()*ch.length)]; document.getElementById('rg-code').value=c; saveRegSettings(true); }
+async function saveRegSettings(withCode){
+  const open=document.getElementById('rg-open').checked, inv=document.getElementById('rg-inv').checked, apr=document.getElementById('rg-apr').checked;
+  const code=(document.getElementById('rg-code').value||'').trim();
+  const msg=document.getElementById('rg-msg');
+  if(inv && !code){ document.querySelector('.rg-code').classList.remove('off'); if(msg) msg.textContent='請先填邀請碼'; document.getElementById('rg-inv').checked=false; return; }
+  try{
+    if(withCode || inv) await _db.collection('config').doc('regSecret').set({code});
+    await _db.collection('config').doc('regPublic').set({open, inviteRequired:inv, approval:apr, updatedAt:Date.now()});
+    _regPub={open, inviteRequired:inv, approval:apr}; _regCode=code; renderRegPanel();
+    const m=document.getElementById('rg-msg'); if(m) m.textContent='已儲存 ✓';
+  }catch(e){ if(msg) msg.textContent='儲存失敗：'+(e.message||e); }
+}
+function renderPendingPanel(){
+  const el=document.getElementById('pending-panel'); if(!el) return;
+  const pend=(_adminUsers||[]).filter(u=>u.status==='pending');
+  if(!pend.length){ el.innerHTML=''; return; }
+  const isM=_currentRole==='master';
+  el.innerHTML='<div class="card pd-card"><div class="rg-title">待核准<span class="chip wait">'+pend.length+' 位</span></div>'+pend.map(u=>'<div class="pd-row"><div class="pd-who"><b>'+esc(u.name||u._docId)+'</b><span>'+esc(u.email||'')+'　'+esc(String(u.createdAt||'').slice(0,10))+'</span></div>'+(isM?'<button class="btn btn-secondary" onclick="rejectLearner(\''+esc(u._docId)+'\')">不核准</button><button class="btn btn-primary" onclick="approveLearner(\''+esc(u._docId)+'\')">核准</button>':'')+'</div>').join('')+'</div>';
+}
+async function approveLearner(id){
+  try{ await _db.collection('users').doc(id).update({status:'approved', approvedAt:new Date().toISOString()}); const u=_adminUsers.find(x=>x._docId===id); if(u) u.status='approved'; renderAdminPanel(); }
+  catch(e){ alert('核准失敗：'+(e.message||e)); }
+}
+async function rejectLearner(id){
+  if(!confirm('不核准並刪除這個帳號的資料？（對方之後可以重新註冊）')) return;
+  try{ await _db.collection('users').doc(id).delete(); _adminUsers=_adminUsers.filter(x=>x._docId!==id); renderAdminPanel(); }
+  catch(e){ alert('刪除失敗：'+(e.message||e)); }
+}
+
 function renderAdminPanel(){
   const isMaster = _currentRole==='master';
   renderDashboard();
+  try{ renderRegPanel(); renderPendingPanel(); }catch(e){ console.warn(e); }
   const head = document.getElementById('learner-head');
   if(head){
     head.innerHTML = '<th>名稱</th><th>狀態</th><th>Gmail</th><th>考試次數</th><th>最近成績</th>' + (isMaster?'<th></th>':'');
