@@ -288,6 +288,7 @@ body { overflow-x:clip; }
 .ab-text { font-size:14px; line-height:1.8; margin-top:2px; word-break:break-word; }
 .ab-del { height:30px; padding:0 10px; font-size:13px; }
 .ab-gone { font-size:13px; color:#b0a69b; font-style:italic; }
+.ab-q { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
 /* 切換分頁時不因捲軸出現/消失而左右跳動 */
 html { scrollbar-gutter:stable; overflow-y:scroll; }
 /* 滑鼠點擊不顯示黑框，鍵盤操作才顯示柔和外框 */
@@ -504,6 +505,7 @@ html { scrollbar-gutter:stable; overflow-y:scroll; }
     <!-- 備份（主管理員） -->
     <section class="page" id="page-board">
       <div class="page-head"><div class="page-head-text head-inline"><h2 class="page-title">留言板</h2><span id="bd-status" class="chip-note"></span></div></div>
+      <div class="seg" id="ab-seg" style="grid-template-columns:repeat(2,1fr);max-width:420px"></div>
       <div id="admin-board-list"></div>
     </section>
 
@@ -1146,22 +1148,41 @@ function showPage(name){
   if(name==='board') loadAdminBoard();
 }
 // 留言板管理：看全部留言，主管理員可刪除
-let _adminBoardUnsub=null;
+let _adminBoardUnsub=null, _abAll=[], _abMode='q';
+function abSetMode(m){ _abMode=m; renderAdminBoard(); }
 function loadAdminBoard(){
-  if(_adminBoardUnsub) return;
+  if(_adminBoardUnsub){ renderAdminBoard(); return; }
   const el=document.getElementById('admin-board-list'); if(el) el.innerHTML='<div class="card qb-empty"><div class="qb-empty-sub" style="margin:0">讀取中…</div></div>';
-  _adminBoardUnsub=_db.collection('board').onSnapshot(snap=>{
-    const all=snap.docs.map(d=>Object.assign({id:d.id},d.data()));
-    const tops=all.filter(p=>!p.parentId).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-    const kids={}; all.filter(p=>p.parentId).forEach(p=>{ (kids[p.parentId]=kids[p.parentId]||[]).push(p); });
-    Object.keys(kids).forEach(pid=>{ if(!tops.some(t=>t.id===pid)) tops.push({id:pid,_gone:true,createdAt:Math.max(...kids[pid].map(k=>k.createdAt||0))}); });
-    tops.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-    const st=document.getElementById('bd-status'); if(st) st.textContent='共 '+all.length+' 則';
-    const t=x=>{ const d=new Date(x||0); return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
-    const row=(p,reply)=>'<div class="ab-post'+(reply?' reply':'')+'"><div class="ab-main"><div class="ab-meta"><b>'+esc(p.name||'')+'</b><span>'+t(p.createdAt)+'</span></div><div class="ab-text">'+esc(p.text||'').replace(/\n/g,'<br>')+'</div></div>'+(_currentRole==='master'?'<button class="btn btn-danger ab-del" onclick="adminDeletePost(\''+p.id+'\','+(reply?'false':'true')+')">刪除</button>':'')+'</div>';
-    el.innerHTML = tops.length ? tops.map(p=>'<div class="card ab-thread">'+(p._gone?'<div class="ab-gone">原留言已刪除</div>':row(p,false))+((kids[p.id]||[]).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)).map(k=>row(k,true)).join(''))+'</div>').join('')
-      : '<div class="card qb-empty"><div class="qb-empty-sub" style="margin:0">還沒有留言。</div></div>';
-  }, e=>{ console.warn(e); if(el) el.innerHTML='<div class="card qb-empty"><div class="qb-empty-sub" style="margin:0">讀取失敗：'+esc(e.message||e)+'</div></div>'; });
+  _adminBoardUnsub=_db.collection('board').onSnapshot(snap=>{ _abAll=snap.docs.map(d=>Object.assign({id:d.id},d.data())); renderAdminBoard(); },
+    e=>{ console.warn(e); if(el) el.innerHTML='<div class="card qb-empty"><div class="qb-empty-sub" style="margin:0">讀取失敗：'+esc(e.message||e)+'</div></div>'; });
+}
+function renderAdminBoard(){
+  const el=document.getElementById('admin-board-list'); if(!el) return;
+  const qN=_abAll.filter(p=>p.qid).length, gN=_abAll.length-qN;
+  const seg=document.getElementById('ab-seg');
+  if(seg) seg.innerHTML='<button type="button" class="seg-btn'+(_abMode==='q'?' active':'')+'" onclick="abSetMode(\'q\')">題目討論<span class="seg-n">'+qN+'</span></button><button type="button" class="seg-btn'+(_abMode==='g'?' active':'')+'" onclick="abSetMode(\'g\')">一般留言（交流區）<span class="seg-n">'+gN+'</span></button>';
+  const st=document.getElementById('bd-status'); if(st) st.textContent='共 '+_abAll.length+' 則';
+  const all=_abAll.filter(p=>_abMode==='q'?!!p.qid:!p.qid);
+  const tops=all.filter(p=>!p.parentId);
+  const kids={}; all.filter(p=>p.parentId).forEach(p=>{ (kids[p.parentId]=kids[p.parentId]||[]).push(p); });
+  Object.keys(kids).forEach(pid=>{ if(!tops.some(t=>t.id===pid)) tops.push({id:pid,_gone:true,qid:kids[pid][0].qid,qlabel:kids[pid][0].qlabel,createdAt:Math.max(...kids[pid].map(k=>k.createdAt||0))}); });
+  const last=p=>Math.max(p.createdAt||0,...(kids[p.id]||[]).map(k=>k.createdAt||0));
+  tops.sort((a,b)=>last(b)-last(a));
+  const t=x=>{ const d=new Date(x||0); return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+  const row=(p,reply)=>'<div class="ab-post'+(reply?' reply':'')+'"><div class="ab-main"><div class="ab-meta"><b>'+esc(p.name||'')+'</b><span>'+t(p.createdAt)+'</span></div><div class="ab-text">'+esc(p.text||'').replace(/\n/g,'<br>')+'</div></div>'+(_currentRole==='master'?'<button class="btn btn-danger ab-del" onclick="adminDeletePost(\''+p.id+'\','+(reply?'false':'true')+')">刪除</button>':'')+'</div>';
+  const head=p=>p.qid?'<div class="ab-q"><span class="chip info">'+esc(p.qlabel||p.qid)+'</span>'+(_currentRole==='master'?'<button class="qb-edit-link" onclick="adminGoQuestion(\''+esc(p.qid)+'\')">到題庫修改這題</button>':'')+'</div>':'';
+  el.innerHTML = tops.length ? tops.map(p=>'<div class="card ab-thread">'+head(p)+(p._gone?'<div class="ab-gone">原留言已刪除</div>':row(p,false))+((kids[p.id]||[]).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)).map(k=>row(k,true)).join(''))+'</div>').join('')
+    : '<div class="card qb-empty"><div class="qb-empty-sub" style="margin:0">'+(_abMode==='q'?'還沒有題目討論。':'還沒有一般留言。')+'</div></div>';
+}
+// 從討論直接跳到題庫編輯那一題
+async function adminGoQuestion(qid){
+  const [sub,yr,n]=String(qid).split('|'); const num=parseInt(n,10);
+  showPage('qb');
+  if(!qbCount()) await loadQBAdmin();
+  document.getElementById('qb-subject').value=sub; document.getElementById('qb-year').value=''; document.getElementById('qb-search').value='';
+  renderQBList(); document.getElementById('qb-year').value=yr; renderQBList();
+  let c=0, idx=-1; (_qb[sub]||[]).forEach((q,i)=>{ if(String(q.yr)===String(yr)){ c++; if(c===num) idx=i; } });
+  if(idx>=0) openQBEdit(idx); else alert('題庫裡找不到這一題（'+qid+'）');
 }
 async function adminDeletePost(id, withReplies){
   if(!confirm(withReplies?'刪除這則留言（連同底下的回覆）？':'刪除這則回覆？')) return;
