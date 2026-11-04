@@ -680,6 +680,190 @@ body.in-exam main, body.in-exam .tb-inner { max-width:880px; }
 html { scrollbar-gutter:stable; overflow-y:scroll; }
 :focus:not(:focus-visible) { outline:none; }
 :focus-visible { outline:2px solid rgba(139,26,26,.35); outline-offset:2px; }
+
+/* ════════ 作答畫面 v3 ════════ */
+#exam-screen { padding-top:4px; }
+.ex-top { position:sticky; top:0; z-index:40; background:#f5f0e8; padding:12px 0 10px; margin-bottom:12px; }
+body.dark .ex-top { background:#15171a; }
+.ex-top-row { display:flex; align-items:center; gap:14px; margin-bottom:10px; }
+.ex-where { display:flex; align-items:baseline; gap:8px; white-space:nowrap; }
+.ex-where b { font-size:17px; color:var(--ink); }
+.ex-subj { font-size:13px; color:var(--muted); }
+#exam-screen .score-live { flex:1; justify-content:flex-end; background:none; box-shadow:none; padding:0; margin:0; gap:8px; font-size:13px; }
+.ex-stat { background:#fff; border:1px solid var(--line); border-radius:8px; padding:4px 10px; color:var(--muted) !important; white-space:nowrap; }
+.ex-stat b { margin-left:2px; }
+#exam-screen #lv-timer { background:#fff; border:1px solid var(--line); border-radius:8px; padding:4px 10px; font-size:13px; }
+.ex-exit { display:inline-flex; align-items:center; gap:4px; height:30px; padding:0 10px; border:1px solid var(--line); background:#fff; border-radius:8px; font:inherit; font-size:13px; color:var(--muted); cursor:pointer; white-space:nowrap; }
+.ex-exit .ico { width:14px; height:14px; }
+.ex-exit:hover { color:#b3261e; border-color:#f0cfcb; }
+#exam-screen .progress-wrap { height:6px; background:#e9e1d3; border-radius:4px; margin:0; }
+#exam-screen .progress-fill { height:6px; background:var(--brand); border-radius:4px; }
+#q-nav-wrap { margin:0 0 14px; }
+#q-nav-toggle { display:inline-flex; align-items:center; gap:6px; height:36px; padding:0 14px; background:#fff; border:1px solid var(--line); color:var(--ink); border-radius:9px; font:inherit; font-size:14px; font-weight:600; }
+#q-nav-toggle::before { content:''; width:14px; height:14px; background:currentColor; -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Crect x='4' y='4' width='6' height='6' rx='1'/%3E%3Crect x='14' y='4' width='6' height='6' rx='1'/%3E%3Crect x='4' y='14' width='6' height='6' rx='1'/%3E%3Crect x='14' y='14' width='6' height='6' rx='1'/%3E%3C/svg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Crect x='4' y='4' width='6' height='6' rx='1'/%3E%3Crect x='14' y='4' width='6' height='6' rx='1'/%3E%3Crect x='4' y='14' width='6' height='6' rx='1'/%3E%3Crect x='14' y='14' width='6' height='6' rx='1'/%3E%3C/svg%3E") center/contain no-repeat; }
+#q-nav-toggle.open { border-color:var(--brand); color:var(--brand); }
+#q-nav-toggle:hover { border-color:#d9b9b3; }
+.q-nav-head .btn-submit { height:36px; padding:0 22px; border-radius:9px; font:inherit; font-size:14px; font-weight:700; background:var(--brand); }
+.q-nav-head .btn-submit:hover { background:var(--brand-h); }
+#q-nav-panel { border:1px solid var(--line); border-radius:12px; padding:14px; margin-top:10px; }
+.q-nav-legend { gap:6px 16px; font-size:12px; color:var(--muted); }
+.q-nav-legend > span { display:inline-flex; align-items:center; }
+.q-nav-tip { margin-left:auto; }
+.qnav-cell { border:1px solid var(--line); border-radius:8px; color:var(--ink); font-weight:600; }
+.qnav-cell.cur { box-shadow:0 0 0 2px var(--brand); border-color:var(--brand); }
+.lg-cur { box-shadow:0 0 0 2px var(--brand); border-color:var(--brand) !important; }
+#exam-screen .question-card { border:1px solid var(--line); box-shadow:none; border-radius:16px; padding:28px 30px; min-height:0; }
+.q-header { margin-bottom:16px; gap:8px; }
+.subj-tag { background:var(--brand-soft); color:var(--brand); font-size:12px; font-weight:600; letter-spacing:0; padding:4px 10px; border-radius:6px; }
+.yr-tag { font-size:12px; color:var(--muted); border:1px solid var(--line); border-radius:6px; padding:3px 9px; }
+.q-num { font-size:13px; color:#b0a69b; }
+.q-text { font-size:17px; line-height:1.9; color:var(--ink); margin-bottom:20px; }
+.q-passage { background:#faf6ef; border-left:3px solid var(--brand); font-size:15px; }
+.options { gap:10px; }
+.opt-btn { background:#fff; border:1px solid var(--line); border-radius:12px; padding:13px 16px; font-size:15px; line-height:1.7; gap:12px; align-items:flex-start; color:var(--ink); }
+.opt-letter { flex:0 0 28px; min-width:28px; height:28px; border-radius:50%; background:#f4efe6; color:var(--muted); display:inline-flex; align-items:center; justify-content:center; font-size:13px; margin-top:-1px; }
+.opt-btn:hover:not(:disabled) { border-color:#d9b9b3; background:#fffaf8; }
+.opt-btn:hover:not(:disabled) .opt-letter { background:var(--brand-soft); color:var(--brand); }
+.opt-btn.picked { border-color:var(--brand); background:#fffaf8; }
+.opt-btn.picked .opt-letter { background:var(--brand); color:#fff; }
+.opt-btn.correct, .opt-btn.reveal { border-color:#9fcca8; background:#f3faf4; }
+.opt-btn.correct .opt-letter, .opt-btn.reveal .opt-letter { background:#2e7d32; color:#fff; }
+.opt-btn.wrong { border-color:#f0b9b3; background:#fdf4f3; }
+.opt-btn.wrong .opt-letter { background:#c0392b; color:#fff; }
+.explanation { margin-top:18px; padding:16px 18px; border-radius:12px; border:1px solid #cfe5d3; border-left:1px solid #cfe5d3; background:#f6fbf6; }
+.explanation.wrong-exp { border-color:#f0d2cd; background:#fdf6f5; }
+.exp-title { font-size:15px; margin-bottom:8px; }
+.exp-title.ct { color:#2e6b38; }
+.exp-title.wt { color:#a3261e; }
+.exp-text, .exp-detail { font-size:14px; line-height:1.9; color:#3a3a3a; }
+.exp-detail-btn { margin-top:12px; border:1px solid var(--line); background:#fff; color:var(--ink); border-radius:8px; padding:6px 14px; font:inherit; font-size:13px; font-weight:600; }
+.exp-detail-btn:hover { background:#fff; border-color:var(--brand); color:var(--brand); }
+.exp-detail { border-top:1px dashed var(--line); }
+.nav-row { background:rgba(245,240,232,.96); border-top:1px solid var(--line); box-shadow:none; padding:12px 0; }
+body.in-exam .nav-row .nav-inner { max-width:880px; }
+.btn-next, .btn-prev { height:42px; padding:0 26px; border-radius:10px; font:inherit; font-size:15px; font-weight:600; }
+.btn-next { background:var(--brand); }
+.btn-next:hover { background:var(--brand-h); }
+.btn-next:disabled { background:#d8cfc4; }
+.btn-prev { background:#fff; color:var(--ink); border:1px solid var(--line); }
+.btn-prev:hover { background:#fff; border-color:#d9b9b3; }
+body.dark .ex-stat, body.dark .ex-exit, body.dark #q-nav-toggle, body.dark .opt-btn, body.dark .exp-detail-btn { background:#23262b; border-color:#3a3f47; color:#e6e6e6; }
+body.dark .explanation { background:#22282a; border-color:#3a3f47; }
+body.dark .exp-text, body.dark .exp-detail { color:#e6e6e6; }
+
+/* ════════ 成績頁 v3 ════════ */
+#result-screen { text-align:left; padding-top:8px; }
+.rs-card { background:#fff; border:1px solid var(--line); border-radius:18px; padding:30px 32px; max-width:720px; margin:0 auto; }
+.rs-head { display:flex; align-items:center; gap:28px; padding-bottom:22px; border-bottom:1px solid #f1ebe0; }
+.rs-ring { position:relative; width:132px; height:132px; flex:0 0 auto; }
+.rs-ring svg { width:100%; height:100%; transform:rotate(-90deg); }
+.rs-ring-bg { fill:none; stroke:#f1ebe0; stroke-width:10; }
+.rs-ring-fg { fill:none; stroke:#c0392b; stroke-width:10; stroke-linecap:round; transition:stroke-dasharray .8s ease; }
+.rs-ring-fg.pass { stroke:#2e7d32; }
+.rs-num { position:absolute; inset:0; display:flex; align-items:baseline; justify-content:center; padding-top:42px; gap:2px; }
+#result-screen .result-score { font-size:40px; font-weight:800; color:var(--ink); margin:0; line-height:1; }
+.rs-num small { font-size:14px; color:var(--muted); }
+.rs-info { display:flex; flex-direction:column; align-items:flex-start; gap:8px; min-width:0; }
+.rs-kicker { font-size:14px; color:var(--muted); }
+#result-screen .result-badge { margin:0; padding:6px 14px; border-radius:8px; font-size:15px; font-weight:700; border:none; }
+#result-screen .badge-pass { background:#e6f2e8; color:#2e6b38; }
+#result-screen .badge-fail { background:#fdf0d6; color:#8a5a00; }
+#result-screen .result-label { font-size:14px; color:var(--muted); }
+#result-screen .save-badge { margin:0; font-size:12px; background:#f4efe6; color:var(--muted); }
+.rs-sec-title { font-size:14px; font-weight:700; color:var(--ink); margin:22px 0 10px; }
+#result-screen .breakdown { margin:0; }
+#result-screen .bk-item { display:grid; grid-template-columns:120px 1fr 48px 56px; gap:12px; align-items:center; padding:8px 0; border-bottom:none; font-size:14px; }
+.bk-name { white-space:nowrap; }
+.bk-bar { height:8px; background:#f1ebe0; border-radius:4px; overflow:hidden; }
+.bk-fill { display:block; height:100%; background:#c0392b; border-radius:4px; }
+.bk-fill.pass { background:#2e7d32; }
+#result-screen .bk-score { color:var(--ink); text-align:right; }
+.bk-cnt { font-size:12px; color:var(--muted); text-align:right; }
+.rs-actions { display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px; margin-top:24px; }
+.rs-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; height:46px; border-radius:11px; border:1px solid var(--line); background:#fff; font:inherit; font-size:15px; font-weight:600; color:var(--ink); cursor:pointer; white-space:nowrap; }
+.rs-btn .ico { width:18px; height:18px; }
+.rs-btn:hover { border-color:#d9b9b3; }
+.rs-btn.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
+.rs-btn.primary:hover { background:var(--brand-h); }
+.rs-more { display:flex; justify-content:center; align-items:center; gap:4px; margin-top:16px; }
+.rs-link, .rs-link:disabled { background:none !important; border:none; padding:4px 6px; margin:0; font:inherit; font-size:13px; font-weight:400; color:var(--muted); cursor:pointer; }
+.rs-link:hover { color:var(--brand); }
+.rs-dot { color:#d0c6ba; }
+body.dark .rs-card { background:#1f2226; border-color:#3a3f47; }
+body.dark .rs-btn { background:#23262b; border-color:#3a3f47; color:#e6e6e6; }
+body.dark #result-screen .result-score { color:#e6e6e6; }
+@media(max-width:640px){
+  .rs-card { padding:22px 18px; }
+  .rs-head { flex-direction:column; align-items:center; text-align:center; gap:14px; }
+  .rs-info { align-items:center; }
+  .rs-actions { grid-template-columns:1fr 1fr; }
+  .rs-actions .primary { grid-column:1 / -1; }
+  #result-screen .bk-item { grid-template-columns:96px 1fr 44px; }
+  .bk-cnt { display:none; }
+  .ex-top-row { flex-wrap:wrap; gap:8px; }
+  #exam-screen .score-live { order:3; flex-basis:100%; justify-content:flex-start; }
+  #exam-screen .question-card { padding:18px 16px; }
+}
+
+/* ════════ 我的紀錄 v3 ════════ */
+#history-screen { padding:22px 0 30px; }
+.hist-header { gap:12px; margin-bottom:18px; }
+.hist-back { display:inline-flex; align-items:center; gap:4px; height:36px; padding:0 12px 0 8px; background:#fff; border:1px solid var(--line); border-radius:9px; font:inherit; font-size:14px; color:var(--ink); cursor:pointer; }
+.hist-back .ico { width:16px; height:16px; }
+.hist-back:hover { border-color:#d9b9b3; }
+.hist-title { font-size:20px; font-weight:700; color:var(--ink); }
+.hist-clear { height:36px; padding:0 14px; background:#fff; border:1px solid #f0cfcb; color:#b3261e; border-radius:9px; font:inherit; font-size:13px; cursor:pointer; }
+.hist-clear:hover { background:#fdf1f0; }
+.hist-filter select { height:36px; padding:0 10px; border:1px solid var(--line); border-radius:9px; font:inherit; font-size:14px; background:#fff; color:var(--ink); }
+.hist-analysis-card { display:grid; grid-template-columns:1fr 1fr; gap:28px; background:#fff; border:1px solid var(--line); border-radius:16px; padding:20px 22px; box-shadow:none; margin-bottom:22px; }
+.wa-title { font-size:14px; font-weight:700; color:var(--ink); margin-bottom:12px; display:flex; align-items:baseline; gap:8px; }
+.wa-sub { font-size:12px; font-weight:400; color:var(--muted); }
+.wa-weak { background:var(--brand-soft); border:none; color:var(--brand); border-radius:8px; font-size:13px; padding:8px 12px; margin-bottom:12px; }
+.wa-row { font-size:13px; margin-bottom:9px; }
+.wa-name { width:104px; color:var(--ink); }
+.wa-bar { height:8px; background:#f1ebe0; }
+.wa-empty { font-size:13px; color:var(--muted); padding:18px 0; }
+.hist-list-title { font-size:14px; font-weight:700; color:var(--ink); margin:0 0 10px; display:flex; gap:8px; align-items:baseline; }
+.hist-list-title span { font-size:12px; font-weight:400; color:var(--muted); }
+#history-list { background:#fff; border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+#history-list:has(.hist-empty) { background:none; border:none; }
+.hist-record { background:#fff; border-radius:0; box-shadow:none; padding:0; margin:0; border-bottom:1px solid #f3eee5; }
+.hist-record:last-child { border-bottom:none; }
+#history-list .hist-list-title { padding:16px 20px 0; margin:0 0 4px; }
+.hr-main { display:flex; align-items:center; gap:16px; padding:14px 20px; }
+.hr-score { width:64px; height:64px; flex:0 0 auto; border-radius:14px; display:flex; align-items:baseline; justify-content:center; padding-top:16px; box-sizing:border-box; gap:1px; }
+.hr-score b { font-size:24px; line-height:1; }
+.hr-score small { font-size:11px; }
+.hr-score.pass { background:#e6f2e8; color:#2e6b38; }
+.hr-score.fail { background:#fdf1f0; color:#a3261e; }
+.hr-info { flex:1; min-width:0; }
+.hr-subj { font-size:15px; font-weight:700; color:var(--ink); margin-bottom:3px; }
+.hr-meta { font-size:13px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hr-chip { font-size:12px; font-weight:600; padding:3px 9px; border-radius:6px; white-space:nowrap; }
+.hr-chip.pass { background:#e6f2e8; color:#2e6b38; }
+.hr-chip.fail { background:#f4efe6; color:var(--muted); }
+.hr-toggle { display:inline-flex; align-items:center; gap:2px; height:32px; padding:0 8px 0 12px; border:1px solid var(--line); background:#fff; border-radius:8px; font:inherit; font-size:13px; color:var(--ink); cursor:pointer; white-space:nowrap; }
+.hr-toggle .ico { width:15px; height:15px; transition:transform .2s; }
+.hr-toggle.open .ico { transform:rotate(180deg); }
+.hr-toggle:hover { border-color:#d9b9b3; }
+.hist-del { margin:0; width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border:none; background:none; color:#c2b8ad; border-radius:8px; padding:0; }
+.hist-del .ico { width:17px; height:17px; }
+.hist-del:hover { background:#fdf1f0; color:#b3261e; border:none; }
+.hist-qlist { margin:0; padding:0 20px 16px 100px; gap:6px; }
+.hist-q { width:30px; height:30px; border-radius:7px; border:none; font:inherit; font-size:12px; font-weight:600; cursor:pointer; padding:0; }
+.hist-q.ok { background:#e6f2e8; color:#2e6b38; }
+.hist-q.ng { background:#fdf1f0; color:#a3261e; }
+.hist-q:hover { outline:2px solid currentColor; outline-offset:-2px; }
+.hist-empty { background:#fff; border:1px dashed var(--line); border-radius:16px; padding:44px 20px; color:var(--muted); font-size:14px; }
+body.dark .hist-analysis-card, body.dark #history-list, body.dark .hist-record, body.dark .hist-back, body.dark .hr-toggle, body.dark .hist-filter select { background:#1f2226; border-color:#3a3f47; color:#e6e6e6; }
+body.dark .hr-subj, body.dark .hist-title, body.dark .wa-title, body.dark .wa-name { color:#e6e6e6; }
+@media(max-width:640px){
+  .hist-analysis-card { grid-template-columns:1fr; gap:18px; }
+  .hr-main { flex-wrap:wrap; gap:10px 12px; padding:14px 16px; }
+  .hr-score { width:54px; height:54px; padding-top:12px; }
+  .hr-chip { display:none; }
+  .hist-qlist { padding:0 16px 14px; }
+}
 .tb-right { display:flex; align-items:center; gap:6px; }
 header.topbar #settings-fab { position:static; width:36px; height:36px; box-shadow:none; border:1px solid var(--line); background:#fff; flex:0 0 auto; }
 header.topbar #settings-fab:hover { transform:none; border-color:#d9b9b3; }
@@ -933,23 +1117,27 @@ body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark 
 
 <!-- ════ EXAM SCREEN ════ -->
 <div id="exam-screen">
-  <div class="score-live">
-    <span>進度：<b id="lv-prog">0/0</b></span>
-    <span class="sc-correct" id="lv-correct-wrap">答對：<b id="lv-correct">0</b></span>
-    <span class="sc-wrong" id="lv-wrong-wrap">答錯：<b id="lv-wrong">0</b></span>
-    <span id="lv-timer" style="display:none"></span>
-    <span style="margin-left:auto;color:#c0392b;cursor:pointer;font-size:.8rem;" onclick="confirmExit()">✕ 結束測驗</span>
+  <div class="ex-top">
+    <div class="ex-top-row">
+      <div class="ex-where"><b id="prog-label">第 1 題</b><span id="subj-label" class="ex-subj"></span></div>
+      <div class="score-live">
+        <span class="ex-stat">已答 <b id="lv-prog">0/0</b></span>
+        <span class="ex-stat sc-correct" id="lv-correct-wrap">答對 <b id="lv-correct">0</b></span>
+        <span class="ex-stat sc-wrong" id="lv-wrong-wrap">答錯 <b id="lv-wrong">0</b></span>
+        <span id="lv-timer" style="display:none"></span>
+      </div>
+      <button type="button" class="ex-exit" onclick="confirmExit()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>結束</button>
+    </div>
+    <div class="progress-wrap"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
   </div>
-  <div class="progress-wrap"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
-  <div class="progress-text"><span id="prog-label">第 1 題</span><span id="subj-label"></span></div>
 
   <div id="q-nav-wrap">
     <div class="q-nav-head">
-      <button id="q-nav-toggle" onclick="toggleQNav()">📋 題目一覽</button>
+      <button id="q-nav-toggle" onclick="toggleQNav()">題目一覽</button>
       <button class="btn-submit" id="btn-submit" onclick="finishExam()">交卷</button>
     </div>
     <div id="q-nav-panel" style="display:none">
-      <div class="q-nav-legend"><span class="lg lg-cur"></span>目前　<span class="lg lg-ok"></span>答對　<span class="lg lg-no"></span>答錯　<span class="lg"></span>未作答　·　點數字可跳到該題</div>
+      <div class="q-nav-legend"><span><span class="lg lg-cur"></span>目前</span><span><span class="lg lg-ok"></span>答對</span><span><span class="lg lg-no"></span>答錯</span><span><span class="lg"></span>未作答</span><span class="q-nav-tip">點數字可跳到該題</span></div>
       <div id="q-nav-grid"></div>
     </div>
   </div>
@@ -966,7 +1154,7 @@ body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark 
     <div class="explanation" id="q-exp">
       <div class="exp-title" id="exp-title"></div>
       <div class="exp-text"  id="exp-text"></div>
-      <button class="exp-detail-btn" id="exp-detail-btn" type="button" onclick="toggleExpDetail()">🔍 詳細分析 ▼</button>
+      <button class="exp-detail-btn" id="exp-detail-btn" type="button" onclick="toggleExpDetail()">看各選項分析</button>
       <div class="exp-detail" id="exp-detail" style="display:none"></div>
     </div>
   </div>
@@ -980,24 +1168,29 @@ body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark 
 
 <!-- ════ RESULT SCREEN ════ -->
 <div id="result-screen">
-  <div class="result-card">
-    <div style="font-size:2rem">🎓</div>
-    <h2 style="margin-top:10px;font-size:1.2rem">本次測驗結果</h2>
-    <div class="result-score" id="res-score">--</div>
-    <div class="result-label" id="res-label">分</div>
-    <div id="res-badge"></div>
+  <div class="rs-card">
+    <div class="rs-head">
+      <div class="rs-ring">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="rs-ring-bg"/><circle cx="60" cy="60" r="52" class="rs-ring-fg" id="rs-ring-fg" stroke-dasharray="0 327"/></svg>
+        <div class="rs-num"><span class="result-score" id="res-score">--</span><small>分</small></div>
+      </div>
+      <div class="rs-info">
+        <div class="rs-kicker">本次測驗結果</div>
+        <div id="res-badge"></div>
+        <div class="result-label" id="res-label"></div>
+        <span id="res-saved-msg" class="save-badge" style="display:none"></span>
+      </div>
+    </div>
     <div class="breakdown" id="res-breakdown"></div>
-    <div style="margin-top:12px"><span id="res-saved-msg" class="save-badge" style="display:none"></span></div>
-    <div style="margin:12px 0 8px">
-      <button class="btn-primary" style="width:auto;padding:11px 26px" onclick="reviewAnswers()">📝 逐題看答案與解析</button>
+    <div class="rs-actions">
+      <button class="rs-btn primary" onclick="reviewAnswers()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h11a3 3 0 0 1 3 3v11H7a3 3 0 0 1-3-3z"/><line x1="8" y1="10" x2="14" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>逐題看答案與解析</button>
+      <button class="rs-btn" onclick="retryExam()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><polyline points="20 4 20 9 15 9"/></svg>重新測驗</button>
+      <button class="rs-btn" onclick="goHome()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/></svg>回首頁</button>
     </div>
-    <div style="margin:8px 0">
-      <button class="btn-pdf" onclick="exportPDF()">📥 下載成績單 (PDF)</button>
-      <button class="btn-share" onclick="shareResult()">📤 分享成績</button>
-    </div>
-    <div class="result-actions">
-      <button class="btn-retry" onclick="retryExam()">🔄 重新測驗</button>
-      <button class="btn-home"  onclick="goHome()">🏠 回主選單</button>
+    <div class="rs-more">
+      <button class="btn-pdf rs-link" onclick="exportPDF()">下載成績單 PDF</button>
+      <span class="rs-dot">・</span>
+      <button class="btn-share rs-link" onclick="shareResult()">分享成績</button>
     </div>
   </div>
 </div>
@@ -2694,14 +2887,14 @@ function renderQ(){
   st.answered = !!ans;
   const answeredCount = st.answers.filter(a=>a).length;
   document.getElementById('prog-fill').style.width = (answeredCount/total*100)+'%';
-  document.getElementById('prog-label').textContent = `第 ${idx+1} 題 / 共 ${total} 題`;
-  document.getElementById('subj-label').textContent = SUBJ_NAMES[q.subject];
+  document.getElementById('prog-label').textContent = `第 ${idx+1} 題`;
+  document.getElementById('subj-label').textContent = `共 ${total} 題`;
   document.getElementById('lv-prog').textContent = `${answeredCount}/${total}`;
   document.getElementById('lv-correct').textContent = st.correct;
   document.getElementById('lv-wrong').textContent = st.wrong;
   document.getElementById('q-subj-tag').textContent = SUBJ_NAMES[q.subject];
   document.getElementById('q-yr-tag').textContent = q.yr;
-  document.getElementById('q-num').textContent = `Q${idx+1}`;
+  document.getElementById('q-num').textContent = `${idx+1} / ${total}`;
 
   // passage
   const passEl = document.getElementById('q-passage');
@@ -2757,8 +2950,8 @@ function renderQ(){
 function toggleExpDetail(){
   var d=document.getElementById('exp-detail'), b=document.getElementById('exp-detail-btn');
   if(!d||!b) return;
-  if(d.style.display==='none'){ d.style.display='block'; b.textContent='🔼 收合詳細分析'; if(typeof _revealExplanation==='function'){ setTimeout(_revealExplanation,60); setTimeout(_revealExplanation,260); } }
-  else { d.style.display='none'; b.textContent='🔍 詳細分析 ▼'; }
+  if(d.style.display==='none'){ d.style.display='block'; b.textContent='收合選項分析'; if(typeof _revealExplanation==='function'){ setTimeout(_revealExplanation,60); setTimeout(_revealExplanation,260); } }
+  else { d.style.display='none'; b.textContent='看各選項分析'; }
 }
 function uH(s){ s=String(s==null?'':s); return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/&lt;u&gt;/g,'<u>').replace(/&lt;\/u&gt;/g,'</u>'); }
 function _showExplanation(q, isOK){
@@ -2769,11 +2962,11 @@ function _showExplanation(q, isOK){
   if(isOK){
     expEl.className='explanation';
     titleEl.className='exp-title ct';
-    titleEl.textContent=q.free ? '✅ 答對了！此題官方一律送分' : `✅ 答對了！正確答案是 ${ansLettersText(q)}${(q.alt&&q.alt.length)?'（官方公告均可）':''}`;
+    titleEl.textContent=q.free ? '答對了！此題官方一律送分' : `答對了！正確答案是 ${ansLettersText(q)}${(q.alt&&q.alt.length)?'（官方公告均可）':''}`;
   } else {
     expEl.className='explanation wrong-exp';
     titleEl.className='exp-title wt';
-    titleEl.textContent=`❌ 答錯了！正確答案是 ${acceptedList(q).map(i=>letters[i]+'：'+String(q.opts[i]).replace(/<\/?u>/g,'')).join('　或　')}`;
+    titleEl.textContent=`答錯了，正確答案是 ${acceptedList(q).map(i=>letters[i]+'：'+String(q.opts[i]).replace(/<\/?u>/g,'')).join('　或　')}`;
   }
   const _exp=q.exp||'';
   const _btn=document.getElementById('exp-detail-btn');
@@ -2784,7 +2977,7 @@ function _showExplanation(q, isOK){
     _det.textContent=_exp.slice(_i+1);
     _det.style.display='none';
     _btn.style.display='inline-block';
-    _btn.textContent='🔍 詳細分析 ▼';
+    _btn.textContent='看各選項分析';
   } else {
     textEl.textContent=_exp;
     _det.style.display='none'; _det.textContent='';
@@ -2866,7 +3059,7 @@ function toggleQNav(){
   const open = p.style.display==='none';
   p.style.display = open ? 'block' : 'none';
   const t=document.getElementById('q-nav-toggle');
-  if(t) t.textContent = open ? '📋 題目一覽 ▲' : '📋 題目一覽';
+  if(t){ t.textContent = '題目一覽'; t.classList.toggle('open', open); }
   if(open) renderQNav();
 }
 function renderQNav(){
@@ -2925,16 +3118,18 @@ function showResult(){
   const pct = total>0 ? Math.round((correct/total)*100) : 0;
   if(!st.isReviewMode) saveWrongQs(st.examResults);
   document.getElementById('res-score').textContent=pct;
-  document.getElementById('res-label').textContent=`分（答對 ${correct} / ${total} 題）`;
+  document.getElementById('res-label').textContent=`答對 ${correct} / ${total} 題`;
+  const _ring=document.getElementById('rs-ring-fg');
+  if(_ring){ const C=2*Math.PI*52; _ring.setAttribute('stroke-dasharray', (C*pct/100).toFixed(1)+' '+C.toFixed(1)); _ring.classList.toggle('pass', pct>=70); }
   const badge=document.getElementById('res-badge');
   badge.innerHTML = pct>=70
-    ? `<span class="result-badge badge-pass">🎉 通過！（${pct}分）</span>`
-    : `<span class="result-badge badge-fail">📚 繼續加油（${pct}分）</span>`;
-  let html='<h3 style="font-size:.9rem;color:#888;margin-bottom:10px">各科成績</h3>';
+    ? `<span class="result-badge badge-pass">達到通過標準</span>`
+    : `<span class="result-badge badge-fail">還差 ${70-pct} 分達到通過標準（70 分）</span>`;
+  let html='<div class="rs-sec-title">各科成績</div>';
   ['chinese','culture','linguistics','teaching'].forEach(s=>{
     const d=st.stats[s]; if(!d||d.total===0) return;
     const sp=Math.round((d.correct/d.total)*100);
-    html+=`<div class="bk-item"><span>${SUBJ_NAMES[s]}</span><span class="bk-score">${d.correct}/${d.total}（${sp}%）</span></div>`;
+    html+=`<div class="bk-item"><span class="bk-name">${SUBJ_NAMES[s]}</span><span class="bk-bar"><span class="bk-fill${sp>=70?' pass':''}" style="width:${sp}%"></span></span><span class="bk-score">${sp}%</span><span class="bk-cnt">${d.correct}/${d.total}</span></div>`;
   });
   document.getElementById('res-breakdown').innerHTML=html;
   // Save record
@@ -3938,10 +4133,10 @@ function buildHistAnalysis(recs){
       +'<path d="'+line+'" fill="none" stroke="#8b1a1a" stroke-width="2" stroke-linejoin="round"/>'+dots+'</svg>';
   }
   let html='<div class="hist-analysis-card">';
-  html+='<div class="wa-title">📈 進步曲線（近 '+Math.min(pts.length,12)+' 次）</div>';
-  html+=curveHtml||'<div class="wa-empty">至少需 2 次紀錄才會顯示曲線</div>';
-  html+='<div class="wa-title" style="margin-top:16px">🎯 各科正確率（弱項在前）</div>';
-  html+=weakHtml||'<div class="wa-empty">尚無資料</div>';
+  html+='<div class="wa-col"><div class="wa-title">成績變化<span class="wa-sub">近 '+Math.min(pts.length,12)+' 次</span></div>';
+  html+=(curveHtml||'<div class="wa-empty">考兩次以上就會顯示</div>')+'</div>';
+  html+='<div class="wa-col"><div class="wa-title">各科正確率<span class="wa-sub">弱項在前</span></div>';
+  html+=(weakHtml||'<div class="wa-empty">尚無資料</div>')+'</div>';
   html+='</div>';
   return html;
 }
@@ -3957,32 +4152,31 @@ function renderHistory(){
 
   const listEl = document.getElementById('history-list');
   if(records.length===0){
-    listEl.innerHTML='<div class="hist-empty">尚無符合的記錄</div>';
+    listEl.innerHTML='<div class="hist-empty">'+(allUserRecords.length?'這個科目還沒有紀錄':'還沒有考試紀錄，完成一次模擬考後會顯示在這裡')+'</div>';
     return;
   }
 
   const subjNames = {chinese:'國文',culture:'華人社會與文化',linguistics:'漢語語言學',teaching:'華語文教學'};
-  listEl.innerHTML = records.map((r,i)=>{
-    const passClass = r.pct>=70?'pass':'fail';
-    const subjTags = r.subjects.map(s=>`<span class="hist-subj">${subjNames[s]||s}</span>`).join(' ');
+  listEl.innerHTML = '<div class="hist-list-title">考試紀錄<span>'+records.length+' 筆</span></div>' + records.map((r,i)=>{
+    const pass = r.pct>=70;
+    const subjLabel = r.subjects.map(s=>subjNames[s]||s).join('・');
     const yrText = r.years.join('、');
     _histQSets.push(r.questions||[]);
     const setIdx = _histQSets.length - 1;
-    const qDots = (r.questions||[]).map((q,qi)=>`<div class="hist-q ${q.correct?'ok':'ng'}" onclick="openQReview(${setIdx},${qi})" title="Q${q.qNo} 點擊查看題目">${q.correct?'✓':'✗'}</div>`).join('');
+    const qDots = (r.questions||[]).map((q,qi)=>`<button type="button" class="hist-q ${q.correct?'ok':'ng'}" onclick="openQReview(${setIdx},${qi})" title="第 ${q.qNo} 題，點擊查看">${qi+1}</button>`).join('');
+    const qid = 'hq'+i;
     return `<div class="hist-record">
-      <div class="hist-record-top">
-        <span class="hist-name">👤 ${r.name}</span>
-        <span class="hist-date">${r.date} ${r.time}</span>
-        ${subjTags}
-        <button class="hist-del" title="刪除這筆記錄" onclick="deleteHistoryRecord('${r.date}','${r.time}',${r.pct})">🗑</button>
+      <div class="hr-main">
+        <div class="hr-score ${pass?'pass':'fail'}"><b>${r.pct}</b><small>分</small></div>
+        <div class="hr-info">
+          <div class="hr-subj">${subjLabel}</div>
+          <div class="hr-meta">${r.date} ${String(r.time||'').slice(0,5)}・${yrText} 年・答對 ${r.correct}/${r.total}</div>
+        </div>
+        <span class="hr-chip ${pass?'pass':'fail'}">${pass?'通過':'未通過'}</span>
+        ${qDots?`<button type="button" class="hr-toggle" onclick="var el=document.getElementById('${qid}');var open=el.style.display==='none';el.style.display=open?'flex':'none';this.classList.toggle('open',open)">逐題<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>`:''}
+        <button class="hist-del" title="刪除這筆紀錄" aria-label="刪除" onclick="deleteHistoryRecord('${r.date}','${r.time}',${r.pct})"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 20 7"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg></button>
       </div>
-      <div style="font-size:.78rem;color:#888;margin-bottom:8px">年份：${yrText}</div>
-      <div class="hist-score-row">
-        <span class="hist-score-big ${passClass}">${r.pct}分</span>
-        <span class="hist-detail">答對 ${r.correct} / ${r.total} 題</span>
-        ${r.pct>=70?'<span style="color:#2e7d32">🎉 通過</span>':'<span style="color:#c62828">📚 未通過</span>'}
-      </div>
-      ${qDots?`<div class="hist-qlist">${qDots}</div>`:''}
+      ${qDots?`<div class="hist-qlist" id="${qid}" style="display:none">${qDots}</div>`:''}
     </div>`;
   }).join('');
   // Task #16: draw trend chart
@@ -4341,9 +4535,9 @@ function renderQReview(){
     main.insertAdjacentHTML('beforeend', `
 <div id="history-screen" style="display:none">
   <div class="hist-header">
-    <button class="hist-back" onclick="closeHistory()">← 返回</button>
-    <span class="hist-title">📊 我的學習記錄</span>
-    <button style="background:none;border:1px solid #e57373;color:#c62828;border-radius:8px;padding:6px 14px;font-size:.82rem;cursor:pointer" onclick="clearHistory()">🗑 清除全部</button>
+    <button class="hist-back" onclick="closeHistory()" aria-label="返回"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 5 8 12 15 19"/></svg>返回</button>
+    <span class="hist-title">我的紀錄</span>
+    <button class="hist-clear" onclick="clearHistory()">清除全部</button>
   </div>
   <div class="hist-filter">
     <select id="hist-filter-subj" onchange="renderHistory()">

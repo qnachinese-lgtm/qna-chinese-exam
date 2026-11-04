@@ -1,0 +1,38 @@
+// 正式版（qna-chinese）在 2026-11-04 發布新規則前的原始規則備份。要還原就把這整份貼回 Firebase 規則頁並發布。
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /qna_students/{doc} { allow read, write: if true; }
+    match /qna_progress/{doc} { allow read, write: if true; }
+    match /qna_materials/{doc} { allow read, write: if true; }
+    match /qna_resetRequests/{doc} { allow read, write: if true; }
+    match /qna_meta/{doc} { allow read, write: if true; }
+    match /qna_sections/{doc} { allow read, write: if true; }
+
+    function isMaster() {
+      return request.auth != null
+        && request.auth.token.email == 'qnachinese@gmail.com';
+    }
+    match /users/{doc} {
+      allow read, create, update: if true;
+      allow delete: if isMaster();
+    }
+    match /config/examHistory/records/{doc} {
+      allow read, create, update, delete: if true;
+    }
+    match /config/guestHistory/records/{doc} {
+      allow read, create, update: if true;
+      allow delete: if isMaster();
+    }
+    match /config/admins {
+      allow read: if true;
+      allow write: if isMaster();
+    }
+    match /config/admin {
+      allow read, write: if isMaster();
+    }
+    match /config/admin_otp {
+      allow read, write: if isMaster();
+    }
+  }
+}
