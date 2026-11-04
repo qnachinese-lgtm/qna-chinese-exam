@@ -5066,6 +5066,61 @@ function leaveExamNoRecord(){
   if(dr) window.deleteHistoryRecord=function(){ const r=dr.apply(this,arguments); try{ renderProgressPanel(); }catch(e){} return r; };
   if(ch) window.clearHistory=function(){ const r=ch.apply(this,arguments); try{ renderProgressPanel(); }catch(e){} return r; };
 })();
+
+// ═══ 即時同步：自己的考試紀錄一有變化（新增／刪除，包含其他裝置）就更新畫面 ═══
+let _histUnsub = null, _histUid = null;
+window.syncMyHistory = async function(){
+  const user = _auth && _auth.currentUser;
+  if(!_db || !user || !st.currentUser) return;
+  if(_histUnsub && _histUid === user.uid) return;
+  if(_histUnsub){ _histUnsub(); _histUnsub = null; }
+  _histUid = user.uid;
+  const me = st.currentUser;
+  const key = r => (r.name||'')+'|'+(r.date||'')+'|'+(r.time||'');
+  _histUnsub = _db.collection('config').doc('examHistory').collection('records').where('uid','==',user.uid).onSnapshot(snap=>{
+    if(st.currentUser !== me) return;
+    const removed = new Set(snap.docChanges().filter(c=>c.type==='removed').map(c=>key(c.doc.data())));
+    const cloud = snap.docs.map(d=>d.data());
+    const local = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').filter(r=>r.name===me && !removed.has(key(r)));
+    const map = new Map();
+    local.concat(cloud).forEach(r=>{ const c=Object.assign({}, r); delete c.uid; map.set(key(c), c); });
+    const hist = [...map.values()].filter(r=>r.name===me);
+    hist.sort((a,b)=>((b.date||'')+(b.time||'')).localeCompare((a.date||'')+(a.time||'')));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(hist));
+    try{ renderProgressPanel(); }catch(e){}
+    const hs = document.getElementById('history-screen');
+    if(hs && hs.style.display!=='none' && typeof renderHistory==='function') renderHistory();
+  }, err=>console.warn('live history:', err));
+};
+window.syncFromCloud = function(){ return window.syncMyHistory(); };
+(function(){ const o=window.changeUser; window.changeUser=function(){ if(_histUnsub){ _histUnsub(); _histUnsub=null; _histUid=null; } return o.apply(this, arguments); }; })();
+
+// ═══ 網站改版提醒：偵測到新版本時，在底部提示「重新載入」（不自動重整，避免打斷作答）═══
+(function(){
+  let base = null, shown = false;
+  async function check(){
+    if(shown) return;
+    try{
+      const r = await fetch(location.pathname, {method:'HEAD', cache:'no-store'});
+      const tag = r.headers.get('etag') || r.headers.get('last-modified') || r.headers.get('content-length');
+      if(!tag) return;
+      if(base === null){ base = tag; return; }
+      if(tag !== base) show();
+    }catch(e){}
+  }
+  function show(){
+    shown = true;
+    const b = document.createElement('div'); b.id = 'new-version-bar';
+    b.style.cssText = 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:100000;display:flex;align-items:center;gap:12px;background:#2c2c2c;color:#fff;padding:10px 12px 10px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:14px;max-width:calc(100vw - 24px)';
+    b.innerHTML = '<span>網站有新版本</span><button style="border:none;background:#8b1a1a;color:#fff;border-radius:8px;padding:7px 14px;font:inherit;font-weight:700;cursor:pointer">重新載入</button><button aria-label="關閉" style="border:none;background:none;color:#bbb;font-size:18px;cursor:pointer;padding:0 4px">×</button>';
+    b.children[1].onclick = () => location.reload();
+    b.children[2].onclick = () => b.remove();
+    document.body.appendChild(b);
+  }
+  check();
+  setInterval(check, 120000);
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') check(); });
+})();
 </script>
 </body>
 </html>
