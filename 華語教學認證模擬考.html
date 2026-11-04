@@ -5023,6 +5023,36 @@ function pfClose(which){
     window[n]=async function(){ const r=await o.apply(this,arguments); const which=n==='saveProfilePassword'?'pw':'email'; const m=document.getElementById(which==='pw'?'profile-pw-msg':'profile-email-msg');
       if(m && /ok/.test(m.className) && which==='pw'){ setTimeout(()=>{ pfClose('pw'); const pm=document.getElementById('profile-pw-msg'); }, 1800); } return r; }; });
 })();
+
+// ═══ 避免「不小心開始、沒作答就結束」留下 0 分紀錄 ═══
+function _answeredCount(){ return (st.answers||[]).filter(a=>a).length; }
+function leaveExamNoRecord(){
+  if(typeof stopExamTimer==='function') stopExamTimer();
+  if(typeof clearExamResume==='function') clearExamResume();
+  ['exam-screen','result-screen'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.display='none'; });
+  document.getElementById('subject-screen').style.display='block';
+  st.questions=[]; st.answers=[]; st.examResults=[]; st.idx=0; st.correct=0; st.wrong=0; st.stats={};
+  renderProgressPanel(); updateWrongReviewBtn(); updateStartBtn();
+  window.scrollTo(0,0);
+}
+(function(){
+  const NO_ANS = '你還沒有作答任何題目。\n要直接離開嗎？這次不會留下成績紀錄。';
+  const oldExit = window.confirmExit, oldFinish = window.finishExam, oldStart = window.startExam;
+  const oldShow = window.showResult;
+  window.showResult = function(){ if(!st.reviewing && !_answeredCount() && (st.questions||[]).length){ leaveExamNoRecord(); alert('時間到了，但這次沒有作答任何題目，所以不會留下成績紀錄。'); return; } return oldShow.apply(this, arguments); };
+  window.confirmExit = function(){ if(!_answeredCount()){ if(confirm(NO_ANS)) leaveExamNoRecord(); return; } return oldExit.apply(this, arguments); };
+  window.finishExam  = function(){ if(!_answeredCount()){ if(confirm(NO_ANS)) leaveExamNoRecord(); return; } return oldFinish.apply(this, arguments); };
+  window.startExam = function(){
+    let total = 0; const ys = st.selectedYears||[];
+    st.selected.forEach(sub=>{ const c = QB[sub].filter(q=>ys.includes(q.yr)).length; total += st.isGuest ? Math.min(c,10) : c; });
+    if(total > 100){
+      const mins = Math.round(total*1.5), hrs = Math.floor(mins/60), m = mins%60;
+      const t = hrs ? (hrs+' 小時'+(m?m+' 分鐘':'')) : (mins+' 分鐘');
+      if(!confirm('這次共 '+total+' 題，大約需要 '+t+'（以每題 1.5 分鐘估算）。\n題數較多，建議分次練習。\n\n確定要開始嗎？')) return;
+    }
+    return oldStart.apply(this, arguments);
+  };
+})();
 </script>
 </body>
 </html>
