@@ -1474,9 +1474,10 @@ function renderGuestRecords(){
   const get=gid=>{ if(!G.has(gid)) G.set(gid,{gid, first:Infinity, months:new Set(), subMonths:new Set(), arr:[]}); return G.get(gid); };
   visits.forEach(v=>{ if(!v.gid) return; const g=get(v.gid); if(v.first) g.first=Math.min(g.first,v.first); if(v.month) g.months.add(v.month); });
   recs.forEach(r=>{ const key=r.gid || ('once_'+(r.ts||((r.date||'')+(r.time||'')))); const g=get(key); const ts=recTs(r); if(ts){ g.first=Math.min(g.first,ts); g.months.add(ymOf(ts)); g.subMonths.add(ymOf(ts)); } g.arr.push(r); });
-  // 流水號：依第一次來訪的先後，最早的是 #1
+  // 編號＝第一次來訪的「年-月-該月第幾位」，例如 2026-11-003（每個月從 001 重新開始）
   const all=[...G.values()].sort((a,b)=>a.first-b.first);
-  all.forEach((g,i)=>{ g.no=i+1; });
+  const perM={};
+  all.forEach(g=>{ const m=isFinite(g.first)&&g.first?ymOf(g.first):'0000-00'; perM[m]=(perM[m]||0)+1; g.no=m+'-'+String(perM[m]).padStart(3,'0'); });
   // 每月統計（最近 6 個月）
   const now=new Date(); const months=[]; for(let k=0;k<6;k++){ const d=new Date(now.getFullYear(), now.getMonth()-k, 1); months.push(d.getFullYear()+'-'+pad(d.getMonth()+1)); }
   const mStat=months.map(m=>({m, visit:all.filter(g=>g.months.has(m)).length, sub:all.filter(g=>g.subMonths.has(m)).length, fresh:all.filter(g=>g.first!==Infinity && ymOf(g.first)===m).length}));
@@ -1498,7 +1499,7 @@ function renderGuestRecords(){
     const subjSet=new Set(); g.arr.forEach(rec=>(rec.subjects||[]).forEach(x=>subjSet.add(x)));
     const subs=[...subjSet].map(s=>SUBJ_NAMES[s]||s).join('、')||'—';
     const score=(r&&r.correct!=null&&r.total!=null)?(r.pct+'分（'+r.correct+'/'+r.total+'）'):'—';
-    return '<tr><td><b>訪客 #'+g.no+'</b></td><td>'+fmt(g.first).slice(0,10)+'</td><td>'+(g.arr.length?g.arr.length+' 次':'<span style="color:#a99f94">只看沒交卷</span>')+'</td><td>'+subs+'</td><td>'+score+'</td><td>'+fmt(lastTs(g))+'</td></tr>';
+    return '<tr><td><b>訪客 '+g.no+'</b></td><td>'+fmt(g.first).slice(0,10)+'</td><td>'+(g.arr.length?g.arr.length+' 次':'<span style="color:#a99f94">只看沒交卷</span>')+'</td><td>'+subs+'</td><td>'+score+'</td><td>'+fmt(lastTs(g))+'</td></tr>';
   }).join('');
 }
 
