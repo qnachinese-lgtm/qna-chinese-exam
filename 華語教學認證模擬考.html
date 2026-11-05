@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 版本 v3.19｜2026-11-05 20:09｜後台題庫年份可收起。上一版 v3.18｜2026-11-05 20:04｜手機錯題複習改成圖示＋小紅點。上一版 v3.17｜2026-11-05 20:00｜新增瀏覽人數。上一版 v3.16｜2026-11-05 19:54｜手機頂端列按鈕加大。上一版 v3.15｜2026-11-05 19:51｜手機頂端列顯示排行榜、交流區圖示。上一版 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
+<!-- 版本 v3.20｜2026-11-05 20:14｜手機頂端列間距、交流區留言框重新設計。上一版 v3.19｜2026-11-05 20:09｜後台題庫年份可收起。上一版 v3.18｜2026-11-05 20:04｜手機錯題複習改成圖示＋小紅點。上一版 v3.17｜2026-11-05 20:00｜新增瀏覽人數。上一版 v3.16｜2026-11-05 19:54｜手機頂端列按鈕加大。上一版 v3.15｜2026-11-05 19:51｜手機頂端列顯示排行榜、交流區圖示。上一版 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -937,6 +937,24 @@ body.dark .yr-filter-row > *, body.dark .yr-filter-row .yr { color:#e6e6e6; }
 .bd-panel .bd-row .bd-who { margin-right:auto; }
 .bd-panel .bd-msg { flex:0 1 auto; }
 .bd-panel .bd-thread { border:none; border-top:1px solid #f3eee5; border-radius:0; background:none; margin:0; padding:16px 4px; }
+.bd-composer { display:flex; gap:12px; align-items:flex-start; margin-top:16px; padding:14px; background:#faf6ef; border-radius:14px; }
+.bd-composer .bd-av { margin-top:2px; }
+.bd-cbody { flex:1; min-width:0; }
+.bd-composer textarea { display:block; width:100%; box-sizing:border-box; min-height:52px; max-height:240px; resize:none; border:1px solid transparent; background:#fff; border-radius:10px; padding:10px 12px; font:inherit; font-size:15px; line-height:1.7; color:var(--ink); outline:none; transition:border-color .15s; }
+.bd-composer textarea:focus { border-color:#d9b9b3; }
+.bd-cfoot { display:flex; align-items:center; gap:10px; margin-top:8px; }
+.bd-cfoot .bd-who { margin-right:auto; font-size:12px; }
+.bd-cfoot .bd-msg { flex:0 1 auto; font-size:12px; }
+.bd-send { height:34px; padding:0 18px; border:none; border-radius:9px; background:var(--brand); color:#fff; font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
+.bd-send:hover { background:var(--brand-h); }
+.bd-note { display:flex; align-items:center; gap:8px; margin-top:16px; padding:12px 14px; background:#faf6ef; border-radius:12px; font-size:13px; color:var(--muted); }
+.bd-note .ico { width:16px; height:16px; flex:0 0 auto; }
+.bd-empty { display:flex; flex-direction:column; align-items:center; gap:6px; padding:44px 0 30px; color:var(--muted); font-size:13px; }
+.bd-empty .ico { width:34px; height:34px; color:#d9cdbd; margin-bottom:6px; }
+.bd-empty b { font-size:15px; color:var(--ink); font-weight:600; }
+body.dark .bd-composer, body.dark .bd-note { background:#2b2f35; }
+body.dark .bd-composer textarea { background:#1b1d21; color:#e6e6e6; }
+body.dark .bd-empty b { color:#e6e6e6; }
 .bd-qlabel { display:inline-block; font-size:12px; font-weight:600; color:var(--brand); background:var(--brand-soft); border-radius:6px; padding:2px 8px; margin-bottom:8px; }
 .bd-panel .rk-sub { min-height:28px; margin:16px 0 4px; }
 .bd-gone { font-size:13px; color:#b0a69b; font-style:italic; }
@@ -1124,9 +1142,9 @@ body.dark .sv-item b { color:#f0a5a0; }
   /* 「我的紀錄」「排行榜」「交流區」在頭像選單裡都有，手機上頂端列只留錯題複習、頭像、設定 */
   .tb-user > .tb-link[onclick="showHistory()"] { display:none !important; }
   /* 手機上排行榜、交流區直接放在頂端列（只顯示圖示），頭像選單裡也有 */
-  #tb-rank, #tb-board { width:40px; height:40px; padding:0; justify-content:center; border-radius:10px; }
+  #tb-rank, #tb-board { width:38px; height:38px; padding:0; justify-content:center; border-radius:10px; }
   /* 錯題複習：跟排行榜、交流區一樣大的圖示按鈕，錯題數改成右上角小紅點 */
-  .tb-user > .tb-link.tb-review { position:relative; width:40px; height:40px; padding:0; justify-content:center; border-radius:10px; }
+  .tb-user > .tb-link.tb-review { position:relative; width:38px; height:38px; padding:0; justify-content:center; border-radius:10px; }
   .tb-user > .tb-link.tb-review .ico { width:20px; height:20px; }
   .tb-review .tb-count { position:absolute; top:3px; right:2px; min-width:16px; height:16px; padding:0 4px; border-radius:8px;
     background:var(--brand); color:#fff; font-size:10px; font-weight:700; line-height:16px; box-shadow:0 0 0 2px #fffdf9; font-family:system-ui,-apple-system,sans-serif; }
@@ -1140,12 +1158,14 @@ body.dark .sv-item b { color:#f0a5a0; }
   .tb-inner { gap:6px; padding-left:10px; padding-right:10px; }
   .tb-mark { width:30px; height:30px; font-size:15px; }
   .tb-brand { column-gap:6px; }
-  .tb-right, .tb-user { gap:0; }
+  .tb-right, .tb-user { gap:6px; }
   header.topbar #settings-fab, .tb-avatar { width:32px; height:32px; }
   .tb-name { font-size:14px; }
 }
 @media(max-width:380px){
   .tb-name { font-size:14px; letter-spacing:0; }
+  .tb-right, .tb-user { gap:3px; }
+  #tb-rank, #tb-board, .tb-user > .tb-link.tb-review { width:34px; height:34px; }
   .tb-link { padding:0 4px; }
 }
 </style>
@@ -1173,7 +1193,7 @@ body.dark .sv-item b { color:#f0a5a0; }
       <button data-fs="xl" onclick="setFontSize('xl')"><span class="fs-a" style="font-size:19px">字</span>特大</button>
     </div>
   </div>
-  <div class="set-ver">網站版本 v3.19・2026-11-05 20:09 更新</div>
+  <div class="set-ver">網站版本 v3.20・2026-11-05 20:14 更新</div>
 </div>
 <script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg'||_fs==='xl')document.documentElement.classList.add('fs-'+_fs);}catch(e){}</script>
 <header class="topbar">
@@ -5790,13 +5810,20 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
     const typing = cp.contains(document.activeElement) && document.activeElement.value;
     if(redrawCompose || !typing){
       cp.innerHTML = _bdTab==='gen'
-        ? composeHtml('gen','讀書心得、考試資訊、對網站的建議都可以在這裡分享…')
-        : '<div class="bd-login">想討論某一題，請在作答時打開那一題解析下方的「討論」留言。</div>';
+        ? (canPost()
+            ? '<div class="bd-composer"><div class="bd-av">'+esc(String(st.currentUser||'?').charAt(0))+'</div><div class="bd-cbody">'
+              +'<textarea id="ct-gen" maxlength="1000" rows="2" placeholder="讀書心得、考試資訊、對網站的建議都可以在這裡分享…" oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,240)+\'px\'"></textarea>'
+              +'<div class="bd-cfoot"><span class="bd-who">以「'+esc(st.currentUser)+'」留言</span><span id="cm-gen" class="bd-msg"></span><button class="bd-send" onclick="bdPost(\'gen\',null)">送出</button></div></div></div>'
+            : composeHtml('gen',''))
+        : '<div class="bd-note">'+ICO('<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="8" r=".6" fill="currentColor"/>')+'想討論某一題，請在作答時打開那一題解析下方的「討論」留言。</div>';
     }
     const posts = _bdTab==='gen' ? gen : bq;
     const n = nTop(posts);
-    document.getElementById('bd-sub').innerHTML = '<span class="rk-cap">'+(n?'共 '+n+' 則':'')+'</span><span class="rk-cap">最新的在最上面</span>';
-    document.getElementById('bd-list').innerHTML = threadsHtml(posts, _bdTab, _bdTab==='gen'?'還沒有留言，來當第一個留言的人吧！':'還沒有人討論題目。');
+    const sub = document.getElementById('bd-sub');
+    sub.innerHTML = n ? '<span class="rk-cap">共 '+n+' 則・最新的在最上面</span>' : '';
+    sub.style.display = n ? '' : 'none';
+    document.getElementById('bd-list').innerHTML = n ? threadsHtml(posts, _bdTab, '')
+      : '<div class="bd-empty">'+ICO('<path d="M4 5h16v11H9l-5 4z"/>')+'<b>'+(_bdTab==='gen'?'還沒有留言':'還沒有題目討論')+'</b><span>'+(_bdTab==='gen'?'來當第一個留言的人吧！':'作答時在解析下方按「討論」就能發問。')+'</span></div>';
   }
 
   // 每題討論：題目代號＝科目|年份|該年第幾題（與後台、審題表一致）
