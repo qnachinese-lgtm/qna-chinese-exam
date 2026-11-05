@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 版本 v3.20｜2026-11-05 20:14｜手機頂端列間距、交流區留言框重新設計。上一版 v3.19｜2026-11-05 20:09｜後台題庫年份可收起。上一版 v3.18｜2026-11-05 20:04｜手機錯題複習改成圖示＋小紅點。上一版 v3.17｜2026-11-05 20:00｜新增瀏覽人數。上一版 v3.16｜2026-11-05 19:54｜手機頂端列按鈕加大。上一版 v3.15｜2026-11-05 19:51｜手機頂端列顯示排行榜、交流區圖示。上一版 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
+<!-- 版本 v3.21｜2026-11-05 20:18｜各頁同寬同高、頭像選單、帳號設定重新設計。上一版 v3.20｜2026-11-05 20:14｜手機頂端列間距、交流區留言框重新設計。上一版 v3.19｜2026-11-05 20:09｜後台題庫年份可收起。上一版 v3.18｜2026-11-05 20:04｜手機錯題複習改成圖示＋小紅點。上一版 v3.17｜2026-11-05 20:00｜新增瀏覽人數。上一版 v3.16｜2026-11-05 19:54｜手機頂端列按鈕加大。上一版 v3.15｜2026-11-05 19:51｜手機頂端列顯示排行榜、交流區圖示。上一版 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -625,15 +625,26 @@ button:focus:not(:focus-visible) { outline:none; }
 .pf-back .ico { width:18px; height:18px; }
 .pf-back:hover { background:#f4efe6; color:var(--ink); }
 .pf-title { font-size:22px; font-weight:700; margin:0; }
-.pf-card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:4px 20px; max-width:640px; }
+.pf-card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:0 24px 8px; }
+/* 帳號設定（v3.21）：上方個人資料，下方設定列；跟其他頁同寬 */
+.pf-hero { display:flex; align-items:center; gap:16px; padding:22px 0 20px; border-bottom:1px solid #f3eee5; }
+.pf-av { width:56px; height:56px; flex:0 0 auto; border-radius:50%; background:var(--brand-soft); color:var(--brand); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:700; }
+.pf-hero-txt { min-width:0; }
+.pf-hero-name { font-size:19px; font-weight:700; color:var(--ink); }
+.pf-hero-sub { font-size:13px; color:var(--muted); margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pf-sec { font-size:12px; font-weight:700; color:var(--muted); letter-spacing:1px; padding:18px 0 4px; }
+.pf-card > .pf-sec + .pf-row { border-top:none; }
+body.dark .pf-hero { border-bottom-color:#31353b; }
+body.dark .pf-av { background:#3a2828; color:#f0a5a0; }
+body.dark .pf-hero-name { color:#e6e6e6; }
 .pf-row { display:flex; align-items:center; gap:14px; min-height:60px; border-top:1px solid #f3eee5; }
 .pf-card > .pf-row:first-child { border-top:none; }
-.pf-label { flex:0 0 80px; font-size:14px; color:var(--muted); }
+.pf-label { flex:0 0 96px; font-size:14px; color:var(--muted); }
 .pf-value { flex:1; min-width:0; font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.pf-dots { letter-spacing:2px; color:#a99f94; }
+.pf-dots { letter-spacing:1px; color:#a99f94; font-family:system-ui,-apple-system,sans-serif; }
 .pf-edit { height:32px; padding:0 14px; border:1px solid var(--line); background:#fff; border-radius:8px; font:inherit; font-size:13px; color:var(--ink); cursor:pointer; }
 .pf-edit:hover, .pf-edit.on { border-color:#d9b9b3; color:var(--brand); }
-.pf-form { padding:4px 0 18px 94px; }
+.pf-form { padding:4px 0 18px 110px; }
 .pf-form label { display:block; font-size:13px; color:var(--muted); margin:10px 0 6px; }
 .pf-form input { width:100%; max-width:360px; height:42px; padding:0 12px; border:1.5px solid #e6dccb; border-radius:10px; font:inherit; font-size:15px; outline:none; }
 .pf-form input:focus { border-color:var(--brand); }
@@ -881,7 +892,8 @@ body.dark .yr-filter-row > *, body.dark .yr-filter-row .yr { color:#e6e6e6; }
 
 /* ════════ 排行榜、留言板 ════════ */
 #rank-screen, #board-screen { padding:22px 0 40px; }
-#rank-screen, #board-screen { max-width:860px; margin:0 auto; }
+/* 排行榜、交流區、我的紀錄：跟首頁同寬、標題同高（v3.21） */
+#rank-screen, #board-screen, #history-screen, #profile-screen { max-width:none; margin:0; padding-top:0 !important; }
 .rk-panel { background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px; }
 .rk-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; padding:4px; background:#f3ede3; border-radius:12px; }
 .rk-tab { height:40px; border:none; background:none; border-radius:9px; font:inherit; font-size:15px; font-weight:600; color:var(--muted); cursor:pointer; }
@@ -1126,6 +1138,16 @@ html.fs-xl main { zoom:1.3; }
 body.dark .sv-pill { background:#1f2226; border-color:#3a3f47; }
 body.dark .sv-item b { color:#f0a5a0; }
 #login-screen { flex-direction:column; }
+/* 頭像選單抬頭（v3.21）：頭像＋名字＋信箱一行，太長用「…」 */
+.user-menu { min-width:250px; max-width:min(300px, calc(100vw - 24px)); padding:6px; }
+.um-head { display:flex; align-items:center; gap:10px; padding:10px 10px 12px; margin:0 0 4px; border-bottom:1px solid #f1ebe0; }
+.um-av { width:38px; height:38px; flex:0 0 auto; border-radius:50%; background:var(--brand-soft); color:var(--brand); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; }
+.um-who { min-width:0; flex:1; }
+.um-name { font-size:15px; font-weight:700; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.um-mail { font-size:12px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; word-break:normal; }
+.user-menu button { padding:10px 12px; border-radius:9px; }
+.user-menu hr { margin:4px 6px; }
+body.dark .um-av { background:#3a2828; color:#f0a5a0; }
 /* 頭像選單裡的排行榜、交流區只在手機顯示 */
 .user-menu .um-mobile { display:none; }
 /* 手機版頂端列：名稱可縮短、測試版標籤放到名稱下方，避免文字跟右側按鈕疊在一起 */
@@ -1193,7 +1215,7 @@ body.dark .sv-item b { color:#f0a5a0; }
       <button data-fs="xl" onclick="setFontSize('xl')"><span class="fs-a" style="font-size:19px">字</span>特大</button>
     </div>
   </div>
-  <div class="set-ver">網站版本 v3.20・2026-11-05 20:14 更新</div>
+  <div class="set-ver">網站版本 v3.21・2026-11-05 20:18 更新</div>
 </div>
 <script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg'||_fs==='xl')document.documentElement.classList.add('fs-'+_fs);}catch(e){}</script>
 <header class="topbar">
@@ -1205,7 +1227,7 @@ body.dark .sv-item b { color:#f0a5a0; }
       <div class="tb-avatar-wrap">
         <button class="tb-avatar" id="tb-avatar" onclick="toggleUserMenu(event)" aria-label="帳號選單">?</button>
         <div class="user-menu" id="user-menu">
-          <div class="um-head"><div class="um-name" id="um-name"></div><div class="um-mail" id="um-mail"></div></div>
+          <div class="um-head"><div class="um-av" id="um-av">?</div><div class="um-who"><div class="um-name" id="um-name"></div><div class="um-mail" id="um-mail"></div></div></div>
           <button id="um-register" onclick="closeUserMenu();openGuestRegister()" style="display:none"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"/></svg>註冊並保存進度</button>
           <button id="um-profile" onclick="closeUserMenu();showProfile()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>帳號設定</button>
           <button onclick="closeUserMenu();showHistory()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><path d="M7 15l4-5 3 3 5-7"/></svg>我的紀錄</button>
@@ -4804,11 +4826,13 @@ function renderQReview(){
   if(!document.getElementById('profile-screen')){
     main.insertAdjacentHTML('beforeend', `
 <div id="profile-screen" style="display:none">
-  <div class="pf-head">
-    <button class="pf-back" onclick="closeProfile()" aria-label="返回"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 6 9 12 15 18"/></svg>返回</button>
-    <h2 class="pf-title">帳號設定</h2>
+  <div class="hist-header">
+    <button class="hist-back" onclick="closeProfile()"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 5 8 12 15 19"/></svg>返回</button>
+    <span class="hist-title">帳號設定</span>
   </div>
   <div class="pf-card">
+    <div class="pf-hero"><div class="pf-av" id="pf-av">?</div><div class="pf-hero-txt"><div class="pf-hero-name" id="pf-hero-name"></div><div class="pf-hero-sub" id="pf-hero-sub"></div></div></div>
+    <div class="pf-sec">帳號資料</div>
     <div class="pf-row"><span class="pf-label">帳號名稱</span><span class="pf-value" id="profile-name"></span></div>
     <div class="pf-row"><span class="pf-label">登入信箱</span><span class="pf-value" id="profile-email-display"></span><span class="pf-lock">不可更改</span></div>
     <div class="pf-row"><span class="pf-label">備份信箱</span><span class="pf-value" id="profile-backup-display">未設定</span><button type="button" class="pf-edit" id="pf-edit-email" onclick="pfOpen('email')">設定</button></div>
@@ -4857,6 +4881,9 @@ function showProfile(){
   const accounts = getUserAccounts();
   const acc = accounts.find(a=>a.name===st.currentUser);
   document.getElementById('profile-name').textContent = st.currentUser||'';
+  try{ document.getElementById('pf-av').textContent = String(st.currentUser||'?').charAt(0);
+       document.getElementById('pf-hero-name').textContent = st.currentUser||'';
+       document.getElementById('pf-hero-sub').textContent = (acc&&acc.email)||''; }catch(e){}
   document.getElementById('profile-email-display').textContent = (acc&&acc.email)||'（未設定）';
   document.getElementById('profile-email-input').value = (acc&&acc.email)||'';
   // Clear fields
@@ -5340,6 +5367,7 @@ function syncLearnerChrome(){
   try{ const pp=document.getElementById('progress-panel'); const has=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').some(r=>r.name===name); if(pp) pp.style.display = (has && !guest) ? 'block' : 'none'; }catch(e){}
   const av = document.getElementById('tb-avatar'); if(av) av.textContent = guest ? '訪' : String(name).trim().charAt(0).toUpperCase();
   const un = document.getElementById('um-name'); if(un) un.textContent = guest ? '訪客' : name;
+  const ua = document.getElementById('um-av'); if(ua) ua.textContent = guest ? '訪' : String(name||'?').charAt(0);
   const um = document.getElementById('um-mail'); if(um) um.textContent = guest ? '試做中，成績不會保存' : (localStorage.getItem('tocfl_user_email')||'');
   const ur = document.getElementById('um-register'); if(ur) ur.style.display = guest ? 'flex' : 'none';
   const up = document.getElementById('um-profile'); if(up) up.style.display = guest ? 'none' : 'flex';
