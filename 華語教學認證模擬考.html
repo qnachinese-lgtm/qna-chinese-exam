@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 版本 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
+<!-- 版本 v3.15｜2026-11-05 19:51｜手機頂端列顯示排行榜、交流區圖示。上一版 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -1113,10 +1113,21 @@ html.fs-xl main { zoom:1.3; }
   .tb-link { padding:0 6px; gap:4px; }
   .tb-count { min-width:18px; height:18px; padding:0 5px; font-size:11px; }
   /* 「我的紀錄」「排行榜」「交流區」在頭像選單裡都有，手機上頂端列只留錯題複習、頭像、設定 */
-  .tb-user > .tb-link[onclick="showHistory()"], #tb-rank, #tb-board { display:none !important; }
+  .tb-user > .tb-link[onclick="showHistory()"] { display:none !important; }
+  /* 手機上排行榜、交流區直接放在頂端列（只顯示圖示），頭像選單裡也有 */
+  #tb-rank, #tb-board { width:30px; padding:0; justify-content:center; }
+  #tb-rank .ico, #tb-board .ico { width:20px; height:20px; }
   .user-menu .um-mobile { display:flex; }
   .tb-brand { flex:1 1 auto; overflow:hidden; }
   .tb-name { display:block; white-space:nowrap; }
+}
+@media(max-width:430px){
+  .tb-inner { gap:6px; padding-left:10px; padding-right:10px; }
+  .tb-mark { width:30px; height:30px; font-size:15px; }
+  .tb-brand { column-gap:6px; }
+  .tb-right, .tb-user { gap:0; }
+  header.topbar #settings-fab, .tb-avatar { width:32px; height:32px; }
+  .tb-name { font-size:14px; }
 }
 @media(max-width:380px){
   .tb-name { font-size:14px; letter-spacing:0; }
@@ -1147,7 +1158,7 @@ html.fs-xl main { zoom:1.3; }
       <button data-fs="xl" onclick="setFontSize('xl')"><span class="fs-a" style="font-size:19px">字</span>特大</button>
     </div>
   </div>
-  <div class="set-ver">網站版本 v3.14・2026-11-05 19:46 更新</div>
+  <div class="set-ver">網站版本 v3.15・2026-11-05 19:51 更新</div>
 </div>
 <script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg'||_fs==='xl')document.documentElement.classList.add('fs-'+_fs);}catch(e){}</script>
 <header class="topbar">
