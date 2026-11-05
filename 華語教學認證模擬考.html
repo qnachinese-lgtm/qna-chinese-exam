@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 版本 v3.8｜2026-11-05｜手機版頂端列修正（排行榜、交流區移進頭像選單）。完整紀錄見〈更新紀錄.md〉 -->
+<!-- 版本 v3.9｜2026-11-05｜顯示設定拿掉兩個錯題複習選項。完整紀錄見〈更新紀錄.md〉 -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -1101,17 +1101,7 @@ body.dark .set-ver { border-top-color:#31353b; }
       <button data-fs="xl" onclick="setFontSize('xl')"><span class="fs-a" style="font-size:19px">字</span>特大</button>
     </div>
   </div>
-  <div class="set-row">
-    <span class="set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h10"/><path d="M10 8l1.5 1.5L14 7"/></svg></span>
-    <div class="set-text"><div class="set-label">首頁顯示錯題複習</div><div class="set-hint">在首頁顯示「錯題複習」按鈕</div></div>
-    <button id="set-showreview" class="set-toggle" onclick="toggleShowReview()" aria-label="首頁顯示錯題複習開關"></button>
-  </div>
-  <div class="set-row" id="set-review-access" style="display:none">
-    <span class="set-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h10"/><path d="M10 8l1.5 1.5L14 7"/></svg></span>
-    <div class="set-text"><div class="set-label">查看之前的錯題</div><div class="set-hint">首頁已隱藏，可以從這裡進入</div></div>
-    <button class="set-btn" onclick="toggleSettings();openReviewPicker()">查看</button>
-  </div>
-  <div class="set-ver">網站版本 v3.8（2026-11-05）</div>
+  <div class="set-ver">網站版本 v3.9（2026-11-05）</div>
 </div>
 <script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg')document.documentElement.style.fontSize='112.5%';else if(_fs==='xl')document.documentElement.style.fontSize='125%';}catch(e){}</script>
 <header class="topbar">
@@ -3652,8 +3642,7 @@ function updateWrongReviewBtn(){
   const cnt = document.getElementById('wrong-count');
   if(!btn) return;
   const wrongs = getWrongQs();
-  const showReview = localStorage.getItem('tocfl_showreview')!=='0';   // 首頁是否顯示錯題複習
-  if(wrongs.length && showReview){
+  if(wrongs.length){   // 有錯題就在頂端列顯示（v3.9 拿掉「首頁顯示錯題複習」設定）
     btn.style.display='inline-flex';
     if(cnt) cnt.textContent = wrongs.length;
   } else {
