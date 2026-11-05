@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 版本 v3.12｜2026-11-05｜排行榜重新設計。完整紀錄見〈更新紀錄.md〉 -->
+<!-- 版本 v3.13｜2026-11-05｜交流區重新設計。完整紀錄見〈更新紀錄.md〉 -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -881,7 +881,7 @@ body.dark .yr-filter-row > *, body.dark .yr-filter-row .yr { color:#e6e6e6; }
 
 /* ════════ 排行榜、留言板 ════════ */
 #rank-screen, #board-screen { padding:22px 0 40px; }
-#rank-screen { max-width:860px; margin:0 auto; }
+#rank-screen, #board-screen { max-width:860px; margin:0 auto; }
 .rk-panel { background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px; }
 .rk-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; padding:4px; background:#f3ede3; border-radius:12px; }
 .rk-tab { height:40px; border:none; background:none; border-radius:9px; font:inherit; font-size:15px; font-weight:600; color:var(--muted); cursor:pointer; }
@@ -927,10 +927,22 @@ body.dark .yr-filter-row > *, body.dark .yr-filter-row .yr { color:#e6e6e6; }
 .bd-acts button:hover { color:var(--brand); }
 .bd-replies { margin:10px 0 0 48px; padding-left:14px; border-left:2px solid #f1ebe0; display:flex; flex-direction:column; gap:12px; }
 .bd-reply-box { margin-top:8px; }
+/* 交流區（v3.13）：跟排行榜同一張卡片 */
+.bd-tabs { grid-template-columns:repeat(2,1fr); }
+.bd-tabs .rk-tab b { margin-left:6px; font-size:12px; font-weight:700; color:inherit; opacity:.7; }
+.bd-panel .bd-compose, .bd-panel .bd-login { border:none; background:none; border-radius:0; padding:0; margin:14px 0 0; }
+.bd-panel .bd-login { background:#faf6ef; border-radius:12px; padding:14px 16px; }
+.bd-panel .bd-compose textarea { background:#fdfbf7; }
+.bd-panel .bd-row { justify-content:flex-end; }
+.bd-panel .bd-row .bd-who { margin-right:auto; }
+.bd-panel .bd-msg { flex:0 1 auto; }
+.bd-panel .bd-thread { border:none; border-top:1px solid #f3eee5; border-radius:0; background:none; margin:0; padding:16px 4px; }
+.bd-qlabel { display:inline-block; font-size:12px; font-weight:600; color:var(--brand); background:var(--brand-soft); border-radius:6px; padding:2px 8px; margin-bottom:8px; }
+.bd-panel .rk-sub { min-height:28px; margin:16px 0 4px; }
 .bd-gone { font-size:13px; color:#b0a69b; font-style:italic; }
 body.dark .rk-tab, body.dark .rk-card, body.dark .bd-compose, body.dark .bd-login, body.dark .bd-thread, body.dark .bd-compose textarea, body.dark .bd-reply-box textarea { background:#1f2226; border-color:#3a3f47; color:#e6e6e6; }
 body.dark .rk-name, body.dark .rk-val b, body.dark .bd-meta b, body.dark .bd-text { color:#e6e6e6; }
-@media(max-width:640px){ .rk-row { padding:12px 14px; gap:10px; } .bd-replies { margin-left:20px; } .rk-tab { font-size:14px; }
+@media(max-width:640px){ .rk-row { padding:12px 14px; gap:10px; } .bd-replies { margin-left:20px; } .bd-panel .rk-sub { flex-direction:row; align-items:center; } .bd-panel .bd-thread { padding:14px 2px; } .rk-tab { font-size:14px; }
   .rk-panel { padding:10px; }
   .rk-sub { flex-direction:column; align-items:stretch; gap:8px; }
   .rk-seg { display:flex; min-width:0; max-width:100%; overflow-x:auto; scrollbar-width:none; }
@@ -944,6 +956,10 @@ body.dark .rk-panel { background:#1f2226; border-color:#3a3f47; }
 body.dark .rk-tabs, body.dark .rk-seg { background:#2b2f35; }
 body.dark .rk-tab.on, body.dark .rk-seg button.on { background:#1b1d21; color:#f0a5a0; }
 body.dark .rk-panel .rk-card, body.dark .rk-panel .hist-empty { border-top-color:#31353b; background:none; }
+body.dark .bd-panel .bd-thread { border-top-color:#31353b; background:none; }
+body.dark .bd-panel .bd-login { background:#2b2f35; }
+body.dark .bd-panel .bd-compose, body.dark .bd-panel .bd-compose textarea { background:#1b1d21; }
+body.dark .bd-qlabel { background:#3a2828; color:#f0a5a0; }
 .q-disc { margin-top:14px; padding-top:12px; border-top:1px dashed var(--line); }
 .disc-btn { display:inline-flex; align-items:center; gap:6px; height:34px; padding:0 12px; border:1px solid var(--line); background:#fff; border-radius:9px; font:inherit; font-size:14px; font-weight:600; color:var(--ink); cursor:pointer; }
 .disc-btn .ico { width:16px; height:16px; color:var(--brand); }
@@ -1131,7 +1147,7 @@ html.fs-xl main { zoom:1.3; }
       <button data-fs="xl" onclick="setFontSize('xl')"><span class="fs-a" style="font-size:19px">字</span>特大</button>
     </div>
   </div>
-  <div class="set-ver">網站版本 v3.12（2026-11-05）</div>
+  <div class="set-ver">網站版本 v3.13（2026-11-05）</div>
 </div>
 <script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg'||_fs==='xl')document.documentElement.classList.add('fs-'+_fs);}catch(e){}</script>
 <header class="topbar">
@@ -5623,8 +5639,12 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
     <button class="hist-back" onclick="closeCommunity()">${ICO('<polyline points="15 5 8 12 15 19"/>')}返回</button>
     <span class="hist-title">交流區</span>
   </div>
-  <div id="bd-compose"></div>
-  <div id="bd-list"></div>
+  <div class="rk-panel bd-panel">
+    <div class="rk-tabs bd-tabs" id="bd-tabs"></div>
+    <div id="bd-compose"></div>
+    <div class="rk-sub" id="bd-sub"></div>
+    <div id="bd-list"></div>
+  </div>
 </div>`);
   }
   // 頂端列加入「排行榜」「留言板」
@@ -5682,7 +5702,7 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
 
   // ── 留言：交流區（一般留言）＋ 每題討論（有 qid 的留言）共用同一個資料表 board ──
   let _bdUnsub = null, _bdAll = [], _bdLoaded = false;
-  const _replyTo = {gen:null, q:null};
+  const _replyTo = {gen:null, q:null, bq:null};
   let _discOpen = false, _discQ = null;        // 目前作答畫面這一題的討論區
   function startBoardLive(){
     if(_bdUnsub || typeof _db==='undefined' || !_db) return;
@@ -5722,20 +5742,35 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
     if(!tops.length) return '<div class="hist-empty">'+emptyTxt+'</div>';
     return tops.map(p=>{
       const reps = (byParent[p.id]||[]).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
-      return '<div class="bd-thread">'+(p._gone?'<div class="bd-gone">原留言已刪除</div>':postHtml(p,false,ctx))+(reps.length?'<div class="bd-replies">'+reps.map(r=>postHtml(r,true,ctx)).join('')+'</div>':'')+'</div>';
+      const lab = (ctx==='bq' && !p._gone && p.qlabel) ? '<div class="bd-qlabel">'+esc(p.qlabel)+'</div>' : '';
+      return '<div class="bd-thread">'+lab+(p._gone?'<div class="bd-gone">原留言已刪除</div>':postHtml(p,false,ctx))+(reps.length?'<div class="bd-replies">'+reps.map(r=>postHtml(r,true,ctx)).join('')+'</div>':'')+'</div>';
     }).join('');
   }
   // 交流區
+  let _bdTab = 'gen';   // gen＝一般留言、bq＝題目討論
+  window.bdSetTab = function(t){ _bdTab=t; _replyTo.gen=null; _replyTo.bq=null; renderBoard(true); };
   window.showBoard = function(){
     openScreen('board-screen');
-    document.getElementById('bd-compose').innerHTML = composeHtml('gen','讀書心得、考試資訊、對網站的建議都可以在這裡分享…');
-    document.getElementById('bd-list').innerHTML = _bdLoaded ? '' : '<div class="hist-empty">讀取中…</div>';
+    renderBoard(true);
+    if(!_bdLoaded) document.getElementById('bd-list').innerHTML = '<div class="hist-empty">讀取中…</div>';
     startBoardLive(); if(_bdLoaded) renderBoard();
   };
-  function renderBoard(){
-    const posts = _bdAll.filter(p=>!p.qid);
-    const el = document.getElementById('bd-list');
-    el.innerHTML = (posts.length?'<div class="bd-count">共 '+posts.length+' 則</div>':'')+threadsHtml(posts,'gen','還沒有留言，來當第一個留言的人吧！');
+  function renderBoard(redrawCompose){
+    const gen = _bdAll.filter(p=>!p.qid), bq = _bdAll.filter(p=>p.qid);
+    const nTop = arr => arr.filter(p=>!p.parentId).length;
+    document.getElementById('bd-tabs').innerHTML = [['gen','一般留言',nTop(gen)],['bq','題目討論',nTop(bq)]]
+      .map(([k,t,n])=>'<button class="rk-tab'+(_bdTab===k?' on':'')+'" onclick="bdSetTab(\''+k+'\')">'+t+(n?'<b>'+n+'</b>':'')+'</button>').join('');
+    const cp = document.getElementById('bd-compose');
+    const typing = cp.contains(document.activeElement) && document.activeElement.value;
+    if(redrawCompose || !typing){
+      cp.innerHTML = _bdTab==='gen'
+        ? composeHtml('gen','讀書心得、考試資訊、對網站的建議都可以在這裡分享…')
+        : '<div class="bd-login">想討論某一題，請在作答時打開那一題解析下方的「討論」留言。</div>';
+    }
+    const posts = _bdTab==='gen' ? gen : bq;
+    const n = nTop(posts);
+    document.getElementById('bd-sub').innerHTML = '<span class="rk-cap">'+(n?'共 '+n+' 則':'')+'</span><span class="rk-cap">最新的在最上面</span>';
+    document.getElementById('bd-list').innerHTML = threadsHtml(posts, _bdTab, _bdTab==='gen'?'還沒有留言，來當第一個留言的人吧！':'還沒有人討論題目。');
   }
 
   // 每題討論：題目代號＝科目|年份|該年第幾題（與後台、審題表一致）
@@ -5776,7 +5811,7 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
     return r;
   };
 
-  window.bdReply = function(ctx, id){ _replyTo[ctx]=id; if(ctx==='gen') renderBoard(); else refreshDisc(); if(id){ const t=document.getElementById('rt-'+ctx); if(t) t.focus(); } };
+  window.bdReply = function(ctx, id){ _replyTo[ctx]=id; if(ctx!=='q') renderBoard(); else refreshDisc(); if(id){ const t=document.getElementById('rt-'+ctx); if(t) t.focus(); } };
   window.bdPost = async function(ctx, parentId){
     const ta = document.getElementById((parentId?'rt-':'ct-')+ctx);
     const msg = document.getElementById((parentId?'rm-':'cm-')+ctx);
@@ -5786,9 +5821,10 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
     const id = Date.now().toString(36)+Math.random().toString(36).slice(2,8);
     const data = {uid:uid(), name:st.currentUser, text:text.slice(0,1000), createdAt:Date.now()};
     if(parentId) data.parentId = parentId;
-    if(ctx==='q'){ const info=qInfo(curQ()); if(!info){ if(msg) msg.textContent='找不到題目代號'; return; } data.qid=info.qid; data.qlabel=info.label; }
+    if(parentId){ const par=_bdAll.find(x=>x.id===parentId); if(par && par.qid){ data.qid=par.qid; if(par.qlabel) data.qlabel=par.qlabel; } }
+    if(ctx==='q' && !data.qid){ const info=qInfo(curQ()); if(!info){ if(msg) msg.textContent='找不到題目代號'; return; } data.qid=info.qid; data.qlabel=info.label; }
     if(msg) msg.textContent='送出中…';
-    try{ await _db.collection('board').doc(id).set(data); if(ta) ta.value=''; if(msg) msg.textContent=''; _replyTo[ctx]=null; if(ctx==='gen') renderBoard(); else refreshDisc(); }
+    try{ await _db.collection('board').doc(id).set(data); if(ta) ta.value=''; if(msg) msg.textContent=''; _replyTo[ctx]=null; if(ctx!=='q') renderBoard(); else refreshDisc(); }
     catch(e){ console.warn(e); if(msg) msg.textContent='送出失敗：'+(e.code==='permission-denied'?'沒有權限，請重新登入':e.message||e); }
   };
   window.bdDelete = async function(id){
