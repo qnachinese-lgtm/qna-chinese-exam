@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 版本 v3.9｜2026-11-05｜顯示設定拿掉兩個錯題複習選項。完整紀錄見〈更新紀錄.md〉 -->
+<!-- 版本 v3.10｜2026-11-05｜字級「大／特大」改成內容區等比例放大。完整紀錄見〈更新紀錄.md〉 -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -1053,6 +1053,13 @@ body.dark .yr-btn.active { background:#c0392b; border-color:#c0392b; }
 body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark .pdf-section h3 { color:#e6e6e6; }
 .set-ver { margin:10px 6px 2px; padding-top:8px; border-top:1px solid #f1ebe0; font-size:12px; color:var(--muted); text-align:right; }
 body.dark .set-ver { border-top-color:#31353b; }
+/* 字級：內容區等比例放大（頂端列不放大，避免手機上擠在一起） */
+html.fs-lg main { zoom:1.15; }
+html.fs-xl main { zoom:1.3; }
+@media(max-width:720px){
+  html.fs-lg .subject-card, html.fs-xl .subject-card { min-width:0; }
+  html.fs-lg .subject-card .title, html.fs-xl .subject-card .title { white-space:normal; }
+}
 /* 頭像選單裡的排行榜、交流區只在手機顯示 */
 .user-menu .um-mobile { display:none; }
 /* 手機版頂端列：名稱可縮短、測試版標籤放到名稱下方，避免文字跟右側按鈕疊在一起 */
@@ -1101,9 +1108,9 @@ body.dark .set-ver { border-top-color:#31353b; }
       <button data-fs="xl" onclick="setFontSize('xl')"><span class="fs-a" style="font-size:19px">字</span>特大</button>
     </div>
   </div>
-  <div class="set-ver">網站版本 v3.9（2026-11-05）</div>
+  <div class="set-ver">網站版本 v3.10（2026-11-05）</div>
 </div>
-<script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg')document.documentElement.style.fontSize='112.5%';else if(_fs==='xl')document.documentElement.style.fontSize='125%';}catch(e){}</script>
+<script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg'||_fs==='xl')document.documentElement.classList.add('fs-'+_fs);}catch(e){}</script>
 <header class="topbar">
   <div class="tb-inner">
     <div class="tb-brand"><span class="tb-mark">美</span><span class="tb-name">美娟華語工作室</span><span class="tb-sub">對外華語教學能力認證考試・模擬練習</span></div>
@@ -2923,7 +2930,10 @@ function applyPrefs(){
     const dark = localStorage.getItem('tocfl_dark')==='1';
     document.body.classList.toggle('dark', dark);
     const fs = localStorage.getItem('tocfl_fontsize')||'std';
-    document.documentElement.style.fontSize = fs==='lg'?'112.5%':(fs==='xl'?'125%':'');
+    // 字級：整個內容區等比例放大（原本只改根字級，大部分文字是固定 px，看不出差別）
+    document.documentElement.style.fontSize = '';
+    document.documentElement.classList.toggle('fs-lg', fs==='lg');
+    document.documentElement.classList.toggle('fs-xl', fs==='xl');
     const dt=document.getElementById('set-dark'); if(dt) dt.classList.toggle('on', dark);
     document.querySelectorAll('#set-fontseg button').forEach(b=>b.classList.toggle('active', b.dataset.fs===fs));
     const showReview = localStorage.getItem('tocfl_showreview')!=='0';   // 預設顯示
