@@ -135,6 +135,20 @@ service cloud.firestore {
       allow delete: if isMaster();
     }
 
+    // ── 網站瀏覽人數：total 與每天一筆；只能新增或 +1，任何人可讀，只有主管理員能刪 ──
+    match /pageStats/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['views','visitors'])
+        && request.resource.data.views == 1
+        && request.resource.data.visitors is int && request.resource.data.visitors >= 0 && request.resource.data.visitors <= 1;
+      allow update: if request.resource.data.keys().hasOnly(['views','visitors'])
+        && request.resource.data.views == resource.data.get('views', 0) + 1
+        && request.resource.data.visitors is int
+        && request.resource.data.visitors >= resource.data.get('visitors', 0)
+        && request.resource.data.visitors <= resource.data.get('visitors', 0) + 1;
+      allow delete: if isMaster();
+    }
+
     // 其他未列出的路徑一律拒絕
   }
 }
