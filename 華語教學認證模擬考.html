@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 版本 v3.22｜2026-11-05 20:21｜新增顯示名稱。上一版 v3.21｜2026-11-05 20:18｜各頁同寬同高、頭像選單、帳號設定重新設計。上一版 v3.20｜2026-11-05 20:14｜手機頂端列間距、交流區留言框重新設計。上一版 v3.19｜2026-11-05 20:09｜後台題庫年份可收起。上一版 v3.18｜2026-11-05 20:04｜手機錯題複習改成圖示＋小紅點。上一版 v3.17｜2026-11-05 20:00｜新增瀏覽人數。上一版 v3.16｜2026-11-05 19:54｜手機頂端列按鈕加大。上一版 v3.15｜2026-11-05 19:51｜手機頂端列顯示排行榜、交流區圖示。上一版 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
+<!-- 版本 v3.23｜2026-11-05 20:29｜留言編輯、按讚、操作紀錄。上一版 v3.22｜2026-11-05 20:21｜新增顯示名稱。上一版 v3.21｜2026-11-05 20:18｜各頁同寬同高、頭像選單、帳號設定重新設計。上一版 v3.20｜2026-11-05 20:14｜手機頂端列間距、交流區留言框重新設計。上一版 v3.19｜2026-11-05 20:09｜後台題庫年份可收起。上一版 v3.18｜2026-11-05 20:04｜手機錯題複習改成圖示＋小紅點。上一版 v3.17｜2026-11-05 20:00｜新增瀏覽人數。上一版 v3.16｜2026-11-05 19:54｜手機頂端列按鈕加大。上一版 v3.15｜2026-11-05 19:51｜手機頂端列顯示排行榜、交流區圖示。上一版 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -937,6 +937,16 @@ body.dark .yr-filter-row > *, body.dark .yr-filter-row .yr { color:#e6e6e6; }
 .bd-acts { display:flex; gap:4px; margin-top:4px; }
 .bd-acts button { background:none; border:none; padding:4px 8px 4px 0; font:inherit; font-size:13px; color:var(--muted); cursor:pointer; }
 .bd-acts button:hover { color:var(--brand); }
+/* 按讚、編輯（v3.23） */
+.bd-acts { align-items:center; gap:14px; }
+.bd-acts button { padding:4px 0; }
+.bd-like { display:inline-flex; align-items:center; gap:4px; }
+.bd-like .ico { width:16px; height:16px; }
+.bd-like.on { color:var(--brand); font-weight:600; }
+.bd-like.on .ico { fill:currentColor; }
+.bd-edit-box { margin-top:6px; }
+.bd-edit-box textarea { width:100%; box-sizing:border-box; min-height:72px; border:1px solid #d9b9b3; border-radius:10px; padding:10px 12px; font:inherit; font-size:15px; line-height:1.7; resize:vertical; outline:none; background:#fff; color:var(--ink); }
+body.dark .bd-edit-box textarea { background:#1b1d21; color:#e6e6e6; border-color:#3a3f47; }
 .bd-replies { margin:10px 0 0 48px; padding-left:14px; border-left:2px solid #f1ebe0; display:flex; flex-direction:column; gap:12px; }
 .bd-reply-box { margin-top:8px; }
 /* 交流區（v3.13）：跟排行榜同一張卡片 */
@@ -1215,7 +1225,7 @@ body.dark .um-av { background:#3a2828; color:#f0a5a0; }
       <button data-fs="xl" onclick="setFontSize('xl')"><span class="fs-a" style="font-size:19px">字</span>特大</button>
     </div>
   </div>
-  <div class="set-ver">網站版本 v3.22・2026-11-05 20:21 更新</div>
+  <div class="set-ver">網站版本 v3.23・2026-11-05 20:29 更新</div>
 </div>
 <script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg'||_fs==='xl')document.documentElement.classList.add('fs-'+_fs);}catch(e){}</script>
 <header class="topbar">
@@ -5830,12 +5840,23 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
       ? '<div class="bd-compose"><textarea id="ct-'+ctx+'" maxlength="1000" placeholder="'+esc(ph)+'"></textarea><div class="bd-row"><span class="bd-who">以「'+esc(dispName())+'」留言</span><span id="cm-'+ctx+'" class="bd-msg"></span><button class="md-btn primary" onclick="bdPost(\''+ctx+'\',null)">送出</button></div></div>'
       : '<div class="bd-login">登入後就可以留言和回覆。'+(st.isGuest?'<button class="md-btn" onclick="openGuestRegister()">註冊帳號</button>':'')+'</div>';
   }
+  // 編輯中的留言（v3.23）
+  let _editId = null;
+  const HEART = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>';
   function postHtml(p, isReply, ctx){
-    const mine = uid() && p.uid===uid();
+    const me = uid(), mine = me && p.uid===me;
+    const likes = Array.isArray(p.likes) ? p.likes : [], liked = !!(me && likes.includes(me));
+    const editing = mine && _editId===p.id;
+    const body = editing
+      ? '<div class="bd-edit-box"><textarea id="et-'+p.id+'" maxlength="1000">'+esc(p.text)+'</textarea><div class="bd-row"><span id="em-'+p.id+'" class="bd-msg"></span><button class="md-btn" onclick="bdEdit(null)">取消</button><button class="md-btn primary" onclick="bdSaveEdit(\''+p.id+'\')">儲存</button></div></div>'
+      : '<div class="bd-text">'+esc(p.text).replace(/\n/g,'<br>')+'</div>';
     return '<div class="bd-post'+(isReply?' reply':'')+'"><div class="bd-av">'+esc(String(p.name||'?').charAt(0))+'</div><div class="bd-main">'
-      +'<div class="bd-meta"><b>'+esc(p.name||'同學')+'</b><span>'+fmtTime(p.createdAt)+'</span></div>'
-      +'<div class="bd-text">'+esc(p.text).replace(/\n/g,'<br>')+'</div>'
-      +'<div class="bd-acts">'+(!isReply&&canPost()?'<button onclick="bdReply(\''+ctx+'\',\''+p.id+'\')">回覆</button>':'')+(mine?'<button onclick="bdDelete(\''+p.id+'\')">刪除</button>':'')+'</div>'
+      +'<div class="bd-meta"><b>'+esc(p.name||'同學')+'</b><span>'+fmtTime(p.createdAt)+(p.editedAt?'・已編輯':'')+'</span></div>'
+      + body
+      +(editing?'':'<div class="bd-acts">'
+        +'<button class="bd-like'+(liked?' on':'')+'" onclick="bdLike(\''+p.id+'\')" aria-label="讚">'+HEART+'<span>'+(likes.length||'讚')+'</span></button>'
+        +(!isReply&&canPost()?'<button onclick="bdReply(\''+ctx+'\',\''+p.id+'\')">回覆</button>':'')
+        +(mine?'<button onclick="bdEdit(\''+p.id+'\')">編輯</button><button onclick="bdDelete(\''+p.id+'\')">刪除</button>':'')+'</div>')
       +(!isReply && _replyTo[ctx]===p.id ? '<div class="bd-reply-box"><textarea id="rt-'+ctx+'" maxlength="1000" placeholder="回覆 '+esc(p.name||'')+'…"></textarea><div class="bd-row"><span id="rm-'+ctx+'" class="bd-msg"></span><button class="md-btn" onclick="bdReply(\''+ctx+'\',null)">取消</button><button class="md-btn primary" onclick="bdPost(\''+ctx+'\',\''+p.id+'\')">送出回覆</button></div></div>' : '')
       +'</div></div>';
   }
@@ -5937,12 +5958,41 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
     if(parentId){ const par=_bdAll.find(x=>x.id===parentId); if(par && par.qid){ data.qid=par.qid; if(par.qlabel) data.qlabel=par.qlabel; } }
     if(ctx==='q' && !data.qid){ const info=qInfo(curQ()); if(!info){ if(msg) msg.textContent='找不到題目代號'; return; } data.qid=info.qid; data.qlabel=info.label; }
     if(msg) msg.textContent='送出中…';
-    try{ await _db.collection('board').doc(id).set(data); if(ta) ta.value=''; if(msg) msg.textContent=''; _replyTo[ctx]=null; if(ctx!=='q') renderBoard(); else refreshDisc(); }
+    try{ await _db.collection('board').doc(id).set(data); bdLog(parentId?'reply':'post', Object.assign({id},data), {newText:data.text}); if(ta) ta.value=''; if(msg) msg.textContent=''; _replyTo[ctx]=null; if(ctx!=='q') renderBoard(); else refreshDisc(); }
     catch(e){ console.warn(e); if(msg) msg.textContent='送出失敗：'+(e.code==='permission-denied'?'沒有權限，請重新登入':e.message||e); }
+  };
+  // 操作紀錄（v3.23）：發文、編輯、刪除、按讚都記一筆到 boardLog，只有後台看得到
+  function bdLog(action, p, extra){
+    try{ const me=uid(); if(!me || typeof _db==='undefined' || !_db) return;
+      const d=Object.assign({action, postId:p.id, uid:me, name:dispName()||st.currentUser||'', account:st.currentUser||'', at:Date.now()}, extra||{});
+      if(p.qid) d.qid=p.qid; if(p.qlabel) d.qlabel=p.qlabel; if(p.parentId) d.parentId=p.parentId;
+      _db.collection('boardLog').add(d).catch(e=>console.warn('boardLog:', e));
+    }catch(e){ console.warn(e); } }
+  function bdRerender(){ const bs=document.getElementById('board-screen'); if(bs && bs.style.display==='block') renderBoard(); refreshDisc(); }
+  window.bdEdit = function(id){ _editId = id; bdRerender(); if(id){ const t=document.getElementById('et-'+id); if(t){ t.focus(); t.setSelectionRange(t.value.length,t.value.length); } } };
+  window.bdSaveEdit = async function(id){
+    const ta=document.getElementById('et-'+id), msg=document.getElementById('em-'+id);
+    const text=(ta&&ta.value||'').trim();
+    if(!text){ if(msg) msg.textContent='內容不能空白'; return; }
+    if(msg) msg.textContent='儲存中…';
+    const old=(_bdAll.find(x=>x.id===id)||{});
+    try{ await _db.collection('board').doc(id).update({text:text.slice(0,1000), editedAt:Date.now()}); bdLog('edit', Object.assign({id},old), {oldText:String(old.text||''), newText:text.slice(0,1000)}); _editId=null; bdRerender(); }
+    catch(e){ console.warn(e); if(msg) msg.textContent='儲存失敗：'+(e.code==='permission-denied'?'沒有權限':e.message||e); }
+  };
+  window.bdLike = async function(id){
+    const me = uid();
+    if(!canPost() || !me){ alert('登入後就可以按讚。'); return; }
+    const p = _bdAll.find(x=>x.id===id); if(!p) return;
+    const liked = Array.isArray(p.likes) && p.likes.includes(me);
+    // 先在畫面上更新，失敗再改回來
+    p.likes = liked ? p.likes.filter(x=>x!==me) : (p.likes||[]).concat(me); bdRerender();
+    try{ const FV=firebase.firestore.FieldValue; await _db.collection('board').doc(id).update({likes: liked ? FV.arrayRemove(me) : FV.arrayUnion(me)}); bdLog(liked?'unlike':'like', p); }
+    catch(e){ console.warn(e); p.likes = liked ? (p.likes||[]).concat(me) : p.likes.filter(x=>x!==me); bdRerender(); alert('按讚失敗，請稍後再試'); }
   };
   window.bdDelete = async function(id){
     if(!confirm('確定要刪除這則留言嗎？')) return;
-    try{ await _db.collection('board').doc(id).delete(); }catch(e){ alert('刪除失敗：'+(e.message||e)); }
+    const old=(_bdAll.find(x=>x.id===id)||{id});
+    try{ await _db.collection('board').doc(id).delete(); bdLog('delete', Object.assign({id},old), {oldText:String(old.text||'')}); }catch(e){ alert('刪除失敗：'+(e.message||e)); }
   };
   // 從排行榜／交流區直接點「我的紀錄」或「個人資料」時，先把這兩頁收起來
   ['showHistory','showProfile','openReviewPicker'].forEach(fn=>{ const o=window[fn]; if(typeof o!=='function') return;

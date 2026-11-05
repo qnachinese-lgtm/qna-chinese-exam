@@ -122,8 +122,27 @@ service cloud.firestore {
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid
         && request.resource.data.text is string
         && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000;
-      allow update: if false;
+      // 更新（v3.23）：本人只能改內容（text、editedAt）；登入者只能把「自己」加入或移出 likes
+      allow update: if signedIn() && (
+        (resource.data.uid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text','editedAt'])
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000)
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])
+          && request.resource.data.likes is list
+          && request.resource.data.likes.toSet().difference(resource.data.get('likes', []).toSet()).union(
+               resource.data.get('likes', []).toSet().difference(request.resource.data.likes.toSet())) == [request.auth.uid].toSet())
+      );
       allow delete: if isMaster() || (signedIn() && resource.data.uid == request.auth.uid);
+    }
+
+    // ── 留言操作紀錄（v3.23）：發文／回覆／編輯／刪除／按讚，登入者只能以自己的身分新增；只有管理員能看；不能修改 ──
+    match /boardLog/{id} {
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid
+        && request.resource.data.action in ['post','reply','edit','delete','like','unlike','admin-delete'];
+      allow read: if isAdmin();
+      allow update: if false;
+      allow delete: if isMaster();
     }
 
     // ── 訪客來訪統計：任何人可新增（每位訪客每月一筆，只能有 gid／month／first 三個欄位），只有管理員能看 ──

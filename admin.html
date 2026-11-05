@@ -292,6 +292,20 @@ body { overflow-x:clip; }
 .ab-text { font-size:14px; line-height:1.8; margin-top:2px; word-break:break-word; }
 .ab-del { height:30px; padding:0 10px; font-size:13px; }
 .ab-gone { font-size:13px; color:#b0a69b; font-style:italic; }
+.ab-like { color:#b3261e; font-size:12px; }
+.ab-hist-btn { border:none; background:none; padding:0; font:inherit; font-size:12px; color:var(--brand); cursor:pointer; }
+.ab-hist { margin-top:8px; padding:8px 12px; background:#faf6ef; border-radius:10px; }
+.ab-hist-item { font-size:13px; line-height:1.7; padding:6px 0; border-bottom:1px solid #f1ebe0; } .ab-hist-item:last-child { border-bottom:none; }
+.ab-hist-item span { font-size:12px; color:var(--muted); }
+.ab-log { padding:4px 18px; }
+.ab-log-row { display:flex; gap:12px; align-items:flex-start; padding:12px 0; border-bottom:1px solid #f3eee5; font-size:14px; } .ab-log-row:last-child { border-bottom:none; }
+.ab-log-t { flex:0 0 120px; font-size:12px; color:var(--muted); padding-top:2px; }
+.ab-act { flex:0 0 auto; font-size:12px; font-weight:600; padding:2px 8px; border-radius:6px; }
+.ab-act-info { background:#eef3fb; color:#2f5d9a; } .ab-act-warn { background:#fdf0d6; color:#8a5a00; } .ab-act-danger { background:#fbe9e7; color:#b3261e; } .ab-act-ok { background:#fbf1ef; color:#8b1a1a; } .ab-act-muted { background:#f1ebe0; color:var(--muted); }
+.ab-log-main { flex:1; min-width:0; }
+.ab-log-acc { font-size:12px; color:var(--muted); }
+.ab-log-txt { font-size:13px; color:#5d554d; margin-top:3px; word-break:break-word; } .ab-log-txt s { color:#a99f94; }
+@media(max-width:640px){ .ab-log-row { flex-wrap:wrap; } .ab-log-t { flex-basis:100%; } }
 .ab-q { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
 .gm-wrap { margin-bottom:12px; }
 .gm-card { padding:18px 20px; }
@@ -1209,11 +1223,12 @@ function showPage(name){
   if(name==='board') loadAdminBoard();
 }
 // 留言板管理：看全部留言，主管理員可刪除
-let _adminBoardUnsub=null, _abAll=[], _abMode='q';
+let _adminBoardUnsub=null, _abAll=[], _abMode='q', _abLogUnsub=null, _abLog=[], _abOpenHist={};
 function abSetMode(m){ _abMode=m; renderAdminBoard(); }
 function loadAdminBoard(){
   if(_adminBoardUnsub){ renderAdminBoard(); return; }
   const el=document.getElementById('admin-board-list'); if(el) el.innerHTML='<div class="card qb-empty"><div class="qb-empty-sub" style="margin:0">讀取中…</div></div>';
+  if(!_abLogUnsub){ try{ _abLogUnsub=_db.collection('boardLog').orderBy('at','desc').limit(1000).onSnapshot(snap=>{ _abLog=snap.docs.map(d=>Object.assign({id:d.id},d.data())); renderAdminBoard(); }, e=>console.warn('boardLog:', e)); }catch(e){ console.warn(e); } }
   _adminBoardUnsub=_db.collection('board').onSnapshot(snap=>{ _abAll=snap.docs.map(d=>Object.assign({id:d.id},d.data())); renderAdminBoard(); },
     e=>{ console.warn(e); if(el) el.innerHTML='<div class="card qb-empty"><div class="qb-empty-sub" style="margin:0">讀取失敗：'+esc(e.message||e)+'</div></div>'; });
 }
@@ -1221,7 +1236,9 @@ function renderAdminBoard(){
   const el=document.getElementById('admin-board-list'); if(!el) return;
   const qN=_abAll.filter(p=>p.qid).length, gN=_abAll.length-qN;
   const seg=document.getElementById('ab-seg');
-  if(seg) seg.innerHTML='<button type="button" class="seg-btn'+(_abMode==='q'?' active':'')+'" onclick="abSetMode(\'q\')">題目討論<span class="seg-n">'+qN+'</span></button><button type="button" class="seg-btn'+(_abMode==='g'?' active':'')+'" onclick="abSetMode(\'g\')">一般留言（交流區）<span class="seg-n">'+gN+'</span></button>';
+  if(seg) seg.innerHTML='<button type="button" class="seg-btn'+(_abMode==='q'?' active':'')+'" onclick="abSetMode(\'q\')">題目討論<span class="seg-n">'+qN+'</span></button><button type="button" class="seg-btn'+(_abMode==='g'?' active':'')+'" onclick="abSetMode(\'g\')">一般留言（交流區）<span class="seg-n">'+gN+'</span></button><button type="button" class="seg-btn'+(_abMode==='log'?' active':'')+'" onclick="abSetMode(\'log\')">操作紀錄<span class="seg-n">'+_abLog.length+'</span></button>';
+  if(seg) seg.style.gridTemplateColumns='repeat(3,1fr)', seg.style.maxWidth='640px';
+  if(_abMode==='log'){ el.innerHTML=renderBoardLog(); const stx=document.getElementById('bd-status'); if(stx) stx.textContent='共 '+_abLog.length+' 筆操作'; return; }
   const st=document.getElementById('bd-status'); if(st) st.textContent='共 '+_abAll.length+' 則';
   const all=_abAll.filter(p=>_abMode==='q'?!!p.qid:!p.qid);
   const tops=all.filter(p=>!p.parentId);
@@ -1230,10 +1247,31 @@ function renderAdminBoard(){
   const last=p=>Math.max(p.createdAt||0,...(kids[p.id]||[]).map(k=>k.createdAt||0));
   tops.sort((a,b)=>last(b)-last(a));
   const t=x=>{ const d=new Date(x||0); return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
-  const row=(p,reply)=>'<div class="ab-post'+(reply?' reply':'')+'"><div class="ab-main"><div class="ab-meta"><b>'+esc(p.name||'')+'</b><span>'+t(p.createdAt)+'</span></div><div class="ab-text">'+esc(p.text||'').replace(/\n/g,'<br>')+'</div></div>'+(_currentRole==='master'?'<button class="btn btn-danger ab-del" onclick="adminDeletePost(\''+p.id+'\','+(reply?'false':'true')+')">刪除</button>':'')+'</div>';
+  const edits=id=>_abLog.filter(l=>l.postId===id && l.action==='edit').sort((a,b)=>(a.at||0)-(b.at||0));
+  const row=(p,reply)=>{ const ed=edits(p.id), nl=(Array.isArray(p.likes)?p.likes.length:0), op=!!_abOpenHist[p.id];
+    return '<div class="ab-post'+(reply?' reply':'')+'"><div class="ab-main"><div class="ab-meta"><b>'+esc(p.name||'')+'</b><span>'+t(p.createdAt)+'</span>'
+      +(nl?'<span class="ab-like">♥ '+nl+'</span>':'')
+      +((p.editedAt||ed.length)?'<button class="ab-hist-btn" onclick="abToggleHist(\''+p.id+'\')">已編輯 '+(ed.length||1)+' 次'+(op?'・收起':'・看紀錄')+'</button>':'')
+      +'</div><div class="ab-text">'+esc(p.text||'').replace(/\n/g,'<br>')+'</div>'
+      +(op?'<div class="ab-hist">'+(ed.length?ed.map((l,i)=>'<div class="ab-hist-item"><span>第 '+(i+1)+' 次・'+t(l.at)+'</span><div><b>原本：</b>'+esc(l.oldText||'').replace(/\n/g,'<br>')+'</div><div><b>改成：</b>'+esc(l.newText||'').replace(/\n/g,'<br>')+'</div></div>').join(''):'<div class="ab-hist-item">這次編輯發生在紀錄功能上線前，沒有舊內容。</div>')+'</div>':'')
+      +'</div>'+(_currentRole==='master'?'<button class="btn btn-danger ab-del" onclick="adminDeletePost(\''+p.id+'\','+(reply?'false':'true')+')">刪除</button>':'')+'</div>'; };
   const head=p=>p.qid?'<div class="ab-q"><span class="chip info">'+esc(p.qlabel||p.qid)+'</span>'+(_currentRole==='master'?'<button class="qb-edit-link" onclick="adminGoQuestion(\''+esc(p.qid)+'\')">到題庫修改這題</button>':'')+'</div>':'';
   el.innerHTML = tops.length ? tops.map(p=>'<div class="card ab-thread">'+head(p)+(p._gone?'<div class="ab-gone">原留言已刪除</div>':row(p,false))+((kids[p.id]||[]).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)).map(k=>row(k,true)).join(''))+'</div>').join('')
     : '<div class="card qb-empty"><div class="qb-empty-sub" style="margin:0">'+(_abMode==='q'?'還沒有題目討論。':'還沒有一般留言。')+'</div></div>';
+}
+function abToggleHist(id){ _abOpenHist[id]=!_abOpenHist[id]; renderAdminBoard(); }
+// 操作紀錄列表
+function renderBoardLog(){
+  if(!_abLog.length) return '<div class="card qb-empty"><div class="qb-empty-sub" style="margin:0">還沒有操作紀錄（v3.23 上線後開始記錄）。</div></div>';
+  const t=x=>{ const d=new Date(x||0); return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+  const A={post:['發文','info'],reply:['回覆','info'],edit:['編輯','warn'],delete:['刪除','danger'],'admin-delete':['管理員刪除','danger'],like:['按讚','ok'],unlike:['收回讚','muted']};
+  const cut=x=>{ x=String(x||''); return esc(x.length>80?x.slice(0,80)+'…':x); };
+  return '<div class="card ab-log">'+_abLog.map(l=>{ const a=A[l.action]||[l.action,'muted'];
+    let body='';
+    if(l.action==='edit') body='<div class="ab-log-txt"><s>'+cut(l.oldText)+'</s></div><div class="ab-log-txt">→ '+cut(l.newText)+'</div>';
+    else if(l.oldText||l.newText) body='<div class="ab-log-txt">'+cut(l.oldText||l.newText)+'</div>';
+    else if(l.action==='like'||l.action==='unlike'){ const tp=_abAll.find(x=>x.id===l.postId); body='<div class="ab-log-txt">'+(tp?'對 '+esc(tp.name||'')+'：「'+cut(tp.text)+'」':'（留言已刪除）')+'</div>'; }
+    return '<div class="ab-log-row"><span class="ab-log-t">'+t(l.at)+'</span><span class="ab-act ab-act-'+a[1]+'">'+a[0]+'</span><div class="ab-log-main"><div><b>'+esc(l.name||'')+'</b>'+(l.account&&l.account!==l.name?'<span class="ab-log-acc">（帳號 '+esc(l.account)+'）</span>':'')+(l.qlabel?'<span class="chip info" style="margin-left:6px">'+esc(l.qlabel)+'</span>':'')+'</div>'+body+'</div></div>'; }).join('')+'</div>';
 }
 // 從討論直接跳到題庫編輯那一題
 async function adminGoQuestion(qid){
@@ -1248,7 +1286,9 @@ async function adminGoQuestion(qid){
 async function adminDeletePost(id, withReplies){
   if(!confirm(withReplies?'刪除這則留言（連同底下的回覆）？':'刪除這則回覆？')) return;
   try{
+    const old=_abAll.find(x=>x.id===id)||{};
     await _db.collection('board').doc(id).delete();
+    try{ const u=firebase.auth().currentUser; if(u) _db.collection('boardLog').add({action:'admin-delete', postId:id, uid:u.uid, name:'管理員', account:u.email||'', at:Date.now(), oldText:String(old.text||''), postBy:String(old.name||''), qlabel:old.qlabel||''}).catch(()=>{}); }catch(e){}
     if(withReplies){ const snap=await _db.collection('board').where('parentId','==',id).get(); for(const d of snap.docs) await d.ref.delete(); }
   }catch(e){ alert('刪除失敗：'+(e.message||e)); }
 }
