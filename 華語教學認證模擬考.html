@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 版本 v3.21｜2026-11-05 20:18｜各頁同寬同高、頭像選單、帳號設定重新設計。上一版 v3.20｜2026-11-05 20:14｜手機頂端列間距、交流區留言框重新設計。上一版 v3.19｜2026-11-05 20:09｜後台題庫年份可收起。上一版 v3.18｜2026-11-05 20:04｜手機錯題複習改成圖示＋小紅點。上一版 v3.17｜2026-11-05 20:00｜新增瀏覽人數。上一版 v3.16｜2026-11-05 19:54｜手機頂端列按鈕加大。上一版 v3.15｜2026-11-05 19:51｜手機頂端列顯示排行榜、交流區圖示。上一版 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
+<!-- 版本 v3.22｜2026-11-05 20:21｜新增顯示名稱。上一版 v3.21｜2026-11-05 20:18｜各頁同寬同高、頭像選單、帳號設定重新設計。上一版 v3.20｜2026-11-05 20:14｜手機頂端列間距、交流區留言框重新設計。上一版 v3.19｜2026-11-05 20:09｜後台題庫年份可收起。上一版 v3.18｜2026-11-05 20:04｜手機錯題複習改成圖示＋小紅點。上一版 v3.17｜2026-11-05 20:00｜新增瀏覽人數。上一版 v3.16｜2026-11-05 19:54｜手機頂端列按鈕加大。上一版 v3.15｜2026-11-05 19:51｜手機頂端列顯示排行榜、交流區圖示。上一版 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -1215,7 +1215,7 @@ body.dark .um-av { background:#3a2828; color:#f0a5a0; }
       <button data-fs="xl" onclick="setFontSize('xl')"><span class="fs-a" style="font-size:19px">字</span>特大</button>
     </div>
   </div>
-  <div class="set-ver">網站版本 v3.21・2026-11-05 20:18 更新</div>
+  <div class="set-ver">網站版本 v3.22・2026-11-05 20:21 更新</div>
 </div>
 <script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg'||_fs==='xl')document.documentElement.classList.add('fs-'+_fs);}catch(e){}</script>
 <header class="topbar">
@@ -4175,7 +4175,7 @@ function enterGuest(){
 function changeUser(){
   stopSessionTimer();
   if(st.isGuest){ clearGuestLocalData(); }
-  st.currentUser = null;
+  st.currentUser = null; st.displayName = '';
   st.isGuest = false;
   localStorage.removeItem('tocfl_current_user');
   document.getElementById('subject-screen').style.display='none';
@@ -4833,7 +4833,14 @@ function renderQReview(){
   <div class="pf-card">
     <div class="pf-hero"><div class="pf-av" id="pf-av">?</div><div class="pf-hero-txt"><div class="pf-hero-name" id="pf-hero-name"></div><div class="pf-hero-sub" id="pf-hero-sub"></div></div></div>
     <div class="pf-sec">帳號資料</div>
-    <div class="pf-row"><span class="pf-label">帳號名稱</span><span class="pf-value" id="profile-name"></span></div>
+    <div class="pf-row"><span class="pf-label">顯示名稱</span><span class="pf-value" id="profile-name"></span><button type="button" class="pf-edit" id="pf-edit-name" onclick="pfOpen('name')">修改</button></div>
+    <div class="pf-form" id="pf-form-name" style="display:none">
+      <label for="profile-name-input">顯示名稱（頭像、問候語、排行榜、交流區看到的名字）</label>
+      <input type="text" id="profile-name-input" maxlength="20" placeholder="例如：小美">
+      <div class="profile-msg" id="profile-name-msg"></div>
+      <div class="pf-btns"><button type="button" class="pf-cancel" onclick="pfClose('name')">取消</button><button type="button" class="pf-save" onclick="saveDisplayName()">儲存</button></div>
+    </div>
+    <div class="pf-row"><span class="pf-label">帳號</span><span class="pf-value" id="profile-account"></span><span class="pf-lock">不可更改</span></div>
     <div class="pf-row"><span class="pf-label">登入信箱</span><span class="pf-value" id="profile-email-display"></span><span class="pf-lock">不可更改</span></div>
     <div class="pf-row"><span class="pf-label">備份信箱</span><span class="pf-value" id="profile-backup-display">未設定</span><button type="button" class="pf-edit" id="pf-edit-email" onclick="pfOpen('email')">設定</button></div>
     <div class="pf-form" id="pf-form-email" style="display:none">
@@ -4880,9 +4887,10 @@ function showProfile(){
   // Populate
   const accounts = getUserAccounts();
   const acc = accounts.find(a=>a.name===st.currentUser);
-  document.getElementById('profile-name').textContent = st.currentUser||'';
-  try{ document.getElementById('pf-av').textContent = String(st.currentUser||'?').charAt(0);
-       document.getElementById('pf-hero-name').textContent = st.currentUser||'';
+  document.getElementById('profile-name').textContent = dispName()||'';
+  try{ document.getElementById('profile-account').textContent = st.currentUser||'';
+       document.getElementById('pf-av').textContent = String(dispName()||'?').charAt(0);
+       document.getElementById('pf-hero-name').textContent = dispName()||'';
        document.getElementById('pf-hero-sub').textContent = (acc&&acc.email)||''; }catch(e){}
   document.getElementById('profile-email-display').textContent = (acc&&acc.email)||'（未設定）';
   document.getElementById('profile-email-input').value = (acc&&acc.email)||'';
@@ -5012,6 +5020,8 @@ async function loadMyProfile(user){
 }
 
 // 進入學習者畫面
+// 顯示名稱（v3.22）：學生可以自己改；帳號名稱（users 文件編號、紀錄對應用）不變
+function dispName(){ return (st && !st.isGuest && st.displayName) ? st.displayName : (st ? st.currentUser : ''); }
 function enterLearner(profile){
   const user = _auth && _auth.currentUser;
   if(!user) return;
@@ -5019,6 +5029,7 @@ function enterLearner(profile){
   _enteredUid = user.uid;
   const name = profile.name;
   st.currentUser = name; st.isGuest = false;
+  st.displayName = String(profile.displayName||'').trim(); st._docId = profile._docId || name;
   // 本機只留自己的資料（清掉舊版同步下來的其他人資料）
   localStorage.setItem(USERS_KEY, JSON.stringify([{name, email:profile.email||user.email, createdAt:profile.createdAt||''}]));
   localStorage.setItem('tocfl_user_email', profile.email||user.email||'');
@@ -5365,14 +5376,15 @@ function syncLearnerChrome(){
   if(!on) return;
   const guest = !!st.isGuest, name = st.currentUser;
   try{ const pp=document.getElementById('progress-panel'); const has=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]').some(r=>r.name===name); if(pp) pp.style.display = (has && !guest) ? 'block' : 'none'; }catch(e){}
-  const av = document.getElementById('tb-avatar'); if(av) av.textContent = guest ? '訪' : String(name).trim().charAt(0).toUpperCase();
-  const un = document.getElementById('um-name'); if(un) un.textContent = guest ? '訪客' : name;
-  const ua = document.getElementById('um-av'); if(ua) ua.textContent = guest ? '訪' : String(name||'?').charAt(0);
+  const dn = dispName() || name;
+  const av = document.getElementById('tb-avatar'); if(av) av.textContent = guest ? '訪' : String(dn).trim().charAt(0).toUpperCase();
+  const un = document.getElementById('um-name'); if(un) un.textContent = guest ? '訪客' : dn;
+  const ua = document.getElementById('um-av'); if(ua) ua.textContent = guest ? '訪' : String(dn||'?').trim().charAt(0).toUpperCase();
   const um = document.getElementById('um-mail'); if(um) um.textContent = guest ? '試做中，成績不會保存' : (localStorage.getItem('tocfl_user_email')||'');
   const ur = document.getElementById('um-register'); if(ur) ur.style.display = guest ? 'flex' : 'none';
   const up = document.getElementById('um-profile'); if(up) up.style.display = guest ? 'none' : 'flex';
   const hh = document.getElementById('home-hello'), hs = document.getElementById('home-sub');
-  if(hh) hh.textContent = guest ? '免註冊試做' : (name + '，今天想練哪一科？');
+  if(hh) hh.textContent = guest ? '免註冊試做' : (dn + '，今天想練哪一科？');
   if(hs){
     if(guest){ hs.textContent = '每科約 10 題，成績不會保存。註冊後可練全部題目並保存紀錄。'; }
     else{
@@ -5488,8 +5500,8 @@ async function saveBackupEmail(){
 
 // 帳號設定：點「修改」才展開表單
 function pfOpen(which){
-  const other = which==='email' ? 'pw' : 'email';
-  pfClose(other);
+  ['name','email','pw'].filter(x=>x!==which).forEach(pfClose);
+  if(which==='name'){ const i=document.getElementById('profile-name-input'); if(i) i.value=dispName()||''; }
   const f=document.getElementById('pf-form-'+which), b=document.getElementById('pf-edit-'+which);
   const open = f.style.display==='none';
   if(!open){ pfClose(which); return; }
@@ -5501,7 +5513,27 @@ function pfClose(which){
   if(!f) return;
   f.style.display='none'; if(b){ b.classList.remove('on'); b.textContent = (which==='email' && /未設定/.test((document.getElementById('profile-backup-display')||{}).textContent||'')) ? '設定' : '修改'; }
   if(which==='pw') ['profile-pw-old','profile-pw-new','profile-pw-confirm'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
-  const m=document.getElementById(which==='pw'?'profile-pw-msg':'profile-email-msg'); if(m){ m.textContent=''; m.className='profile-msg'; }
+  const m=document.getElementById('profile-'+which+'-msg'); if(m){ m.textContent=''; m.className='profile-msg'; }
+}
+async function saveDisplayName(){
+  const inp=document.getElementById('profile-name-input'), msg=document.getElementById('profile-name-msg');
+  const v=String(inp.value||'').replace(/\s+/g,' ').trim();
+  if(!v){ msg.className='profile-msg err'; msg.textContent='請輸入顯示名稱'; return; }
+  if(v.length>20){ msg.className='profile-msg err'; msg.textContent='最多 20 個字'; return; }
+  if(/[<>]/.test(v)){ msg.className='profile-msg err'; msg.textContent='名稱不能有 < 或 >'; return; }
+  msg.className='profile-msg'; msg.textContent='儲存中…';
+  try{
+    const val = (v===st.currentUser) ? firebase.firestore.FieldValue.delete() : v;
+    await _db.collection('users').doc(st._docId||st.currentUser).update({displayName:val});
+    st.displayName = (v===st.currentUser) ? '' : v;
+    document.getElementById('profile-name').textContent = dispName();
+    document.getElementById('pf-hero-name').textContent = dispName();
+    document.getElementById('pf-av').textContent = String(dispName()).charAt(0);
+    if(typeof syncLearnerChrome==='function') syncLearnerChrome();
+    if(typeof pushMyBoard==='function') pushMyBoard();
+    msg.className='profile-msg ok'; msg.textContent='✅ 已更新，排行榜和之後的留言會用新名字';
+    setTimeout(()=>pfClose('name'), 1600);
+  }catch(e){ console.warn(e); msg.className='profile-msg err'; msg.textContent='儲存失敗：'+(e.code==='permission-denied'?'沒有權限，請重新登入':(e.message||e)); }
 }
 (function(){
   const sp=window.showProfile; if(typeof sp==='function') window.showProfile=function(){ const r=sp.apply(this,arguments); pfClose('email'); pfClose('pw'); return r; };
@@ -5665,7 +5697,7 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
         const all = summarize(recs);
         const w = summarize(recs, r=>{ const d=recDate(r); return d && weekKey(d)===wk; });
         const m = summarize(recs, r=>{ const d=recDate(r); return d && monthKey(d)===mo; });
-        const data = { uid:id, name:maskName(st.currentUser), count:all.count, best:all.best,
+        const data = { uid:id, name:maskName(dispName()), count:all.count, best:all.best,
           avg: all.count ? Math.round(all.sum/all.count) : 0,
           wk:{k:wk, count:w.count, best:w.best}, mo:{k:mo, count:m.count, best:m.best} };
         const sig = JSON.stringify(data);
@@ -5795,7 +5827,7 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
     return (sameDay?'今天 ':(d.getFullYear()!==n.getFullYear()?d.getFullYear()+'/':'')+(d.getMonth()+1)+'/'+d.getDate()+' ')+pad(d.getHours())+':'+pad(d.getMinutes()); }
   function composeHtml(ctx, ph){
     return canPost()
-      ? '<div class="bd-compose"><textarea id="ct-'+ctx+'" maxlength="1000" placeholder="'+esc(ph)+'"></textarea><div class="bd-row"><span class="bd-who">以「'+esc(st.currentUser)+'」留言</span><span id="cm-'+ctx+'" class="bd-msg"></span><button class="md-btn primary" onclick="bdPost(\''+ctx+'\',null)">送出</button></div></div>'
+      ? '<div class="bd-compose"><textarea id="ct-'+ctx+'" maxlength="1000" placeholder="'+esc(ph)+'"></textarea><div class="bd-row"><span class="bd-who">以「'+esc(dispName())+'」留言</span><span id="cm-'+ctx+'" class="bd-msg"></span><button class="md-btn primary" onclick="bdPost(\''+ctx+'\',null)">送出</button></div></div>'
       : '<div class="bd-login">登入後就可以留言和回覆。'+(st.isGuest?'<button class="md-btn" onclick="openGuestRegister()">註冊帳號</button>':'')+'</div>';
   }
   function postHtml(p, isReply, ctx){
@@ -5839,9 +5871,9 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
     if(redrawCompose || !typing){
       cp.innerHTML = _bdTab==='gen'
         ? (canPost()
-            ? '<div class="bd-composer"><div class="bd-av">'+esc(String(st.currentUser||'?').charAt(0))+'</div><div class="bd-cbody">'
+            ? '<div class="bd-composer"><div class="bd-av">'+esc(String(dispName()||'?').charAt(0))+'</div><div class="bd-cbody">'
               +'<textarea id="ct-gen" maxlength="1000" rows="2" placeholder="讀書心得、考試資訊、對網站的建議都可以在這裡分享…" oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,240)+\'px\'"></textarea>'
-              +'<div class="bd-cfoot"><span class="bd-who">以「'+esc(st.currentUser)+'」留言</span><span id="cm-gen" class="bd-msg"></span><button class="bd-send" onclick="bdPost(\'gen\',null)">送出</button></div></div></div>'
+              +'<div class="bd-cfoot"><span class="bd-who">以「'+esc(dispName())+'」留言</span><span id="cm-gen" class="bd-msg"></span><button class="bd-send" onclick="bdPost(\'gen\',null)">送出</button></div></div></div>'
             : composeHtml('gen',''))
         : '<div class="bd-note">'+ICO('<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="8" r=".6" fill="currentColor"/>')+'想討論某一題，請在作答時打開那一題解析下方的「討論」留言。</div>';
     }
@@ -5900,7 +5932,7 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
     if(!text){ if(msg) msg.textContent='請先輸入內容'; return; }
     if(!canPost()){ if(msg) msg.textContent='請先登入'; return; }
     const id = Date.now().toString(36)+Math.random().toString(36).slice(2,8);
-    const data = {uid:uid(), name:st.currentUser, text:text.slice(0,1000), createdAt:Date.now()};
+    const data = {uid:uid(), name:dispName(), text:text.slice(0,1000), createdAt:Date.now()};
     if(parentId) data.parentId = parentId;
     if(parentId){ const par=_bdAll.find(x=>x.id===parentId); if(par && par.qid){ data.qid=par.qid; if(par.qlabel) data.qlabel=par.qlabel; } }
     if(ctx==='q' && !data.qid){ const info=qInfo(curQ()); if(!info){ if(msg) msg.textContent='找不到題目代號'; return; } data.qid=info.qid; data.qlabel=info.label; }
