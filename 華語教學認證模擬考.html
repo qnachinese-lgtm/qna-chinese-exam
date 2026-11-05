@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 最後更新: 2026-11-04 | 學習者網站 v3（重新設計、即時同步、安靜自動更新） -->
+<!-- 版本 v3.8｜2026-11-05｜手機版頂端列修正（排行榜、交流區移進頭像選單）。完整紀錄見〈更新紀錄.md〉 -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -1051,6 +1051,31 @@ body.dark .subject-card .icon, body.dark .pdf-link { background:#2b2f35; color:#
 body.dark .subject-card.selected .icon { background:#3a2828; color:#f0a5a0; }
 body.dark .yr-btn.active { background:#c0392b; border-color:#c0392b; }
 body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark .pdf-section h3 { color:#e6e6e6; }
+.set-ver { margin:10px 6px 2px; padding-top:8px; border-top:1px solid #f1ebe0; font-size:12px; color:var(--muted); text-align:right; }
+body.dark .set-ver { border-top-color:#31353b; }
+/* 頭像選單裡的排行榜、交流區只在手機顯示 */
+.user-menu .um-mobile { display:none; }
+/* 手機版頂端列：名稱可縮短、測試版標籤放到名稱下方，避免文字跟右側按鈕疊在一起 */
+@media(max-width:720px){
+  .tb-inner { gap:8px; padding-left:12px; padding-right:12px; }
+  .tb-brand { display:grid; grid-template-columns:auto minmax(0,1fr); column-gap:8px; align-items:center; }
+  .tb-brand .tb-mark { grid-row:1 / span 2; }
+  .tb-name { font-size:15px; letter-spacing:0; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .tb-brand .env-tag { justify-self:start; font-size:10px; padding:1px 6px; border-radius:4px; margin-top:2px; }
+  .tb-right { gap:4px; flex:0 0 auto; }
+  .tb-user { gap:2px; }
+  .tb-link { padding:0 6px; gap:4px; }
+  .tb-count { min-width:18px; height:18px; padding:0 5px; font-size:11px; }
+  /* 「我的紀錄」「排行榜」「交流區」在頭像選單裡都有，手機上頂端列只留錯題複習、頭像、設定 */
+  .tb-user > .tb-link[onclick="showHistory()"], #tb-rank, #tb-board { display:none !important; }
+  .user-menu .um-mobile { display:flex; }
+  .tb-brand { flex:1 1 auto; overflow:hidden; }
+  .tb-name { display:block; white-space:nowrap; }
+}
+@media(max-width:380px){
+  .tb-name { font-size:14px; letter-spacing:0; }
+  .tb-link { padding:0 4px; }
+}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -1086,6 +1111,7 @@ body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark 
     <div class="set-text"><div class="set-label">查看之前的錯題</div><div class="set-hint">首頁已隱藏，可以從這裡進入</div></div>
     <button class="set-btn" onclick="toggleSettings();openReviewPicker()">查看</button>
   </div>
+  <div class="set-ver">網站版本 v3.8（2026-11-05）</div>
 </div>
 <script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg')document.documentElement.style.fontSize='112.5%';else if(_fs==='xl')document.documentElement.style.fontSize='125%';}catch(e){}</script>
 <header class="topbar">
@@ -5583,6 +5609,11 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
     tbu.insertAdjacentHTML('afterbegin',
       '<button class="tb-link" id="tb-rank" onclick="showRank()">'+ICO('<path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/>')+'<span>排行榜</span></button>'
      +'<button class="tb-link" id="tb-board" onclick="showBoard()">'+ICO('<path d="M4 5h16v11H9l-5 4z"/>')+'<span>交流區</span></button>');
+    // 手機版：排行榜、交流區放進頭像選單
+    const umHr = document.querySelector('#user-menu hr');
+    if(umHr) umHr.insertAdjacentHTML('beforebegin',
+      '<button class="um-mobile" onclick="closeUserMenu();showRank()">'+ICO('<path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/>')+'排行榜</button>'
+     +'<button class="um-mobile" onclick="closeUserMenu();showBoard()">'+ICO('<path d="M4 5h16v11H9l-5 4z"/>')+'交流區</button>');
   }
 
   // ── 排行榜 ──
