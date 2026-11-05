@@ -1051,6 +1051,24 @@ body.dark .subject-card .icon, body.dark .pdf-link { background:#2b2f35; color:#
 body.dark .subject-card.selected .icon { background:#3a2828; color:#f0a5a0; }
 body.dark .yr-btn.active { background:#c0392b; border-color:#c0392b; }
 body.dark #home-hello, body.dark .um-name, body.dark #start-sum-main, body.dark .pdf-section h3 { color:#e6e6e6; }
+/* 手機版頂端列：名稱可縮短、測試版標籤放到名稱下方，避免文字跟右側按鈕疊在一起 */
+@media(max-width:720px){
+  .tb-inner { gap:8px; padding-left:12px; padding-right:12px; }
+  .tb-brand { display:grid; grid-template-columns:auto minmax(0,1fr); column-gap:8px; align-items:center; }
+  .tb-brand .tb-mark { grid-row:1 / span 2; }
+  .tb-name { font-size:15px; letter-spacing:0; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .tb-brand .env-tag { justify-self:start; font-size:10px; padding:1px 6px; border-radius:4px; margin-top:2px; }
+  .tb-right { gap:4px; flex:0 0 auto; }
+  .tb-user { gap:2px; }
+  .tb-link { padding:0 6px; gap:4px; }
+  .tb-count { min-width:18px; height:18px; padding:0 5px; font-size:11px; }
+  /* 「我的紀錄」在頭像選單裡也有，手機上省下頂端空間 */
+  .tb-user > .tb-link[onclick="showHistory()"] { display:none; }
+}
+@media(max-width:380px){
+  .tb-name { font-size:14px; letter-spacing:0; }
+  .tb-link { padding:0 4px; }
+}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
