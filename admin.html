@@ -1440,12 +1440,16 @@ async function saveRegSettings(withCode){
   const open=document.getElementById('rg-open').checked, inv=document.getElementById('rg-inv').checked, apr=document.getElementById('rg-apr').checked;
   const code=(document.getElementById('rg-code').value||'').trim();
   const msg=document.getElementById('rg-msg');
-  if(inv && !code){ document.querySelector('.rg-code').classList.remove('off'); if(msg) msg.textContent='請先填邀請碼'; document.getElementById('rg-inv').checked=false; return; }
+  let code2=code;
+  if(inv && !code2){ // 打開「需要邀請碼」但還沒填 → 自動產生一組，之後可以自己改
+    const ch='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; code2='QNA-'; for(let i=0;i<6;i++) code2+=ch[Math.floor(Math.random()*ch.length)];
+    document.getElementById('rg-code').value=code2; withCode=true;
+  }
   try{
-    if(withCode || inv) await _db.collection('config').doc('regSecret').set({code});
+    if(withCode || inv) await _db.collection('config').doc('regSecret').set({code:code2});
     await _db.collection('config').doc('regPublic').set({open, inviteRequired:inv, approval:apr, updatedAt:Date.now()});
-    _regPub={open, inviteRequired:inv, approval:apr}; _regCode=code; renderRegPanel();
-    const m=document.getElementById('rg-msg'); if(m) m.textContent='已儲存 ✓';
+    _regPub={open, inviteRequired:inv, approval:apr}; _regCode=code2; renderRegPanel();
+    const m=document.getElementById('rg-msg'); if(m) m.textContent = (inv && !code) ? '已自動產生邀請碼 '+code2+'，可以自己改掉再按「儲存邀請碼」' : '已儲存 ✓';
   }catch(e){ if(msg) msg.textContent='儲存失敗：'+(e.message||e); }
 }
 function renderPendingPanel(){
