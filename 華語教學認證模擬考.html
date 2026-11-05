@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 版本 v3.11｜2026-11-05｜手機也用明體（載入 Noto Serif TC 網路字型）。完整紀錄見〈更新紀錄.md〉 -->
+<!-- 版本 v3.12｜2026-11-05｜排行榜重新設計。完整紀錄見〈更新紀錄.md〉 -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -881,13 +881,19 @@ body.dark .yr-filter-row > *, body.dark .yr-filter-row .yr { color:#e6e6e6; }
 
 /* ════════ 排行榜、留言板 ════════ */
 #rank-screen, #board-screen { padding:22px 0 40px; }
-.rk-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px; }
-.rk-tab { height:44px; border:1px solid var(--line); background:#fff; border-radius:11px; font:inherit; font-size:15px; font-weight:600; color:var(--ink); cursor:pointer; }
-.rk-tab.on { border-color:var(--brand); background:var(--brand-soft); color:var(--brand); }
-.rk-sub { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
-.rk-seg { display:inline-flex; background:#efe8dc; border-radius:10px; padding:3px; gap:2px; }
+#rank-screen { max-width:860px; margin:0 auto; }
+.rk-panel { background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px; }
+.rk-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; padding:4px; background:#f3ede3; border-radius:12px; }
+.rk-tab { height:40px; border:none; background:none; border-radius:9px; font:inherit; font-size:15px; font-weight:600; color:var(--muted); cursor:pointer; }
+.rk-tab:hover { color:var(--ink); }
+.rk-tab.on { background:#fff; color:var(--brand); box-shadow:0 1px 3px rgba(60,30,20,.10); }
+.rk-sub { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; min-height:38px; margin:12px 0 10px; }
+.rk-seg { display:inline-flex; background:#f3ede3; border-radius:10px; padding:3px; gap:2px; }
 .rk-seg button { height:32px; padding:0 14px; border:none; background:none; border-radius:8px; font:inherit; font-size:13px; color:var(--muted); cursor:pointer; white-space:nowrap; }
 .rk-seg button.on { background:#fff; color:var(--brand); font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.06); }
+.rk-cap { font-size:13px; color:var(--muted); }
+.rk-panel .rk-card { border:none; border-top:1px solid #f3eee5; border-radius:0; }
+.rk-panel .hist-empty { border:none; background:none; box-shadow:none; padding:44px 0 36px; border-top:1px solid #f3eee5; border-radius:0; }
 .rk-card { background:#fff; border:1px solid var(--line); border-radius:16px; overflow:hidden; }
 .rk-row { display:flex; align-items:center; gap:14px; padding:12px 20px; border-bottom:1px solid #f3eee5; }
 .rk-row:last-child { border-bottom:none; }
@@ -898,7 +904,7 @@ body.dark .yr-filter-row > *, body.dark .yr-filter-row .yr { color:#e6e6e6; }
 .rk-me { margin-left:8px; font-size:11px; font-weight:600; background:var(--brand); color:#fff; border-radius:5px; padding:1px 6px; vertical-align:2px; }
 .rk-extra { font-size:12px; color:var(--muted); }
 .rk-val { font-size:13px; color:var(--muted); white-space:nowrap; } .rk-val b { font-size:18px; color:var(--ink); }
-.rk-note { font-size:12px; color:var(--muted); margin-top:12px; line-height:1.7; }
+.rk-note { font-size:12px; color:var(--muted); margin-top:12px; line-height:1.7; text-align:center; }
 .bd-compose, .bd-login { background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px; margin-bottom:16px; }
 .bd-login { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:14px; color:var(--muted); }
 .bd-compose textarea, .bd-reply-box textarea { width:100%; box-sizing:border-box; min-height:84px; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font:inherit; font-size:15px; line-height:1.7; resize:vertical; outline:none; background:#fff; }
@@ -924,7 +930,20 @@ body.dark .yr-filter-row > *, body.dark .yr-filter-row .yr { color:#e6e6e6; }
 .bd-gone { font-size:13px; color:#b0a69b; font-style:italic; }
 body.dark .rk-tab, body.dark .rk-card, body.dark .bd-compose, body.dark .bd-login, body.dark .bd-thread, body.dark .bd-compose textarea, body.dark .bd-reply-box textarea { background:#1f2226; border-color:#3a3f47; color:#e6e6e6; }
 body.dark .rk-name, body.dark .rk-val b, body.dark .bd-meta b, body.dark .bd-text { color:#e6e6e6; }
-@media(max-width:640px){ .rk-row { padding:12px 14px; gap:10px; } .bd-replies { margin-left:20px; } .rk-tab { font-size:14px; } }
+@media(max-width:640px){ .rk-row { padding:12px 14px; gap:10px; } .bd-replies { margin-left:20px; } .rk-tab { font-size:14px; }
+  .rk-panel { padding:10px; }
+  .rk-sub { flex-direction:column; align-items:stretch; gap:8px; }
+  .rk-seg { display:flex; min-width:0; max-width:100%; overflow-x:auto; scrollbar-width:none; }
+  .rk-seg::-webkit-scrollbar { display:none; }
+  .rk-seg button { flex:1 0 auto; padding:0 10px; }
+  .rk-cap { text-align:center; padding:6px 0; }
+  .rk-cap.rk-cap-r { display:none; }
+  .rk-seg.rk-subj { display:grid; grid-template-columns:repeat(4,1fr); overflow:visible; }
+  .rk-seg.rk-subj button { white-space:normal; height:auto; min-height:32px; padding:5px 4px; font-size:12px; line-height:1.35; } }
+body.dark .rk-panel { background:#1f2226; border-color:#3a3f47; }
+body.dark .rk-tabs, body.dark .rk-seg { background:#2b2f35; }
+body.dark .rk-tab.on, body.dark .rk-seg button.on { background:#1b1d21; color:#f0a5a0; }
+body.dark .rk-panel .rk-card, body.dark .rk-panel .hist-empty { border-top-color:#31353b; background:none; }
 .q-disc { margin-top:14px; padding-top:12px; border-top:1px dashed var(--line); }
 .disc-btn { display:inline-flex; align-items:center; gap:6px; height:34px; padding:0 12px; border:1px solid var(--line); background:#fff; border-radius:9px; font:inherit; font-size:14px; font-weight:600; color:var(--ink); cursor:pointer; }
 .disc-btn .ico { width:16px; height:16px; color:var(--brand); }
@@ -1112,7 +1131,7 @@ html.fs-xl main { zoom:1.3; }
       <button data-fs="xl" onclick="setFontSize('xl')"><span class="fs-a" style="font-size:19px">字</span>特大</button>
     </div>
   </div>
-  <div class="set-ver">網站版本 v3.11（2026-11-05）</div>
+  <div class="set-ver">網站版本 v3.12（2026-11-05）</div>
 </div>
 <script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg'||_fs==='xl')document.documentElement.classList.add('fs-'+_fs);}catch(e){}</script>
 <header class="topbar">
@@ -5592,9 +5611,11 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
     <button class="hist-back" onclick="closeCommunity()">${ICO('<polyline points="15 5 8 12 15 19"/>')}返回</button>
     <span class="hist-title">排行榜</span>
   </div>
-  <div class="rk-tabs" id="rk-tabs"></div>
-  <div class="rk-sub" id="rk-sub"></div>
-  <div id="rk-list"></div>
+  <div class="rk-panel">
+    <div class="rk-tabs" id="rk-tabs"></div>
+    <div class="rk-sub" id="rk-sub"></div>
+    <div id="rk-list"></div>
+  </div>
   <div class="rk-note">名字會部分遮住保護隱私。單科須一次作答 ${MIN_Q} 題以上才列入該科最高分；平均分數須考 ${MIN_AVG} 次以上才列入。</div>
 </div>
 <div id="board-screen" style="display:none">
@@ -5635,9 +5656,12 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
   function renderRank(){
     const tabs = [['best','各科最高分'],['count','練習次數'],['avg','平均分數']];
     document.getElementById('rk-tabs').innerHTML = tabs.map(([k,t])=>'<button class="rk-tab'+(_rkTab===k?' on':'')+'" onclick="rkSet(\'tab\',\''+k+'\')">'+t+'</button>').join('');
+    const periodSeg = '<div class="rk-seg">'+[['all','全部'],['wk','本週'],['mo','本月']].map(([k,t])=>'<button class="'+(_rkPeriod===k?'on':'')+'" onclick="rkSet(\'period\',\''+k+'\')">'+t+'</button>').join('')+'</div>';
+    const subjSeg = '<div class="rk-seg rk-subj">'+SUBJS.map(s=>'<button class="'+(_rkSubj===s?'on':'')+'" onclick="rkSet(\'subj\',\''+s+'\')">'+SN[s]+'</button>').join('')+'</div>';
     let sub = '';
-    if(_rkTab!=='avg') sub += '<div class="rk-seg">'+[['all','全部'],['wk','本週'],['mo','本月']].map(([k,t])=>'<button class="'+(_rkPeriod===k?'on':'')+'" onclick="rkSet(\'period\',\''+k+'\')">'+t+'</button>').join('')+'</div>';
-    if(_rkTab==='best') sub += '<div class="rk-seg">'+SUBJS.map(s=>'<button class="'+(_rkSubj===s?'on':'')+'" onclick="rkSet(\'subj\',\''+s+'\')">'+SN[s]+'</button>').join('')+'</div>';
+    if(_rkTab==='best')  sub = subjSeg + periodSeg;
+    if(_rkTab==='count') sub = '<span class="rk-cap">四科練習次數合計</span>' + periodSeg;
+    if(_rkTab==='avg')   sub = '<span class="rk-cap">四科平均分數・累計全部期間</span><span class="rk-cap rk-cap-r">考 '+MIN_AVG+' 次以上才列入</span>';
     document.getElementById('rk-sub').innerHTML = sub;
     const now = new Date(), wk = weekKey(now), mo = monthKey(now), me = uid();
     const per = x => _rkPeriod==='wk' ? (x.wk && x.wk.k===wk ? x.wk : null) : _rkPeriod==='mo' ? (x.mo && x.mo.k===mo ? x.mo : null) : x;
