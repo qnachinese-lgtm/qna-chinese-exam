@@ -145,6 +145,25 @@ service cloud.firestore {
       allow delete: if isMaster();
     }
 
+    // ── 問答題題庫（題目、參考答案、評分要點）：所有人可讀，主管理員可改 ──
+    match /essaybank/{doc} {
+      allow read: if true;
+      allow write: if isMaster();
+    }
+
+    // ── 問答題作答（v3.26）：學生只能以自己的身分新增（自評或送批改）；本人與管理員可看；管理員只能改批改欄位 ──
+    match /essaySubs/{id} {
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status in ['self','submitted']
+        && request.resource.data.answer is string && request.resource.data.answer.size() <= 5000
+        && !('teacherScore' in request.resource.data) && !('teacherComment' in request.resource.data);
+      allow get, list: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['teacherScore','teacherChecks','teacherComment','status','gradedAt','gradedBy'])
+        && request.resource.data.status == 'graded';
+      allow delete: if isMaster();
+    }
+
     // ── 訪客來訪統計：任何人可新增（每位訪客每月一筆，只能有 gid／month／first 三個欄位），只有管理員能看 ──
     match /guestVisits/{id} {
       allow create: if request.resource.data.keys().hasOnly(['gid','month','first'])

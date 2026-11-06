@@ -306,6 +306,29 @@ body { overflow-x:clip; }
 .ab-log-acc { font-size:12px; color:var(--muted); }
 .ab-log-txt { font-size:13px; color:#5d554d; margin-top:3px; word-break:break-word; } .ab-log-txt s { color:#a99f94; }
 @media(max-width:640px){ .ab-log-row { flex-wrap:wrap; } .ab-log-t { flex-basis:100%; } }
+/* 問答題（v3.26） */
+.es-card, .es-bank, .es-edit { padding:14px 18px; margin-bottom:10px; }
+.es-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; cursor:pointer; }
+.es-bank .es-card-head, .es-edit .es-card-head { cursor:default; }
+.es-acc { font-size:12px; color:var(--muted); margin-left:6px; }
+.es-sub { font-size:13px; color:var(--muted); margin-top:3px; }
+.es-right { display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+.chip.warn { background:#fdf0d6; color:#8a5a00; }
+.es-sec { font-size:13px; font-weight:700; color:var(--muted); margin:14px 0 6px; } .es-sec small { font-weight:400; }
+.es-box { font-size:14px; line-height:1.85; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:#fff; }
+.es-box.q { background:#faf6ef; border-color:transparent; } .es-box.ref { background:#f7fbf7; border-color:#d7e8d9; margin-top:8px; }
+.es-rub { border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+.es-rrow { display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border-bottom:1px solid #f3eee5; font-size:14px; line-height:1.7; }
+.es-rrow:last-child { border-bottom:none; } .es-rrow span { flex:1; } .es-rrow b { font-size:13px; color:var(--muted); }
+.es-rrow input { margin-top:5px; width:16px; height:16px; accent-color:var(--brand); }
+.es-rrow.on { background:#f6fbf6; } .es-mk { flex:0 0 18px !important; font-weight:700; color:#2e7d32; } .es-rrow:not(.on) .es-mk { color:#c9bfb2; }
+.es-tip { font-size:13px; color:var(--muted); margin-top:8px; line-height:1.7; }
+.es-grade { margin-top:12px; font-size:14px; } .es-grade input, .es-num { width:72px; height:34px; padding:0 8px; border:1px solid var(--line); border-radius:8px; font:inherit; font-size:15px; }
+.es-cmt, .es-ta, .es-rbe textarea { width:100%; box-sizing:border-box; margin-top:10px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font:inherit; font-size:14px; line-height:1.7; resize:vertical; }
+.es-cmt { min-height:70px; } .es-ta { margin-top:0; }
+.es-btns { display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:12px; } .es-msg { font-size:13px; color:var(--muted); margin-right:auto; }
+.es-refd { margin-top:10px; font-size:13px; } .es-refd summary { cursor:pointer; color:var(--brand); }
+.es-rbe { display:flex; align-items:center; gap:8px; margin-bottom:8px; } .es-rbe textarea { margin-top:0; flex:1; }
 .ab-q { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
 .gm-wrap { margin-bottom:12px; }
 .gm-card { padding:18px 20px; }
@@ -467,6 +490,7 @@ button.qb-yr-head:hover { background:#f4ede2; }
         <button class="tab master-only" data-page="qb" onclick="showPage('qb')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><line x1="8" y1="8" x2="16" y2="8"/></svg>題庫</button>
         <button class="tab" data-page="guests" onclick="showPage('guests')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/><path d="M10.5 7.2a1.6 1.6 0 1 1 2.2 1.5c-.5.2-.7.6-.7 1.1"/></svg>訪客</button>
         <button class="tab" data-page="board" onclick="showPage('board')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>留言板</button>
+        <button class="tab" data-page="essay" onclick="showPage('essay')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"/></svg>問答題</button>
         <button class="tab master-only" data-page="admins" onclick="showPage('admins')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><rect x="9" y="11" width="6" height="5" rx="1"/><path d="M10.5 11V9.5a1.5 1.5 0 0 1 3 0V11"/></svg>管理員</button>
         <button class="tab master-only" data-page="backup" onclick="showPage('backup')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="8" ry="2.5"/><path d="M4 5.5v6c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5v-6"/><path d="M4 11.5v6c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5v-6"/></svg>備份</button>
       </nav>
@@ -567,6 +591,12 @@ button.qb-yr-head:hover { background:#f4ede2; }
       <div class="page-head"><div class="page-head-text head-inline"><h2 class="page-title">留言板</h2><span id="bd-status" class="chip-note"></span></div></div>
       <div class="seg" id="ab-seg" style="grid-template-columns:repeat(2,1fr);max-width:420px"></div>
       <div id="admin-board-list"></div>
+    </section>
+
+    <section class="page" id="page-essay">
+      <div class="page-head"><div class="page-head-text head-inline"><h2 class="page-title">問答題</h2><span id="essay-status" class="chip-note"></span></div></div>
+      <div class="seg" id="essay-seg" style="grid-template-columns:repeat(4,1fr);max-width:720px"></div>
+      <div id="essay-list"></div>
     </section>
 
     <section class="page" id="page-backup">
@@ -1221,6 +1251,7 @@ function showPage(name){
   try{ sessionStorage.setItem('qna_admin_page', name); }catch(e){}
   closeRowMenu();
   if(name==='board') loadAdminBoard();
+  if(name==='essay') loadEssayAdmin();
 }
 // 留言板管理：看全部留言，主管理員可刪除
 let _adminBoardUnsub=null, _abAll=[], _abMode='q', _abLogUnsub=null, _abLog=[], _abOpenHist={};
@@ -1288,7 +1319,7 @@ async function adminDeletePost(id, withReplies){
   try{
     const old=_abAll.find(x=>x.id===id)||{};
     await _db.collection('board').doc(id).delete();
-    try{ const u=firebase.auth().currentUser; if(u) _db.collection('boardLog').add({action:'admin-delete', postId:id, uid:u.uid, name:'管理員', account:u.email||'', at:Date.now(), oldText:String(old.text||''), postBy:String(old.name||''), qlabel:old.qlabel||''}).catch(()=>{}); }catch(e){}
+    try{ const u=auth.currentUser; if(u) _db.collection('boardLog').add({action:'admin-delete', postId:id, uid:u.uid, name:'管理員', account:u.email||'', at:Date.now(), oldText:String(old.text||''), postBy:String(old.name||''), qlabel:old.qlabel||''}).catch(()=>{}); }catch(e){}
     if(withReplies){ const snap=await _db.collection('board').where('parentId','==',id).get(); for(const d of snap.docs) await d.ref.delete(); }
   }catch(e){ alert('刪除失敗：'+(e.message||e)); }
 }
@@ -2055,6 +2086,119 @@ function stopAdminLive(){ _liveUnsubs.forEach(u=>{ try{ u(); }catch(e){} }); _li
 // 初始：顯示「載入中」直到 Firebase 回報登入狀態
 showScreen('boot');
 tryClientAdminSession();
+</script>
+
+<script>
+// ═══ 問答題（v3.26）：批改學生送來的回答、編輯題目與評分標準 ═══
+const ESSAY_SEED = [{"id":"teaching|2015|1","subject":"teaching","yr":"2015","no":1,"pts":10,"q":"在教語法的時候，你可能使用哪些教學法？試舉一個語法點加以說明。(10分)","ref":"","rubric":[]},{"id":"teaching|2015|2","subject":"teaching","yr":"2015","no":2,"pts":15,"q":"華語教學中常採用「合作學習法」，即以分組活動使學習者透過互動學習達到語言學習的成效，但往往各組實際執行情形有所差異。有的小組沈默不說話，有的小組展開熱烈討論，有的小組則進行與教學組題無關的對話。請就學習者特性、課室指導語言、合作學習法執行方式等層面，試述如何確保合作學習法教學目標之達成，並舉例說明。(15分)","ref":"","rubric":[]},{"id":"teaching|2015|3","subject":"teaching","yr":"2015","no":3,"pts":15,"q":"華語文課堂教學之基本要素可包括教學單位、教學環節、教學步驟與教學行為。當教師進行新課而非上練習課或複習課時，其教學環節應如何進行方能達成預期之教學成效？ (15分)","ref":"","rubric":[]},{"id":"linguistics|2015|1","subject":"linguistics","yr":"2015","no":1,"pts":10,"q":"請將下列句子中的漢字排列組合，列出所有在漢語中符合文法的句子（Grammatical Sentences），並說明為何漢語容許這些組合（新排列的句子中可加入標點符號）。\n例句：請快來唱歌","ref":"","rubric":[]},{"id":"linguistics|2015|2","subject":"linguistics","yr":"2015","no":2,"pts":10,"q":"漢語的「頭」除了表示人或動物脖子以上的部分，如「人頭」的語義之外，還可表達哪些不同的語義？請列出其他三種意義，並為每種語義提供一個例詞或例句。這些不同的語義應該分析為多義（Polysemy）或同音異義（Homonym）的現象？請說明歸類的理由。","ref":"","rubric":[]},{"id":"linguistics|2015|3","subject":"linguistics","yr":"2015","no":3,"pts":10,"q":"請以實際例證說明現代漢語的音節結構為何？必要音素為何？可以有哪些語音成分？音節的組合方式有哪些可能？","ref":"","rubric":[]},{"id":"culture|2015|1","subject":"culture","yr":"2015","no":1,"pts":10,"q":"儒家思想深植於華人的價值系統中，影響華人之思維模式，請試由「仁」、「義」、「禮」申述儒學對現代華人社會之影響。（10分）","ref":"","rubric":[]},{"id":"culture|2015|2","subject":"culture","yr":"2015","no":2,"pts":15,"q":"請從中國傳統文化、宗教、跨文化等面向，解釋「中元普渡」在現代華人社會中的意義。（15分）","ref":"","rubric":[]},{"id":"culture|2015|3","subject":"culture","yr":"2015","no":3,"pts":15,"q":"在華語教學的推廣過程中，除了語言能力，「國際移動力」更是培養國際化人才的關鍵。國際移動力包括：適應環境的能力、跨文化的認知能力、能夠辨明高低情境文化的差異等，請詳細說明，身為華語教師如何加強自己的國際移動力。（15分）","ref":"","rubric":[]},{"id":"teaching|2016|1","subject":"teaching","yr":"2016","no":1,"pts":8,"q":"何謂擴散思考(divergent thinking)？請舉例說明之。(8 分)","ref":"","rubric":[]},{"id":"teaching|2016|2","subject":"teaching","yr":"2016","no":2,"pts":15,"q":"中文「打○」有不同意義及功能，請就「打架」、「打算」、「打聽」、「打包」、「打電話」等詞語為例，分述適宜的教學方式及教學法。(15 分)","ref":"","rubric":[]},{"id":"teaching|2016|3","subject":"teaching","yr":"2016","no":3,"pts":15,"q":"在語言課室中，教師要學生分組討論(三人一組)進行一項任務，最後上臺做角色扮演。\n情境是在一個大風雪的晚上，兩個一起旅行的朋友因為找不到住的地方，在一家旅館的櫃檯前，請求給予協助。設想你是這位教師，須事先向學生說明你所採取的評量方式以及評分標準，以利整個活動的進行。請敘述你的評分方式(6 分)以及評分標準(9分)，敘述時也請說明你的理念。","ref":"","rubric":[]},{"id":"linguistics|2016|1","subject":"linguistics","yr":"2016","no":1,"pts":10,"q":"Halliday 與 Hasan (1976)著重描述句法表層相鄰句子之間的連接/銜接(cohesion)，並將篇章的銜接手段分為五大類：照應/指涉/指代(reference)，替代(substitution)，省略\n(ellipsis)，連接詞語(conjunction)和詞語(彙)銜接(lexical cohesion)。分析下面文章裏所包含的銜接手段，回答時請抄寫原文，並在相關詞語上作答說明。\n孟子曰：\n「…..故天將降大任於斯人也，必先苦其心志，勞其筋骨，餓其體膚，空乏其身，行拂亂其所為，所以動心忍性，曾益其所不能。」《孟子•告子下》","ref":"","rubric":[]},{"id":"linguistics|2016|2","subject":"linguistics","yr":"2016","no":2,"pts":10,"q":"試著分析下列句中七個「多」，共可分為幾類，並說明其詞性與意義。\nA：你看今天的天氣多好啊！\nB：對啊！天氣一好，外面總是有那麼多人。\nA：那你覺得人多是好還是不好？\nB：我不太喜歡人多的地方，人多的地方，吵吵鬧鬧的多煩人啊！\n但如果我想多吃東西的話，我一定要去人少的餐廳。","ref":"","rubric":[]},{"id":"linguistics|2016|3","subject":"linguistics","yr":"2016","no":3,"pts":10,"q":"請分辨下列句子畫線部分的詞類歸屬，並說明它們的用法。\n（1） a、他喜歡在晚上看書。\nb、我在聽音樂。\n（2） a、氣象預報説今天下午會下雨。\nb、我會說日語。\nc、下了班，我會準時回家。","ref":"","rubric":[]},{"id":"culture|2016|1","subject":"culture","yr":"2016","no":1,"pts":16,"q":"請詳細敘述楊柳、竹子豐富的文化內涵。（16分）","ref":"","rubric":[]},{"id":"culture|2016|2","subject":"culture","yr":"2016","no":2,"pts":24,"q":"飲食即生命之源，文化的縮影。請依春、夏、秋、冬四季，舉例說明華人社會傳統節日飲食之內涵與文化意義。（24分）","ref":"","rubric":[]},{"id":"teaching|2017|1","subject":"teaching","yr":"2017","no":1,"pts":14,"q":"參考以下例句，\n（一）請針對語義及語法方面，說明近義詞組「一樣」與「同樣」之異同（8 分）\n；（二）並請提出一套能使學生迅速與正確地掌握此組近義詞的教學步驟（6 分）。\n（1）關於這則新聞評論，我和你有同樣/一樣的觀點。\n（2）這兩道菜同樣/一樣美味。\n（3）這兩本書的價錢一樣。\n（4）他們兩兄弟長得一樣，是雙胞胎嗎？\n（5）小明跟我一樣，一直在為你的傷勢祈禱。","ref":"","rubric":[]},{"id":"teaching|2017|2","subject":"teaching","yr":"2017","no":2,"pts":10,"q":"若學生產生「我喜歡看書在家裡」這樣的病句，你身為華語教師會如何加以糾正和提供回饋？請先簡單說明回饋有哪些類型（6 分），並從中選出兩種，說明你如何利用你選出的兩個方法給予上述學生回饋。（4 分）","ref":"","rubric":[]},{"id":"teaching|2017|3","subject":"teaching","yr":"2017","no":3,"pts":6,"q":"數位時代來臨，許多華語學習者無須動手寫漢字，只要透過數位工具應用輸入法即可挑選漢字完成篇章段落。因應此種時代潮流，請提出數位時代之漢字教學重點與教學策略。(6 分)","ref":"","rubric":[]},{"id":"linguistics|2017|1","subject":"linguistics","yr":"2017","no":1,"pts":10,"q":"請以語用學的理論陳述下面兩則例子的意涵。\n(1)請說明下面兩個句子畫線部分的意涵。\n「會場上大家一致讚揚他這個人沒有架子，他表現得非常謙虛，不斷和大家握手拍照」\n「連他的好朋友都說他那個人做事一向不管別人，跟他合作一定要多加小心。」\n(2)請說明下面對話的意涵。\n甲:「今天晚上的活動你要參加嗎？」\n乙:「我媽要我回家一趟。」","ref":"","rubric":[]},{"id":"linguistics|2017|2","subject":"linguistics","yr":"2017","no":2,"pts":10,"q":"請就信息傳遞的規律，說明“雨下了”和“下雨了”的差異。","ref":"","rubric":[]},{"id":"linguistics|2017|3","subject":"linguistics","yr":"2017","no":3,"pts":10,"q":"請說明「白頭偕老」、「白他一眼」、「白吃一頓」、「黑白兩分」中四個「白」字，各屬於什麼詞？其語法功能為何？","ref":"","rubric":[]},{"id":"culture|2017|1","subject":"culture","yr":"2017","no":1,"pts":20,"q":"媽祖信仰在華人地區有極大的影響力，也是臺灣最普遍的民間信仰之一。請說明媽祖與臺灣的關係，及你所知道的媽祖遶境活動。（20分）","ref":"","rubric":[]},{"id":"culture|2017|2","subject":"culture","yr":"2017","no":2,"pts":20,"q":"古時子女成年有舉行冠禮、及笄禮之傳統，臺灣亦有「做十六歲」的習俗，請說明此文化習俗的目的與意義。（20分）","ref":"","rubric":[]},{"id":"teaching|2018|1","subject":"teaching","yr":"2018","no":1,"pts":15,"q":"請針對 Chinese as a heritage language learners（CHL learners）、Chinese as a second language learners（CSL learners）與 Chinese as a foreign language learners（CFL learners），進行學習者背景分析及教學策略差異說明。（15 分）","ref":"","rubric":[]},{"id":"teaching|2018|2","subject":"teaching","yr":"2018","no":2,"pts":15,"q":"請找出下列三句偏誤的主要原因，並提出教學對策。（15 分）\n（1）如果你不去參加舞會，就我不陪你逛街。\n（2）他想結婚一個北方女孩。\n（3）我上大學在東京。","ref":"","rubric":[]},{"id":"linguistics|2018|1","subject":"linguistics","yr":"2018","no":1,"pts":10,"q":"請比較下列四個句子，並試著去解釋為什麼（C）是不合華語語法的。\n(A)你喜歡誰寫的書呢？\n(B)你喜歡寫什麼書的人呢？\n(C)＊你喜歡他為什麼寫的書呢？\n(D)你喜歡他（在）什麼時候寫的書呢？","ref":"","rubric":[]},{"id":"linguistics|2018|2","subject":"linguistics","yr":"2018","no":2,"pts":10,"q":"請以實際例字佐證，並說明國語的ㄝㄜㄛ三個元音，在聲韻結合上有何特色？","ref":"","rubric":[]},{"id":"linguistics|2018|3","subject":"linguistics","yr":"2018","no":3,"pts":10,"q":"關於數詞「二」及「兩」，用法上有些情形需使用「二」，有些需使用「兩」，這兩者的用法差異該如何整理歸納？請就「結構」及「語意」兩方面差異特徵分別說明。","ref":"","rubric":[]},{"id":"culture|2018|1","subject":"culture","yr":"2018","no":1,"pts":20,"q":"數字在華人文化中占有重要地位，具有豐富的文化意涵。在許多民俗文化中，數字都有著喜慶或禁忌的觀念，請就日常生活的喜慶與禁忌兩個面向各自舉例說明。(20分)","ref":"","rubric":[]},{"id":"culture|2018|2","subject":"culture","yr":"2018","no":2,"pts":20,"q":"請具體說明科舉制度的利弊與功過。(20分)","ref":"","rubric":[]},{"id":"teaching|2019|1","subject":"teaching","yr":"2019","no":1,"pts":10,"q":"演繹式的語法教學（deductive grammar teaching）和歸納式的語法教學（inductive grammar teaching）有什麼不同？請舉例說明。（10 分）","ref":"","rubric":[]},{"id":"teaching|2019|2","subject":"teaching","yr":"2019","no":2,"pts":10,"q":"如何進行非固定短語的語塊教學？請分別簡述以下兩種語塊形式的教學策略。（10 分）\n（一）框架語：\n「...三...四」，如：低三下四。\n（二）口語慣用句式：「一...就是...」，如：他一走就是半年。","ref":"","rubric":[]},{"id":"teaching|2019|3","subject":"teaching","yr":"2019","no":3,"pts":14,"q":"請根據以下例句，回答題（一）及題（二）\n：\n（甲）公司最近雇用了一批老礦工進行坑道修改工程。\n（乙）王先生在咖啡館裡與老同學敘舊。\n（丙）警員有時會來整頓流動攤販並開罰單，但過不久，攤販又聚集，這已經是老問題了。\n（一）區分「老」的不同語意及說明此三者的關聯性。（7 分）\n（二）請提出一套能使學生掌握此組多義詞的教學方法。（7 分）","ref":"","rubric":[]},{"id":"linguistics|2019|1","subject":"linguistics","yr":"2019","no":1,"pts":10,"q":"試從詞法與句法的角度說明「幫助」與「幫忙」的差別，並舉例闡述之。","ref":"","rubric":[]},{"id":"linguistics|2019|2","subject":"linguistics","yr":"2019","no":2,"pts":10,"q":"解釋下列例句中，畫線部分量詞短語的意義及語法功能有何不同？\n(1)他朝那個人一拳打了下去。\n(2)他打了那個人一拳。\n(3)他一口氣跑了回家。\n(4)他嚥了一口氣之後就離開人世。","ref":"","rubric":[]},{"id":"linguistics|2019|3","subject":"linguistics","yr":"2019","no":3,"pts":10,"q":"在「把」字句中，用「把」引進的對象可以是謂語動詞的工具、處所、使動者等。請分析下列句中「把」字引進的成份與動詞是什麼關係？\n(1)他把床睡垮了。\n(2)為了不讓狗叼走，他把一個盤子扣在那碗肉上。\n(3)地這樣鏟了三遍，把大家都累壞了。","ref":"","rubric":[]},{"id":"culture|2019|1","subject":"culture","yr":"2019","no":1,"pts":20,"q":"佛教東傳對中華文化有何影響？請從思想、學術、文學、藝術等方面作答。(20分)","ref":"","rubric":[]},{"id":"culture|2019|2","subject":"culture","yr":"2019","no":2,"pts":20,"q":"「天地君親師」可視為華人文化中的另一種「五倫」，試就所知，申論天地君親師為何發展成祭祀與信仰，並融入華人生活。(20分)","ref":"","rubric":[]},{"id":"linguistics|2020|1","subject":"linguistics","yr":"2020","no":1,"pts":10,"q":"請以 A.「不怕酸」、B.「酸不怕」和 C.「怕不酸」為例，說明漢語語序、語法和詞類的特點。","ref":"","rubric":[]},{"id":"linguistics|2020|2","subject":"linguistics","yr":"2020","no":2,"pts":10,"q":"請根據下列例句，將「粗」的語義分類。\n(A)這棵樹長得很粗。\n(B)現在手工的製作很粗。\n(C)他十分粗心，考試時總是出錯。\n(D)他的手臂比你的粗。\n(E)搬家工人的工作十分粗重。","ref":"","rubric":[]},{"id":"linguistics|2020|3","subject":"linguistics","yr":"2020","no":3,"pts":10,"q":"現代漢語能願動詞「會」、「能」、「可以」，分別表示意願和可能兩種意義。請依肯定、否定以及疑問句，舉例說明這三者的差異。","ref":"","rubric":[]},{"id":"culture|2020|1","subject":"culture","yr":"2020","no":1,"pts":15,"q":"華語文教學中，常採用漢外對比法說明文化因素。請從顏色、動物和成語各舉一個例子，說明華人文化與其他文化的差異。（15 分）","ref":"","rubric":[]},{"id":"culture|2020|2","subject":"culture","yr":"2020","no":2,"pts":15,"q":"孟子曰：\n「君子有三樂，而王天下不與存焉。父母俱存，兄弟無故，一樂也；仰不愧於天，俯不怍於人，二樂也；得天下英才而教育之，三樂也。」請利用這段話說明華人的價值觀。（15 分）","ref":"","rubric":[]},{"id":"culture|2020|3","subject":"culture","yr":"2020","no":3,"pts":10,"q":"梅、蘭、竹、菊稱為「四君子」，是中華傳統詩文書畫中常見的題材，更是華人借物喻志的象徵。請舉例說明這四種植物的文化寓意。（10 分）","ref":"","rubric":[]},{"id":"teaching|2021|1","subject":"teaching","yr":"2021","no":1,"pts":15,"q":"王老師為了幫助學生擴展詞彙量，上課時介紹同義詞和近義詞。以下有兩組詞語，請任擇一組，針對詞性、詞義和用法三方面進行比較分析，協助二語學習者找到關鍵性的區別特徵。（15 分）\n(1)突然／忽然\n(2)後來／然後","ref":"","rubric":[]},{"id":"teaching|2021|2","subject":"teaching","yr":"2021","no":2,"pts":15,"q":"語言教學原則強調「結構、功能、文化」之結合。請以「道歉」為主題，運用上述原則於初級成人學生之華語口語能力的教學課程設計上，並說明你的教學重點為何？（15分）","ref":"","rubric":[]},{"id":"linguistics|2021|1","subject":"linguistics","yr":"2021","no":1,"pts":10,"q":"以下為同事某甲和某乙的閒談，請以合作原則(Cooperative Principle)與禮貌原則(Politeness Principle)分別解釋乙的回應如何達到言談溝通的目的？\n甲：我的身材媲美阿諾史瓦辛格。\n乙：那我就是瑪麗蓮夢露了。","ref":"","rubric":[]},{"id":"linguistics|2021|2","subject":"linguistics","yr":"2021","no":2,"pts":10,"q":"以下兩句分屬何種疑問句型？「什麼」在兩句的功能有何不同？\n(A)你想吃點什麼嗎？\n(B)你想吃點什麼呢？","ref":"","rubric":[]},{"id":"linguistics|2021|3","subject":"linguistics","yr":"2021","no":3,"pts":10,"q":"請從語意及語法方面說明「幫手」、「選手」、「高手」、「水手」、「對手」這些詞裡「手」\n與前面的詞之間關係為何？","ref":"","rubric":[]},{"id":"culture|2021|1","subject":"culture","yr":"2021","no":1,"pts":20,"q":"「拜土地公」是臺灣常見的民間信仰，請說明其文化思維。(20 分)","ref":"","rubric":[]},{"id":"culture|2021|2","subject":"culture","yr":"2021","no":2,"pts":20,"q":"傳統華人社會講求「慎終追遠」、「以孝傳家」，隨著社會變遷，現今華人家庭在以上觀念的傳遞與實踐有何改變？(20 分)","ref":"","rubric":[]},{"id":"teaching|2022|1","subject":"teaching","yr":"2022","no":1,"pts":15,"q":"以下為一段華語老師透過提問操練句型教學的現場節錄，請分析老師的提問技巧，並且說明老師如何有效地達到教學目標。(15 分)\n目標句型：S+V+O+V+到+time point (+才/就+VP)\n老\n師：你昨天學中文學到幾點？\n學生 A：我昨天學中文學到九點。\n老\n師：(指別的學生)你呢？\n學生 B：昨天我學中文學到十二點。\n老\n師：喔，你是好學生。(再問其他人)誰學中文學到十二點？\n學生 C：我學中文也學到十二點。\n老\n師：昨天你學中文學到十二點以後做什麼了？\n(老師指黑板上句型的後續部分，提示學生用「才」或者「就」回答)\n學生 C：我學中文學到十二點就睡覺了。\n老\n師：(再指別的學生)你呢？\n學生 D：我學中文學到今天早上兩點才睡覺。","ref":"","rubric":[]},{"id":"teaching|2022|2","subject":"teaching","yr":"2022","no":2,"pts":15,"q":"試從語言使用角度、學習者角度、教學角度，分析通用華語與專業華語之差異。(15 分)","ref":"","rubric":[]},{"id":"linguistics|2022|1","subject":"linguistics","yr":"2022","no":1,"pts":10,"q":"擦音(fricative)的發音方式有什麼特質？漢語有哪些無聲擦音(voiceless fricative)？每個擦音使用什麼發音部位？(10 分)","ref":"","rubric":[]},{"id":"linguistics|2022|2","subject":"linguistics","yr":"2022","no":2,"pts":10,"q":"請分別說明以下兩個句子表達什麼意思，並分析兩句中「穿多少穿多少」的語法結構有什麼不同。(10 分)\n(1)冬天能穿多少穿多少。\n(2)夏天能穿多少穿多少。","ref":"","rubric":[]},{"id":"linguistics|2022|3","subject":"linguistics","yr":"2022","no":3,"pts":10,"q":"試分析下列各句中「到」的語意與語法功能。(10 分)\n(1)秋天快到了。\n(2)我終於找到錢包了。\n(3)他上個月搬到日本了。\n(4)把成績單寄到學生家。\n(5)李四昨天寫功課寫到幾點呢？","ref":"","rubric":[]},{"id":"culture|2022|1","subject":"culture","yr":"2022","no":1,"pts":20,"q":"「留餘匾」製於清朝同治十年（西元 1871 年），匾上題寫家訓 174 字，其中以「四留銘」最為有名：\n「留有餘，不盡之巧以還造化；留有餘，不盡之祿以還朝廷；留有餘，不盡之財以還百姓；留有餘，不盡之福以還子孫。」請從「四留銘」之觀點，說明華人「有餘」的價值觀。（20 分）","ref":"","rubric":[]},{"id":"culture|2022|2","subject":"culture","yr":"2022","no":2,"pts":20,"q":"請分析海外華人社會的會館組織、華文學校與華人報章在華人社會的主要特點。（20 分）","ref":"","rubric":[]},{"id":"teaching|2023|1","subject":"teaching","yr":"2023","no":1,"pts":15,"q":"請看以下的對話：\nA：你明天想去買東西嗎？\nB：還好。\nA：你有沒有什麼東西想買的，我可以幫你買喔！\nB：還好。\nA：我這次去了，可能很久才會再去喔！\nB：就跟你説還好嘛！\n(1)請解釋「嘛」和「嗎」的用法，並說明在什麼情況下才可以用「嘛」。\n(2)設計一組對話包含 5 至 6 個句子，並說明如何引導學習者操練「嘛」的用法。","ref":"","rubric":[]},{"id":"teaching|2023|2","subject":"teaching","yr":"2023","no":2,"pts":15,"q":"語法句型在教學上有幾個階段，如：引入句法階段、說明階段、歸納階段、操練階段等。請就引入句法階段，以華語比較句「A 比 B……」為例，設計 3 種不同的引入方式。","ref":"","rubric":[]},{"id":"linguistics|2023|1","subject":"linguistics","yr":"2023","no":1,"pts":10,"q":"「我跟他去過臺北。」是一個歧義句。請至少寫出三個不同意思的句子，並分析各個句子中「跟」的詞性及功能。","ref":"","rubric":[]},{"id":"linguistics|2023|2","subject":"linguistics","yr":"2023","no":2,"pts":10,"q":"「創作」、「創造」雖被視為同義詞，但二者意思仍有差異，請以動詞用法為例，各搭配\n三例不同的賓語，以說明二詞意義的不同。","ref":"","rubric":[]},{"id":"linguistics|2023|3","subject":"linguistics","yr":"2023","no":3,"pts":10,"q":"請分析下列各句中畫線處的詞類是什麼？並說明他們的用法。\n(1)\n甲、 你想不想吃點什麼？\n乙、 鬧什麼呀！你們越來越不像話了。\n丙、 什麼！你已經五十歲了，實在看不出來。\n(2)\n丁、 這事我疏忽了，怪不得他。\n戊、 原來是寒流到了，怪不得這麼冷。","ref":"","rubric":[]},{"id":"culture|2023|1","subject":"culture","yr":"2023","no":1,"pts":15,"q":"祠堂，又稱宗祠，是華人社會普遍的文化象徵，請問祠堂有何意義與功能？","ref":"","rubric":[]},{"id":"culture|2023|2","subject":"culture","yr":"2023","no":2,"pts":15,"q":"華人社會有以動物為吉祥物的習俗，它們通常各有用途，可適用不同的寓意，請以獅子為例，說明其用途與寓意。","ref":"","rubric":[]},{"id":"teaching|2024|1","subject":"teaching","yr":"2024","no":1,"pts":15,"q":"助詞是一種虛詞，它們附著在詞、詞組或句子後面，有語法功能。下列例句分別出現「了、過、起來」三個助詞，請先說明它們在句子中的語法意義，並進一步分析這三個助詞在教學上應如何掌握區分的特徵。\n(1)媽媽買「了」很多水果\n(2)我兩年沒看電影「了」\n(3)爸爸戴「過」這種帽子\n(4)他站「起來」走出房間\n(5)你今天看「起來」很累","ref":"","rubric":[]},{"id":"teaching|2024|2","subject":"teaching","yr":"2024","no":2,"pts":15,"q":"對於學生華語表達中的錯誤，有兩種不同的主張和做法：一種主張「有錯必糾」，會逐一指出學生的錯誤；一種不同意「有錯必糾」，對學生的錯誤有一定的容忍度。請指出這兩種主張背後的學派並加以評論。","ref":"","rubric":[]},{"id":"linguistics|2024|1","subject":"linguistics","yr":"2024","no":1,"pts":6,"q":"請從語言學的角度分析下列二句之異同。（6 分）\n(1) 你覺得中文難嗎？\n(2) 你覺得中文難不難？","ref":"","rubric":[]},{"id":"linguistics|2024|2","subject":"linguistics","yr":"2024","no":2,"pts":10,"q":"試分析下列各句中副詞「就」、「才」在表意上出現的對立關係，並說明可能隱含的語意差異。（10 分）\n(1) 你七點鐘「就」起床？\n(2) 你七點鐘「才」起床？\n(3) 你一個月「就」能學會？\n(4) 你一個月「才」能學會？\n(5) 吃了三個「就」不吃了？\n(6) 吃了三個「才」不吃了？\n(7) 主任「就」回來，您稍候。\n(8) 主任「才」回來，您稍候。","ref":"","rubric":[]},{"id":"linguistics|2024|3","subject":"linguistics","yr":"2024","no":3,"pts":14,"q":"請分析近義詞「通常」和「常常」在下列句子之異同。（14 分）\n(1) 我「通常/*常常」在家裡吃飯，週末的時候才去外面吃。\n(2) a.公司「通常/常常」星期五下午開會。\nb.公司「*通常/常常」開會。\n(3) a.以前我「*通常/常常」和小明一起吃飯聊天。\nb.以後我一定「*通常/常常」來看您。\n(4)「通常/*常常」我們先去酒吧喝酒，然後再去唱歌。\n(5) 處理這種情況，公司「通常/*常常」的做法是罰款。","ref":"","rubric":[]},{"id":"culture|2024|1","subject":"culture","yr":"2024","no":1,"pts":15,"q":"儒家對生死問題有許多觀察與看法，如《左傳•襄公二十四年》記載晉國范宣子問魯國叔孫豹：\n「古人有言曰：\n『死而不朽』，何謂也？」叔孫豹以「三不朽」\n：立德、立功、立言加以回應。請問「三不朽」的意義內涵為何？從當代的角度來看，「不朽」可以有什麼不同的理解？","ref":"","rubric":[]},{"id":"culture|2024|2","subject":"culture","yr":"2024","no":2,"pts":15,"q":"華人社會的文化表現常常透過節日慶典、飲食習俗、藝術表演等外在形式展現。請選擇\n一個具體的文化活動或習俗，深入分析其背後的內在文化意涵和價值觀，並討論其對全球華人社會的影響及意義。","ref":"","rubric":[]},{"id":"teaching|2025|1","subject":"teaching","yr":"2025","no":1,"pts":15,"q":"請根據下列這段師生課堂對話，闡述其如何體現溝通式語言教學法（Communicative Language Teaching）的交流互動（interaction）原則，並指出對話中教師如何根據學生的回應引出了課文主題相關的平行主題。\n課文主題：學校附近的飯館\n[1]老師：好，我們談完了學校附近的三家餐廳。現在請你告訴我你在美國的大學是在什麼地方？\n[2]學生：我的大學在紐約。\n[3]老師：你是紐約大學的學生嗎？\n[4]學生：不是，我是漢彌爾頓大學的學生。\n[5]老師：漢彌爾頓大學附近也有很多餐廳嗎？\n[6]學生：我不知道。我的大學的城很小，我也不常去餐廳。\n[7]老師：你在漢彌爾頓大學的時候，平常在哪裡吃飯？\n[8]學生：我吃飯在學校的餐廳。\n[9]老師：啊，你在學校的餐廳吃飯。學校的餐廳在哪裡？離你住的地方遠嗎？\n[10]學生：離我住的地方不太遠。\n[11]老師：從你住的地方到餐廳要怎麼走？","ref":"","rubric":[]},{"id":"teaching|2025|2","subject":"teaching","yr":"2025","no":2,"pts":15,"q":"基於理論語法發展而來的教學語法（Pedagogical Grammar）是在關注語法結構的同時，兼顧語義、語用與教學。請由語法結構、語義、語用與教學四個層面，設計存現句「有」\n的教學步驟，並規劃師生問答的操練內容與課堂活動。","ref":"","rubric":[]},{"id":"linguistics|2025|1","subject":"linguistics","yr":"2025","no":1,"pts":8,"q":"請說明「進來」、「進去」、「出來」、「出去」的趨向語義差異。（8 分）","ref":"","rubric":[]},{"id":"linguistics|2025|2","subject":"linguistics","yr":"2025","no":2,"pts":10,"q":"請說明以下兩個句子的語法結構，並分析它們語義差異的原因。（10 分）\n（1）小明去圖書館拿書。\n（2）小明拿書去圖書館。","ref":"","rubric":[]},{"id":"linguistics|2025|3","subject":"linguistics","yr":"2025","no":3,"pts":12,"q":"請分析下列各句中「可以」所表達的情態和語義。（12 分）\n（1）好的蛋白質可以促進身體健康。\n（2）這是訪客的停車格，你可以把車停在這兒，沒問題的。\n（3）我可以游自由式 50 公尺不換氣。","ref":"","rubric":[]},{"id":"culture|2025|1","subject":"culture","yr":"2025","no":1,"pts":15,"q":"漢字不只是華人的語言工具，也承載著歷史與文化。例如：\n「孝」字，上面是「老」的省形，下面是「子」，表示子女背著老人，象徵「承擔與傳承」的孝道文化。請列舉五個漢字，說明其結構與文化意涵。","ref":"","rubric":[]},{"id":"culture|2025|2","subject":"culture","yr":"2025","no":2,"pts":15,"q":"在跨文化華語教學中，文化常被比喻為「冰山」。根據文化冰山理論，華語教師在課堂上除了介紹節慶、美食與服飾等「可見文化」外，更應重視「冰山下」的「非可見文化」\n內容。請舉出三項「非可見文化」的具體例子，並說明其如何影響華人的行為觀念。","ref":"","rubric":[]}];
+const ES_SN = {teaching:'華語文教學', linguistics:'漢語語言學', culture:'華人社會與文化'};
+const ES_ORDER = ['teaching','linguistics','culture'];
+let _esBank = null, _esSubs = [], _esUnsub = null, _esMode = 'wait', _esSubj = 'teaching', _esOpen = {}, _esEditId = null, _esDraft = null;
+const esT = x => { const d=new Date(x||0); return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+const esNL = v => esc(v||'').replace(/\n/g,'<br>');
+async function loadEssayAdmin(){
+  if(!_esBank){ _esBank = ESSAY_SEED.slice(); try{ const d=await _db.collection('essaybank').doc('all').get(); if(d.exists && Array.isArray((d.data()||{}).items)) _esBank=d.data().items; }catch(e){ console.warn('essaybank:', e); } }
+  if(!_esUnsub){
+    const el=document.getElementById('essay-list'); if(el) el.innerHTML='<div class="card qb-empty"><div class="qb-empty-sub" style="margin:0">讀取中…</div></div>';
+    _esUnsub=_db.collection('essaySubs').onSnapshot(snap=>{ _esSubs=snap.docs.map(d=>Object.assign({id:d.id},d.data())).sort((a,b)=>(b.submittedAt||b.createdAt||0)-(a.submittedAt||a.createdAt||0)); renderEssayAdmin(); },
+      e=>{ console.warn(e); if(el) el.innerHTML='<div class="card qb-empty"><div class="qb-empty-sub" style="margin:0">讀取失敗：'+esc(e.message||e)+'</div></div>'; });
+  }
+  renderEssayAdmin();
+}
+function esSetMode(m){ _esMode=m; renderEssayAdmin(); }
+function esSetSubj(s){ _esSubj=s; renderEssayAdmin(); }
+const esQ = id => (_esBank||[]).find(e=>e.id===id);
+function renderEssayAdmin(){
+  const el=document.getElementById('essay-list'); if(!el||!_esBank) return;
+  const nW=_esSubs.filter(s=>s.status==='submitted').length, nG=_esSubs.filter(s=>s.status==='graded').length, nS=_esSubs.filter(s=>s.status==='self').length;
+  const st=document.getElementById('essay-status'); if(st) st.textContent = nW ? (nW+' 份待批改') : '沒有待批改';
+  const seg=document.getElementById('essay-seg');
+  if(seg) seg.innerHTML=[['wait','待批改',nW],['graded','已批改',nG],['self','學生自評',nS],['bank','題目與評分標準',_esBank.length]].map(([k,t,n])=>'<button type="button" class="seg-btn'+(_esMode===k?' active':'')+'" onclick="esSetMode(\''+k+'\')">'+t+'<span class="seg-n">'+n+'</span></button>').join('');
+  if(_esMode==='bank'){ el.innerHTML=renderEssayBank(); return; }
+  const list=_esSubs.filter(s=>s.status===(_esMode==='wait'?'submitted':_esMode));
+  if(!list.length){ el.innerHTML='<div class="card qb-empty"><div class="qb-empty-sub" style="margin:0">'+({wait:'目前沒有待批改的回答。',graded:'還沒有批改過的回答。',self:'還沒有學生自評紀錄。'})[_esMode]+'</div></div>'; return; }
+  el.innerHTML=list.map(renderEssaySub).join('');
+}
+function renderEssaySub(s){
+  const q=esQ(s.essayId)||{rubric:[],ref:''}; const rub=q.rubric||[]; const open=!!_esOpen[s.id] || _esMode==='wait';
+  const checks = Array.isArray(s.teacherChecks) ? s.teacherChecks : (Array.isArray(s.selfChecks)&&_esMode!=='self' ? [] : []);
+  let h='<div class="card es-card">'
+    +'<div class="es-card-head" onclick="esToggle(\''+s.id+'\')"><div><b>'+esc(s.name||'')+'</b>'+(s.account&&s.account!==s.name?'<span class="es-acc">（帳號 '+esc(s.account)+'）</span>':'')
+    +'<div class="es-sub">'+esc(ES_SN[s.subject]||'')+' '+esc(s.yr)+' 年第 '+s.no+' 題・'+(s.pts||'')+' 分・'+(s.status==='self'?'自評於 ':'送出於 ')+esT(s.submittedAt||s.createdAt)+'</div></div>'
+    +'<div class="es-right">'+(s.status==='graded'?'<span class="chip ok">已批改 '+s.teacherScore+'／'+(s.pts||'')+'</span>':s.status==='self'?'<span class="chip info">自評 '+(s.selfScore!=null?s.selfScore:'—')+'／'+(s.pts||'')+'</span>':'<span class="chip warn">待批改</span>')+'</div></div>';
+  if(open){
+    h+='<div class="es-sec">題目</div><div class="es-box q">'+esNL(s.question||q.q)+'</div>'
+      +'<div class="es-sec">學生回答　<small>'+String(s.answer||'').length+' 字</small></div><div class="es-box">'+esNL(s.answer)+'</div>';
+    if(s.status==='self'){
+      if(rub.length && Array.isArray(s.selfChecks)) h+='<div class="es-sec">學生自評</div><div class="es-rub">'+rub.map((r,i)=>'<div class="es-rrow'+(s.selfChecks[i]?' on':'')+'"><span class="es-mk">'+(s.selfChecks[i]?'✓':'—')+'</span><span>'+esNL(r.text)+'</span><b>'+(r.pts||0)+' 分</b></div>').join('')+'</div>';
+    } else {
+      h+='<div class="es-sec">批改</div>';
+      if(rub.length) h+='<div class="es-rub">'+rub.map((r,i)=>'<label class="es-rrow"><input type="checkbox" data-sid="'+s.id+'" data-i="'+i+'" '+(checks[i]?'checked':'')+' onchange="esRecalc(\''+s.id+'\')"><span>'+esNL(r.text)+'</span><b>'+(r.pts||0)+' 分</b></label>').join('')+'</div>';
+      else h+='<div class="es-tip">這一題還沒有評分要點，可以直接給分。到「題目與評分標準」可以新增。</div>';
+      if(Array.isArray(s.selfChecks) && s.selfScore!=null) h+='<div class="es-tip">學生送出前自評：'+s.selfScore+' 分</div>';
+      h+='<div class="es-grade"><label>得分 <input type="number" min="0" max="'+(s.pts||100)+'" id="es-score-'+s.id+'" value="'+(s.teacherScore!=null?s.teacherScore:'')+'"> ／ '+(s.pts||'')+' 分</label></div>'
+        +'<textarea class="es-cmt" id="es-cmt-'+s.id+'" placeholder="給學生的評語（學生看得到）">'+esc(s.teacherComment||'')+'</textarea>'
+        +'<div class="es-btns"><span class="es-msg" id="es-msg-'+s.id+'"></span><button class="btn btn-primary" onclick="esSaveGrade(\''+s.id+'\')">'+(s.status==='graded'?'更新批改':'完成批改')+'</button></div>';
+      if(q.ref) h+='<details class="es-refd"><summary>看參考答案</summary><div class="es-box ref">'+esNL(q.ref)+'</div></details>';
+    }
+  }
+  return h+'</div>';
+}
+function esToggle(id){ _esOpen[id]=!_esOpen[id]; renderEssayAdmin(); }
+function esRecalc(id){
+  const s=_esSubs.find(x=>x.id===id); const q=esQ(s.essayId)||{rubric:[]};
+  let t=0; document.querySelectorAll('input[data-sid="'+id+'"]').forEach(cb=>{ if(cb.checked) t+=Number((q.rubric[+cb.dataset.i]||{}).pts)||0; });
+  const sc=document.getElementById('es-score-'+id); if(sc) sc.value=t;
+}
+async function esSaveGrade(id){
+  const s=_esSubs.find(x=>x.id===id); const q=esQ(s.essayId)||{rubric:[]};
+  const scEl=document.getElementById('es-score-'+id), msg=document.getElementById('es-msg-'+id);
+  const sc=Number(scEl.value); if(scEl.value==='' || isNaN(sc) || sc<0 || sc>(s.pts||1000)){ msg.textContent='請輸入 0～'+(s.pts||'')+' 的分數'; return; }
+  const checks=(q.rubric||[]).map((r,i)=>{ const cb=document.querySelector('input[data-sid="'+id+'"][data-i="'+i+'"]'); return !!(cb&&cb.checked); });
+  msg.textContent='儲存中…';
+  try{ await _db.collection('essaySubs').doc(id).update({teacherScore:sc, teacherChecks:checks, teacherComment:document.getElementById('es-cmt-'+id).value.trim(), status:'graded', gradedAt:Date.now(), gradedBy:(auth.currentUser&&auth.currentUser.email)||''}); msg.textContent='已儲存'; }
+  catch(e){ console.warn(e); msg.textContent='儲存失敗：'+(e.message||e); }
+}
+// ── 題目與評分標準 ──
+function renderEssayBank(){
+  const isM=_currentRole==='master';
+  let h='<div class="seg" style="grid-template-columns:repeat(3,1fr);max-width:560px">'+ES_ORDER.map(k=>'<button type="button" class="seg-btn'+(_esSubj===k?' active':'')+'" onclick="esSetSubj(\''+k+'\')">'+ES_SN[k]+'<span class="seg-n">'+_esBank.filter(e=>e.subject===k).length+'</span></button>').join('')+'</div>';
+  h+='<div class="es-tip" style="margin:0 0 10px">題目文字是從教育部考卷 PDF 自動擷取，請順便檢查。參考答案和評分要點寫好後，學生就能自評；評分要點的分數加起來最好等於配分。'+(isM?'':'（只有主管理員能修改）')+'</div>';
+  if(isM) h+='<div class="es-btns" style="justify-content:flex-start;margin:0 0 10px"><button class="btn btn-secondary" onclick="esNewQ()">＋ 新增題目</button></div>';
+  const items=_esBank.filter(e=>e.subject===_esSubj).sort((a,b)=>(b.yr.localeCompare(a.yr))||(a.no-b.no));
+  h+=items.map(q=>{
+    const rs=(q.rubric||[]).reduce((a,r)=>a+(Number(r.pts)||0),0), ready=!!(q.ref||(q.rubric||[]).length);
+    if(_esEditId===q.id) return renderEssayEditor();
+    return '<div class="card es-bank"><div class="es-card-head"><div><b>'+esc(q.yr)+' 年第 '+q.no+' 題</b><span class="es-acc">'+(q.pts||0)+' 分</span><div class="es-sub">'+esc(String(q.q).split('\n')[0]).slice(0,90)+'</div></div>'
+      +'<div class="es-right">'+(ready?'<span class="chip ok">已有評分要點 '+(q.rubric||[]).length+' 項'+(rs&&rs!==q.pts?'（合計 '+rs+' 分）':'')+'</span>':'<span class="chip warn">尚未準備</span>')+(isM?'<button class="btn btn-secondary" onclick="esEditQ(\''+esc(q.id)+'\')">編輯</button>':'')+'</div></div></div>';
+  }).join('');
+  return h;
+}
+function esEditQ(id){ _esEditId=id; const q=esQ(id); _esDraft=JSON.parse(JSON.stringify(q)); if(!_esDraft.rubric) _esDraft.rubric=[]; renderEssayAdmin(); }
+function esNewQ(){ const yr=prompt('年份（例如 2026）'); if(!yr) return; const no=parseInt(prompt('第幾題（數字）')||'',10); if(!no) return;
+  const id=_esSubj+'|'+yr.trim()+'|'+no; if(esQ(id)){ alert('這一題已經存在'); return; }
+  _esBank.push({id, subject:_esSubj, yr:yr.trim(), no, pts:10, q:'', ref:'', rubric:[]}); esEditQ(id); }
+function renderEssayEditor(){
+  const d=_esDraft, rs=d.rubric.reduce((a,r)=>a+(Number(r.pts)||0),0);
+  return '<div class="card es-edit"><div class="es-card-head"><b>'+esc(d.yr)+' 年第 '+d.no+' 題（'+ES_SN[d.subject]+'）</b></div>'
+    +'<div class="es-sec">題目</div><textarea class="es-ta" rows="5" oninput="_esDraft.q=this.value">'+esc(d.q)+'</textarea>'
+    +'<div class="es-sec">配分 <input type="number" class="es-num" min="0" value="'+(d.pts||0)+'" oninput="_esDraft.pts=Number(this.value)||0"> 分</div>'
+    +'<div class="es-sec">參考答案</div><textarea class="es-ta" rows="7" placeholder="寫給學生看的參考答案" oninput="_esDraft.ref=this.value">'+esc(d.ref||'')+'</textarea>'
+    +'<div class="es-sec">評分要點　<small>目前合計 '+rs+' 分'+(rs!==d.pts?'，配分是 '+d.pts+' 分':'')+'</small></div>'
+    +d.rubric.map((r,i)=>'<div class="es-rbe"><textarea rows="2" placeholder="例如：說明演繹式是先給規則再練習" oninput="_esDraft.rubric['+i+'].text=this.value">'+esc(r.text||'')+'</textarea><input type="number" class="es-num" min="0" value="'+(r.pts||0)+'" oninput="_esDraft.rubric['+i+'].pts=Number(this.value)||0"><span>分</span><button class="btn btn-danger" onclick="_esDraft.rubric.splice('+i+',1);renderEssayAdmin()">刪除</button></div>').join('')
+    +'<button class="btn btn-secondary" onclick="_esDraft.rubric.push({text:\'\',pts:0});renderEssayAdmin()">＋ 新增評分要點</button>'
+    +'<div class="es-btns"><span class="es-msg" id="es-bank-msg"></span><button class="btn btn-secondary" onclick="esCancelEdit()">取消</button><button class="btn btn-primary" onclick="esSaveQ()">儲存</button></div></div>';
+}
+function esCancelEdit(){ const q=esQ(_esEditId); if(q && !q.q && !q.ref && !(q.rubric||[]).length && !_esDraft.q) _esBank=_esBank.filter(e=>e!==q); _esEditId=null; _esDraft=null; renderEssayAdmin(); }
+async function esSaveQ(){
+  const msg=document.getElementById('es-bank-msg'); const d=_esDraft;
+  d.rubric=d.rubric.filter(r=>String(r.text||'').trim()).map(r=>({text:String(r.text).trim(), pts:Number(r.pts)||0}));
+  if(!String(d.q||'').trim()){ msg.textContent='題目不能空白'; return; }
+  const next=_esBank.map(e=>e.id===d.id?d:e);
+  msg.textContent='儲存中…';
+  try{ await _db.collection('essaybank').doc('all').set({items:next, updatedAt:Date.now()}); _esBank=next; _esEditId=null; _esDraft=null; renderEssayAdmin(); }
+  catch(e){ console.warn(e); msg.textContent='儲存失敗：'+(e.message||e); }
+}
 </script>
 
 </body>
