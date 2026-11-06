@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 版本 v3.29｜2026-11-07 00:03｜非選擇題併入模擬考流程。上一版 v3.28｜2026-11-06 23:01｜作答時間、使用紀錄、研究資料匯出。上一版 v3.27｜2026-11-06 13:26｜問答題加國文（病句修改、翻譯、短文寫作）。上一版 v3.26｜2026-11-06 13:17｜新增問答題練習（自評＋老師批改）。上一版 v3.25｜2026-11-06 09:35｜刪除單筆紀錄時一併移除該次錯題並提醒。上一版 v3.24｜2026-11-05 20:34｜清除紀錄時一併清錯題、可單獨清空錯題。上一版 v3.23｜2026-11-05 20:29｜留言編輯、按讚、操作紀錄。上一版 v3.22｜2026-11-05 20:21｜新增顯示名稱。上一版 v3.21｜2026-11-05 20:18｜各頁同寬同高、頭像選單、帳號設定重新設計。上一版 v3.20｜2026-11-05 20:14｜手機頂端列間距、交流區留言框重新設計。上一版 v3.19｜2026-11-05 20:09｜後台題庫年份可收起。上一版 v3.18｜2026-11-05 20:04｜手機錯題複習改成圖示＋小紅點。上一版 v3.17｜2026-11-05 20:00｜新增瀏覽人數。上一版 v3.16｜2026-11-05 19:54｜手機頂端列按鈕加大。上一版 v3.15｜2026-11-05 19:51｜手機頂端列顯示排行榜、交流區圖示。上一版 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
+<!-- 版本 v3.30｜2026-11-07 00:05｜非選擇題詢問視窗可關閉。上一版 v3.29｜2026-11-07 00:03｜非選擇題併入模擬考流程。上一版 v3.28｜2026-11-06 23:01｜作答時間、使用紀錄、研究資料匯出。上一版 v3.27｜2026-11-06 13:26｜問答題加國文（病句修改、翻譯、短文寫作）。上一版 v3.26｜2026-11-06 13:17｜新增問答題練習（自評＋老師批改）。上一版 v3.25｜2026-11-06 09:35｜刪除單筆紀錄時一併移除該次錯題並提醒。上一版 v3.24｜2026-11-05 20:34｜清除紀錄時一併清錯題、可單獨清空錯題。上一版 v3.23｜2026-11-05 20:29｜留言編輯、按讚、操作紀錄。上一版 v3.22｜2026-11-05 20:21｜新增顯示名稱。上一版 v3.21｜2026-11-05 20:18｜各頁同寬同高、頭像選單、帳號設定重新設計。上一版 v3.20｜2026-11-05 20:14｜手機頂端列間距、交流區留言框重新設計。上一版 v3.19｜2026-11-05 20:09｜後台題庫年份可收起。上一版 v3.18｜2026-11-05 20:04｜手機錯題複習改成圖示＋小紅點。上一版 v3.17｜2026-11-05 20:00｜新增瀏覽人數。上一版 v3.16｜2026-11-05 19:54｜手機頂端列按鈕加大。上一版 v3.15｜2026-11-05 19:51｜手機頂端列顯示排行榜、交流區圖示。上一版 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -1286,7 +1286,7 @@ body.dark .es-ref { background:#1e2620; border-color:#2f4a33; } body.dark .es-co
       <button data-fs="xl" onclick="setFontSize('xl')"><span class="fs-a" style="font-size:19px">字</span>特大</button>
     </div>
   </div>
-  <div class="set-ver">網站版本 v3.29・2026-11-07 00:03 更新</div>
+  <div class="set-ver">網站版本 v3.30・2026-11-07 00:05 更新</div>
 </div>
 <script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg'||_fs==='xl')document.documentElement.classList.add('fs-'+_fs);}catch(e){}</script>
 <header class="topbar">
@@ -6385,12 +6385,17 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
     if(!list.length || st.isReviewMode){ _ex=null; return _se0.apply(this, arguments); }
     const pts = list.reduce((a,q)=>a+(q.pts||0),0);
     let ov=document.getElementById('es-ask'); if(!ov){ ov=document.createElement('div'); ov.id='es-ask'; ov.className='es-ask-ov'; document.body.appendChild(ov); }
-    ov.innerHTML='<div class="md-box" style="max-width:440px"><div class="md-head"><div><div class="md-title">要加上非選擇題嗎？</div><div class="md-desc">你選的考卷還有 '+list.length+' 題非選擇題（問答、翻譯、作文等，共 '+pts+' 分）。</div></div></div>'
-      +'<div class="md-body es-ask-body"><div>選擇題交卷後，會接著寫非選擇題；寫完可以對照評分要點自評，或送給老師批改。</div><div class="es-ask-list">'
-      +ORDER.filter(k=>list.some(q=>q.subject===k)).map(k=>'<span>'+SN[k]+' '+list.filter(q=>q.subject===k).length+' 題</span>').join('')+'</div></div>'
+    ov.innerHTML='<div class="md-box" style="max-width:440px"><div class="md-head"><div><div class="md-title">要加上非選擇題嗎？</div><div class="md-desc">你選的考卷另有 '+list.length+' 題非選擇題，共 '+pts+' 分。</div></div><button class="md-x" onclick="esAskClose()" aria-label="關閉">'+ICO('<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>')+'</button></div>'
+      +'<div class="md-body es-ask-body"><div>交完選擇題後，接著作答非選擇題。作答完畢，可以對照評分要點自評，或送交老師批改。</div><div class="es-ask-list">'
+      +ORDER.filter(k=>list.some(q=>q.subject===k)).map(k=>{ const qs=list.filter(q=>q.subject===k); const labs=[...new Set(qs.map(q=>q.label).filter(Boolean))];
+        return '<span>'+SN[k]+'：'+(labs.length ? labs.join('、') : '問答題 '+qs.length+' 題')+'</span>'; }).join('')+'</div></div>'
       +'<div class="md-foot"><button class="md-btn" onclick="esAskGo(false)">只做選擇題</button><button class="md-btn primary" onclick="esAskGo(true)">加上非選擇題</button></div></div>';
+    ov.onclick = e => { if(e.target===ov) esAskClose(); };
     ov.style.display='flex';
   };
+  // 關閉詢問視窗（按 ×、點視窗外面、按 Esc）：回到首頁重新選，不開始考試
+  window.esAskClose = function(){ const ov=document.getElementById('es-ask'); if(ov) ov.style.display='none'; };
+  document.addEventListener('keydown', e=>{ const ov=document.getElementById('es-ask'); if(e.key==='Escape' && ov && ov.style.display==='flex') esAskClose(); });
   window.esAskGo = function(withEssay){
     const ov=document.getElementById('es-ask'); if(ov) ov.style.display='none';
     _ex = withEssay ? {items:essaysFor(), ans:{}, i:0, done:false} : null;
