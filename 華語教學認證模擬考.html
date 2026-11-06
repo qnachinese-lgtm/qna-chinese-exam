@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 版本 v3.24｜2026-11-05 20:34｜清除紀錄時一併清錯題、可單獨清空錯題。上一版 v3.23｜2026-11-05 20:29｜留言編輯、按讚、操作紀錄。上一版 v3.22｜2026-11-05 20:21｜新增顯示名稱。上一版 v3.21｜2026-11-05 20:18｜各頁同寬同高、頭像選單、帳號設定重新設計。上一版 v3.20｜2026-11-05 20:14｜手機頂端列間距、交流區留言框重新設計。上一版 v3.19｜2026-11-05 20:09｜後台題庫年份可收起。上一版 v3.18｜2026-11-05 20:04｜手機錯題複習改成圖示＋小紅點。上一版 v3.17｜2026-11-05 20:00｜新增瀏覽人數。上一版 v3.16｜2026-11-05 19:54｜手機頂端列按鈕加大。上一版 v3.15｜2026-11-05 19:51｜手機頂端列顯示排行榜、交流區圖示。上一版 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
+<!-- 版本 v3.25｜2026-11-06 09:35｜刪除單筆紀錄時一併移除該次錯題並提醒。上一版 v3.24｜2026-11-05 20:34｜清除紀錄時一併清錯題、可單獨清空錯題。上一版 v3.23｜2026-11-05 20:29｜留言編輯、按讚、操作紀錄。上一版 v3.22｜2026-11-05 20:21｜新增顯示名稱。上一版 v3.21｜2026-11-05 20:18｜各頁同寬同高、頭像選單、帳號設定重新設計。上一版 v3.20｜2026-11-05 20:14｜手機頂端列間距、交流區留言框重新設計。上一版 v3.19｜2026-11-05 20:09｜後台題庫年份可收起。上一版 v3.18｜2026-11-05 20:04｜手機錯題複習改成圖示＋小紅點。上一版 v3.17｜2026-11-05 20:00｜新增瀏覽人數。上一版 v3.16｜2026-11-05 19:54｜手機頂端列按鈕加大。上一版 v3.15｜2026-11-05 19:51｜手機頂端列顯示排行榜、交流區圖示。上一版 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -1227,7 +1227,7 @@ body.dark .um-av { background:#3a2828; color:#f0a5a0; }
       <button data-fs="xl" onclick="setFontSize('xl')"><span class="fs-a" style="font-size:19px">字</span>特大</button>
     </div>
   </div>
-  <div class="set-ver">網站版本 v3.24・2026-11-05 20:34 更新</div>
+  <div class="set-ver">網站版本 v3.25・2026-11-06 09:35 更新</div>
 </div>
 <script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg'||_fs==='xl')document.documentElement.classList.add('fs-'+_fs);}catch(e){}</script>
 <header class="topbar">
@@ -4349,10 +4349,30 @@ function clearHistory(){
 }
 // 刪除單筆考試記錄（學習者可自行刪除自己的紀錄）
 function deleteHistoryRecord(date, time, pct){
-  if(!window.confirm('確定要刪除這筆記錄嗎？\n（'+date+' '+time+'　'+pct+'分）\n此操作無法復原。')) return;
+  // v3.25：刪除一筆紀錄時，這次的錯題也一起從錯題複習移除（別次考試也答錯的題目會保留），並先提醒
   const allHistory = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
-  const remaining = allHistory.filter(r=>!(r.name===st.currentUser && r.date===date && r.time===time));
+  const isThis = r => r.name===st.currentUser && r.date===date && r.time===time;
+  const rec = allHistory.find(isThis);
+  const wrongOf = r => ((r && r.questions)||[]).filter(q=>q && q.chosen!=null && !q.correct && !q.free).map(q=>q.q);
+  const keepSet = new Set(allHistory.filter(r=>r.name===st.currentUser && !isThis(r)).flatMap(wrongOf));
+  const mine = (typeof getWrongQs==='function') ? getWrongQs() : [];
+  const recWrong = new Set(wrongOf(rec));
+  const drop = mine.filter(w=>recWrong.has(w.q) && !keepSet.has(w.q));
+  if(!window.confirm('確定要刪除這筆紀錄嗎？\n（'+date+' '+time+'　'+pct+' 分）'
+    +(drop.length ? '\n\n這次的錯題 '+drop.length+' 題也會從「錯題複習」移除。' : '')
+    +'\n此操作無法復原。')) return;
+  const remaining = allHistory.filter(r=>!isThis(r));
   localStorage.setItem(STORAGE_KEY, JSON.stringify(remaining));
+  if(drop.length){
+    try{
+      const dropSet = new Set(drop.map(w=>w.q));
+      const all = JSON.parse(localStorage.getItem(WRONG_KEY)||'{}');
+      all[st.currentUser] = (all[st.currentUser]||[]).filter(w=>!dropSet.has(w.q));
+      localStorage.setItem(WRONG_KEY, JSON.stringify(all));
+      if(!st.isGuest) fbSaveWrongQs(st.currentUser, all[st.currentUser]);
+      if(typeof updateWrongReviewBtn==='function') updateWrongReviewBtn();
+    }catch(e){ console.warn(e); }
+  }
   fbDeleteExamRecord(st.currentUser, date, time);   // 同步刪除雲端
   renderHistory();
 }
