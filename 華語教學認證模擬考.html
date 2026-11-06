@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 版本 v3.28｜2026-11-06 23:01｜作答時間、使用紀錄、研究資料匯出。上一版 v3.27｜2026-11-06 13:26｜問答題加國文（病句修改、翻譯、短文寫作）。上一版 v3.26｜2026-11-06 13:17｜新增問答題練習（自評＋老師批改）。上一版 v3.25｜2026-11-06 09:35｜刪除單筆紀錄時一併移除該次錯題並提醒。上一版 v3.24｜2026-11-05 20:34｜清除紀錄時一併清錯題、可單獨清空錯題。上一版 v3.23｜2026-11-05 20:29｜留言編輯、按讚、操作紀錄。上一版 v3.22｜2026-11-05 20:21｜新增顯示名稱。上一版 v3.21｜2026-11-05 20:18｜各頁同寬同高、頭像選單、帳號設定重新設計。上一版 v3.20｜2026-11-05 20:14｜手機頂端列間距、交流區留言框重新設計。上一版 v3.19｜2026-11-05 20:09｜後台題庫年份可收起。上一版 v3.18｜2026-11-05 20:04｜手機錯題複習改成圖示＋小紅點。上一版 v3.17｜2026-11-05 20:00｜新增瀏覽人數。上一版 v3.16｜2026-11-05 19:54｜手機頂端列按鈕加大。上一版 v3.15｜2026-11-05 19:51｜手機頂端列顯示排行榜、交流區圖示。上一版 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
+<!-- 版本 v3.29｜2026-11-07 00:03｜非選擇題併入模擬考流程。上一版 v3.28｜2026-11-06 23:01｜作答時間、使用紀錄、研究資料匯出。上一版 v3.27｜2026-11-06 13:26｜問答題加國文（病句修改、翻譯、短文寫作）。上一版 v3.26｜2026-11-06 13:17｜新增問答題練習（自評＋老師批改）。上一版 v3.25｜2026-11-06 09:35｜刪除單筆紀錄時一併移除該次錯題並提醒。上一版 v3.24｜2026-11-05 20:34｜清除紀錄時一併清錯題、可單獨清空錯題。上一版 v3.23｜2026-11-05 20:29｜留言編輯、按讚、操作紀錄。上一版 v3.22｜2026-11-05 20:21｜新增顯示名稱。上一版 v3.21｜2026-11-05 20:18｜各頁同寬同高、頭像選單、帳號設定重新設計。上一版 v3.20｜2026-11-05 20:14｜手機頂端列間距、交流區留言框重新設計。上一版 v3.19｜2026-11-05 20:09｜後台題庫年份可收起。上一版 v3.18｜2026-11-05 20:04｜手機錯題複習改成圖示＋小紅點。上一版 v3.17｜2026-11-05 20:00｜新增瀏覽人數。上一版 v3.16｜2026-11-05 19:54｜手機頂端列按鈕加大。上一版 v3.15｜2026-11-05 19:51｜手機頂端列顯示排行榜、交流區圖示。上一版 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -1206,6 +1206,19 @@ body.dark .es-question, body.dark .es-yr { background:#2b2f35; color:#e6e6e6; }
 body.dark .es-answer, body.dark .es-rubric, body.dark .es-rb { border-color:#3a3f47; }
 body.dark .es-ref { background:#1e2620; border-color:#2f4a33; } body.dark .es-comment { background:#2a251c; border-color:#4a3f2a; }
 @media(max-width:640px){ .essay-entry { flex-wrap:wrap; } .essay-entry .md-btn { width:100%; } .es-q { flex-wrap:wrap; gap:6px 10px; } .es-qno { flex-basis:auto; } .es-qtxt { flex-basis:100%; order:3; } .es-qmeta { margin-left:auto; } .es-question { font-size:15px; padding:14px; } }
+.es-ask-ov { display:none; position:fixed; inset:0; z-index:2100; background:rgba(40,28,20,.45); align-items:center; justify-content:center; padding:16px; }
+.es-ask-body { font-size:14px; line-height:1.8; color:var(--ink); }
+.es-ask-list { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; } .es-ask-list span { font-size:12px; padding:3px 9px; border-radius:6px; background:var(--brand-soft); color:var(--brand); }
+.es-prog { display:flex; align-items:center; gap:12px; margin-bottom:14px; font-size:13px; color:var(--muted); }
+.es-bar { flex:1; height:6px; border-radius:3px; background:#f1ebe0; overflow:hidden; } .es-bar i { display:block; height:100%; background:var(--brand); border-radius:3px; }
+.es-skip { border:none; background:none; padding:0; font:inherit; font-size:13px; color:var(--muted); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+.es-nav { justify-content:space-between; }
+.es-rcard { margin-top:16px; }
+.es-rhead { margin-bottom:6px; } .es-rnote { font-size:13px; color:var(--muted); margin-top:2px; }
+.es-rrow2 { display:flex; align-items:center; gap:12px; padding:12px 0; border-top:1px solid #f3eee5; }
+.es-rr-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; } .es-rr-main b { font-size:14px; } .es-rr-main span { font-size:12px; color:var(--muted); }
+.es-rr-btns { display:flex; align-items:center; gap:8px; flex:0 0 auto; } .es-rr-btns .md-btn { height:34px; font-size:13px; padding:0 12px; }
+@media(max-width:640px){ .es-rrow2 { flex-wrap:wrap; } .es-rr-btns { width:100%; justify-content:flex-end; } }
 /* 頭像選單裡的排行榜、交流區只在手機顯示 */
 .user-menu .um-mobile { display:none; }
 /* 手機版頂端列：名稱可縮短、測試版標籤放到名稱下方，避免文字跟右側按鈕疊在一起 */
@@ -1273,7 +1286,7 @@ body.dark .es-ref { background:#1e2620; border-color:#2f4a33; } body.dark .es-co
       <button data-fs="xl" onclick="setFontSize('xl')"><span class="fs-a" style="font-size:19px">字</span>特大</button>
     </div>
   </div>
-  <div class="set-ver">網站版本 v3.28・2026-11-06 23:01 更新</div>
+  <div class="set-ver">網站版本 v3.29・2026-11-07 00:03 更新</div>
 </div>
 <script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg'||_fs==='xl')document.documentElement.classList.add('fs-'+_fs);}catch(e){}</script>
 <header class="topbar">
@@ -6334,7 +6347,7 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
   window.esCheck = function(i,v){ _cur.checks[i]=v; const el=document.getElementById('es-self'); if(el) el.textContent=selfScore(); };
   window.esEdit = function(){ _cur.mode='write'; renderDetail(); };
   window.esNew = function(){ _cur.sub=null; _cur.mode='write'; renderDetail(); };
-  async function save(status){
+  let save = async function(status){
     const q=_cur.q;
     const doc = {uid:myUid(), account:st.currentUser, name:(typeof dispName==='function'?dispName():st.currentUser), essayId:q.id, subject:q.subject, yr:q.yr, no:q.no, label:q.label||'', pts:q.pts||0,
       question:q.q, answer:_cur.answer.slice(0,5000), status, createdAt:Date.now()};
@@ -6343,7 +6356,7 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
     const ref = await _db.collection('essaySubs').add(doc);
     try{ localStorage.removeItem(draftKey(q.id)); }catch(e){}
     const s = Object.assign({id:ref.id}, doc); _mySubs.unshift(s); return s;
-  }
+  };
   window.esSaveSelf = async function(){
     if(!loggedIn()){ alert('登入後才能保存。'); return; }
     const m=document.getElementById('es-msg'); if(m) m.textContent='儲存中…';
@@ -6360,12 +6373,96 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
   ['showHistory','showProfile','startExam','showRank','showBoard','openReviewPicker'].forEach(fn=>{ const o=window[fn]; if(typeof o!=='function') return;
     window[fn]=function(){ const es=document.getElementById('essay-screen'); if(es && es.style.display==='block' && fn!=='openReviewPicker'){ es.style.display='none'; const ss=document.getElementById('subject-screen'); if(ss) ss.style.display='block'; } return o.apply(this, arguments); }; });
 
-  // 首頁入口
-  function addEntry(){
-    const pdf = document.querySelector('#subject-screen .pdf-section'); if(!pdf || document.getElementById('essay-entry')) return;
-    pdf.insertAdjacentHTML('beforebegin','<div class="essay-entry" id="essay-entry"><div class="ee-ico">'+ICO('<path d="M4 20h4L19 9l-4-4L4 16z"/><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"/>')+'</div><div class="ee-txt"><b>問答題練習</b><span>歷屆問答題，寫完可對照評分要點自評，或送給老師批改</span></div><button class="md-btn" onclick="openEssay()">開始練習</button></div>');
+  // ═══ 模擬考加上非選擇題（v3.29）：開始前詢問 → 選擇題交卷後接著寫非選擇題 → 成績頁可自評或送老師批改 ═══
+  let _ex = null;   // {items:[q], ans:{}, i, done}
+  const essaysFor = () => _bank.filter(e=>(st.selected||[]).includes(e.subject) && (st.selectedYears||[]).includes(e.yr))
+    .sort((a,b)=>ORDER.indexOf(a.subject)-ORDER.indexOf(b.subject) || b.yr.localeCompare(a.yr) || a.no-b.no);
+  const _se0 = window.startExam;
+  window.startExam = async function(){
+    if(window._esAsked){ window._esAsked=false; return _se0.apply(this, arguments); }
+    await loadBank();
+    const list = essaysFor();
+    if(!list.length || st.isReviewMode){ _ex=null; return _se0.apply(this, arguments); }
+    const pts = list.reduce((a,q)=>a+(q.pts||0),0);
+    let ov=document.getElementById('es-ask'); if(!ov){ ov=document.createElement('div'); ov.id='es-ask'; ov.className='es-ask-ov'; document.body.appendChild(ov); }
+    ov.innerHTML='<div class="md-box" style="max-width:440px"><div class="md-head"><div><div class="md-title">要加上非選擇題嗎？</div><div class="md-desc">你選的考卷還有 '+list.length+' 題非選擇題（問答、翻譯、作文等，共 '+pts+' 分）。</div></div></div>'
+      +'<div class="md-body es-ask-body"><div>選擇題交卷後，會接著寫非選擇題；寫完可以對照評分要點自評，或送給老師批改。</div><div class="es-ask-list">'
+      +ORDER.filter(k=>list.some(q=>q.subject===k)).map(k=>'<span>'+SN[k]+' '+list.filter(q=>q.subject===k).length+' 題</span>').join('')+'</div></div>'
+      +'<div class="md-foot"><button class="md-btn" onclick="esAskGo(false)">只做選擇題</button><button class="md-btn primary" onclick="esAskGo(true)">加上非選擇題</button></div></div>';
+    ov.style.display='flex';
+  };
+  window.esAskGo = function(withEssay){
+    const ov=document.getElementById('es-ask'); if(ov) ov.style.display='none';
+    _ex = withEssay ? {items:essaysFor(), ans:{}, i:0, done:false} : null;
+    window._esAsked = true; window.startExam();
+  };
+  // 選擇題交卷後：先存好成績，再進入非選擇題
+  const _sr0 = window.showResult;
+  window.showResult = function(){
+    const r = _sr0.apply(this, arguments);
+    if(_ex && !_ex.done && !st.isReviewMode && document.getElementById('result-screen').style.display==='block'){ document.getElementById('result-screen').style.display='none'; showEssayPart(); }
+    else if(_ex && _ex.done) renderEssayResult();
+    return r;
+  };
+  function showEssayPart(){
+    show(); _view='exam';
+    const it=_ex.items[_ex.i], n=_ex.items.length;
+    document.getElementById('es-title').textContent='第二部分：非選擇題';
+    let v=_ex.ans[it.id]; if(v==null){ try{ v=localStorage.getItem(draftKey(it.id))||''; }catch(e){ v=''; } _ex.ans[it.id]=v; }
+    document.getElementById('es-body').innerHTML='<div class="rk-panel es-detail">'
+      +'<div class="es-prog"><span>'+(_ex.i+1)+' / '+n+'</span><div class="es-bar"><i style="width:'+((_ex.i+1)/n*100)+'%"></i></div><button class="es-skip" onclick="esExamFinish(true)">略過，直接看成績</button></div>'
+      +'<div class="es-head"><span class="es-chip info">'+SN[it.subject]+'・'+it.yr+' 年・'+E(QL(it))+'</span><span class="es-pts big">'+(it.pts||'')+' 分</span></div>'
+      +'<div class="es-question">'+NL(it.q)+'</div>'
+      +'<div class="es-label">你的回答</div><textarea id="es-ans" class="es-ans" maxlength="5000" placeholder="在這裡寫下你的回答（會自動暫存）" oninput="esExamInput(this)">'+E(v)+'</textarea><div class="es-count" id="es-count">'+v.length+' 字</div>'
+      +'<div class="es-actions es-nav">'+(_ex.i>0?'<button class="md-btn" onclick="esExamGo(-1)">上一題</button>':'<span></span>')
+      +(_ex.i<n-1?'<button class="md-btn primary" onclick="esExamGo(1)">下一題</button>':'<button class="md-btn primary" onclick="esExamFinish(false)">完成，看成績</button>')+'</div></div>';
+    window.scrollTo(0,0);
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', addEntry); else addEntry();
+  window.esExamInput = function(t){ const it=_ex.items[_ex.i]; _ex.ans[it.id]=t.value; try{ localStorage.setItem(draftKey(it.id), t.value); }catch(e){} const c=document.getElementById('es-count'); if(c) c.textContent=t.value.length+' 字'; };
+  window.esExamGo = function(d){ _ex.i=Math.max(0,Math.min(_ex.items.length-1,_ex.i+d)); showEssayPart(); };
+  window.esExamFinish = function(skip){
+    const written=_ex.items.filter(q=>String(_ex.ans[q.id]||'').trim()).length;
+    if(skip && written && !confirm('已經寫了 '+written+' 題，確定要直接看成績嗎？寫好的內容還會留在成績頁。')) return;
+    if(!skip && written<_ex.items.length && !confirm('還有 '+(_ex.items.length-written)+' 題沒寫，確定要完成嗎？')) return;
+    _ex.done=true; _view=null;
+    try{ logUse && logUse('essay_part_done', {n:_ex.items.length, written}); }catch(e){}
+    document.getElementById('essay-screen').style.display='none';
+    document.getElementById('result-screen').style.display='block';
+    renderEssayResult(); window.scrollTo(0,0);
+  };
+  // 成績頁的非選擇題區塊
+  function renderEssayResult(){
+    const rs=document.querySelector('#result-screen .rs-card'); if(!rs || !_ex) return;
+    let box=document.getElementById('es-result'); if(!box){ box=document.createElement('div'); box.id='es-result'; rs.parentNode.insertBefore(box, rs.nextSibling); }
+    const rows=_ex.items.map(q=>{ const a=String(_ex.ans[q.id]||'').trim(); const s=_mySubs.find(x=>x.essayId===q.id && x._fromExam===_ex);
+      return '<div class="es-rrow2"><div class="es-rr-main"><b>'+SN[q.subject]+' '+q.yr+' 年・'+E(QL(q))+'</b><span>'+(a?a.length+' 字':'沒有作答')+'・'+(q.pts||0)+' 分</span></div>'
+        +'<div class="es-rr-btns">'+(s?statusChip(s):'')+(a?'<button class="md-btn" onclick="esFromExam(\''+E(q.id)+'\')">'+(s?'查看':'自評／送批改')+'</button>':'')+'</div></div>'; }).join('');
+    box.innerHTML='<div class="rs-card es-rcard"><div class="es-rhead"><div><div class="rs-kicker">非選擇題</div><div class="es-rnote">選擇題成績不含非選擇題。每題可以對照評分要點自評，或送給老師批改。</div></div></div>'+rows+'</div>';
+  }
+  window.esFromExam = function(id){
+    const q=_bank.find(e=>e.id===id); if(!q) return;
+    const s=_mySubs.find(x=>x.essayId===id && x._fromExam===_ex);
+    show(); _cur={q, sub:s||null, checks:[], mode:s?'view':'check', answer:String(_ex.ans[id]||'').trim(), back:'result'}; _view='detail'; renderDetail(); window.scrollTo(0,0);
+  };
+  // 從非選擇題詳細頁返回成績頁
+  const _eb0 = window.essayBack;
+  window.essayBack = function(){
+    if(_view==='exam'){ if(confirm('要離開非選擇題、直接看成績嗎？')) esExamFinish(true); return; }
+    if(_cur && _cur.back==='result'){ if(_cur.sub && _ex) _cur.sub._fromExam=_ex; _cur=null; _view=null; document.getElementById('essay-screen').style.display='none'; document.getElementById('result-screen').style.display='block'; renderEssayResult(); window.scrollTo(0,0); return; }
+    return _eb0.apply(this, arguments);
+  };
+  const _save0 = save;
+  save = async function(status){ const s=await _save0(status); if(_cur && _cur.back==='result' && _ex) s._fromExam=_ex; return s; };
+  // 重新開始或回首頁時清掉
+  ['goHome','retryExam'].forEach(fn=>{ const o=window[fn]; if(typeof o!=='function') return; window[fn]=function(){ const b=document.getElementById('es-result'); if(b) b.remove(); if(fn==='goHome') _ex=null; else if(_ex) _ex={items:_ex.items, ans:{}, i:0, done:false}; return o.apply(this, arguments); }; });
+
+  // 頭像選單：我的問答題（看批改結果、單獨練習）
+  function addMenu(){
+    const pf=document.getElementById('um-profile'); if(!pf || document.getElementById('um-essay')) return;
+    pf.insertAdjacentHTML('afterend','<button id="um-essay" onclick="closeUserMenu();esOpenMine()">'+ICO('<path d="M4 20h4L19 9l-4-4L4 16z"/><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"/>')+'問答題</button>');
+  }
+  window.esOpenMine = function(){ _tab = loggedIn() ? 'mine' : 'q'; openEssay(); };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', addMenu); else addMenu();
 })();
 </script>
 
