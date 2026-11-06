@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 版本 v3.27｜2026-11-06 13:26｜問答題加國文（病句修改、翻譯、短文寫作）。上一版 v3.26｜2026-11-06 13:17｜新增問答題練習（自評＋老師批改）。上一版 v3.25｜2026-11-06 09:35｜刪除單筆紀錄時一併移除該次錯題並提醒。上一版 v3.24｜2026-11-05 20:34｜清除紀錄時一併清錯題、可單獨清空錯題。上一版 v3.23｜2026-11-05 20:29｜留言編輯、按讚、操作紀錄。上一版 v3.22｜2026-11-05 20:21｜新增顯示名稱。上一版 v3.21｜2026-11-05 20:18｜各頁同寬同高、頭像選單、帳號設定重新設計。上一版 v3.20｜2026-11-05 20:14｜手機頂端列間距、交流區留言框重新設計。上一版 v3.19｜2026-11-05 20:09｜後台題庫年份可收起。上一版 v3.18｜2026-11-05 20:04｜手機錯題複習改成圖示＋小紅點。上一版 v3.17｜2026-11-05 20:00｜新增瀏覽人數。上一版 v3.16｜2026-11-05 19:54｜手機頂端列按鈕加大。上一版 v3.15｜2026-11-05 19:51｜手機頂端列顯示排行榜、交流區圖示。上一版 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
+<!-- 版本 v3.28｜2026-11-06 23:01｜作答時間、使用紀錄、研究資料匯出。上一版 v3.27｜2026-11-06 13:26｜問答題加國文（病句修改、翻譯、短文寫作）。上一版 v3.26｜2026-11-06 13:17｜新增問答題練習（自評＋老師批改）。上一版 v3.25｜2026-11-06 09:35｜刪除單筆紀錄時一併移除該次錯題並提醒。上一版 v3.24｜2026-11-05 20:34｜清除紀錄時一併清錯題、可單獨清空錯題。上一版 v3.23｜2026-11-05 20:29｜留言編輯、按讚、操作紀錄。上一版 v3.22｜2026-11-05 20:21｜新增顯示名稱。上一版 v3.21｜2026-11-05 20:18｜各頁同寬同高、頭像選單、帳號設定重新設計。上一版 v3.20｜2026-11-05 20:14｜手機頂端列間距、交流區留言框重新設計。上一版 v3.19｜2026-11-05 20:09｜後台題庫年份可收起。上一版 v3.18｜2026-11-05 20:04｜手機錯題複習改成圖示＋小紅點。上一版 v3.17｜2026-11-05 20:00｜新增瀏覽人數。上一版 v3.16｜2026-11-05 19:54｜手機頂端列按鈕加大。上一版 v3.15｜2026-11-05 19:51｜手機頂端列顯示排行榜、交流區圖示。上一版 v3.14｜2026-11-05 19:46｜設定面板顯示版本更新時間。完整紀錄見〈更新紀錄.md〉 -->
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -1273,7 +1273,7 @@ body.dark .es-ref { background:#1e2620; border-color:#2f4a33; } body.dark .es-co
       <button data-fs="xl" onclick="setFontSize('xl')"><span class="fs-a" style="font-size:19px">字</span>特大</button>
     </div>
   </div>
-  <div class="set-ver">網站版本 v3.27・2026-11-06 13:26 更新</div>
+  <div class="set-ver">網站版本 v3.28・2026-11-06 23:01 更新</div>
 </div>
 <script>try{if(localStorage.getItem('tocfl_dark')==='1')document.body.classList.add('dark');var _fs=localStorage.getItem('tocfl_fontsize');if(_fs==='lg'||_fs==='xl')document.documentElement.classList.add('fs-'+_fs);}catch(e){}</script>
 <header class="topbar">
@@ -4333,6 +4333,8 @@ async function submitGuestRegister(){
 }
 
 function saveExamRecord(pct, total){
+  // v3.28：作答時間（開始、結束、每題秒數）
+  let _tmg=null; try{ if(typeof window._examTiming==='function') _tmg=window._examTiming(); }catch(e){}
   const now = new Date();
   const dateStr = now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0');
   const timeStr = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')+':'+now.getSeconds().toString().padStart(2,'0');
@@ -4346,8 +4348,11 @@ function saveExamRecord(pct, total){
     total: total,
     pct: pct,
     stats: JSON.parse(JSON.stringify(st.stats)),
-    questions: st.examResults.map(r=>({...r}))
+    questions: st.examResults.map((r,i)=>{ const o={...r}; if(_tmg){ o.sec=_tmg.qSec[i]||0; if(_tmg.first[i]!=null) o.firstSec=_tmg.first[i]; if(_tmg.changes[i]) o.changes=_tmg.changes[i]; } return o; })
   };
+  if(_tmg){ record.startedAt=_tmg.startedAt; record.endedAt=_tmg.endedAt; record.durationSec=_tmg.durationSec; record.activeSec=_tmg.activeSec; }
+  record.settings = {order:st.mode||'', reveal:st.revealMode||'', timer:(typeof _timerSecsPerQ!=='undefined'?_timerSecsPerQ:0), review:!!st.isReviewMode};
+  window._lastTiming = _tmg;
   if(st.isGuest){
     fbAddGuestRecord(pct, total);   // 後台匿名統計
     try{   // 暫存本次測驗，供「註冊並保存」搬到新帳號
@@ -6361,6 +6366,119 @@ window.syncFromCloud = function(){ return window.syncMyHistory(); };
     pdf.insertAdjacentHTML('beforebegin','<div class="essay-entry" id="essay-entry"><div class="ee-ico">'+ICO('<path d="M4 20h4L19 9l-4-4L4 16z"/><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"/>')+'</div><div class="ee-txt"><b>問答題練習</b><span>歷屆問答題，寫完可對照評分要點自評，或送給老師批改</span></div><button class="md-btn" onclick="openEssay()">開始練習</button></div>');
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', addEntry); else addEntry();
+})();
+</script>
+
+<script>
+// ═══ 作答時間紀錄 ＋ 使用紀錄（v3.28）═══
+// 作答時間：開始、結束、總秒數、實際作答秒數（切到別的分頁不算）、每題停留秒數、第一次作答秒數、改答次數
+// 使用紀錄：usageLog 集合，每筆只有代號（uid 或訪客編號），沒有姓名或信箱；只有管理員看得到
+(function(){
+  const now = () => Date.now();
+  let tm = null;   // 這一次測驗的計時資料
+  function initTm(){
+    const n = (st.questions||[]).length;
+    tm = { qs: st.questions, startedAt: now(), qSec: new Array(n).fill(0), first: new Array(n).fill(null), changes: new Array(n).fill(0),
+           cur: null, enterAt: 0, hiddenMs: 0, hiddenAt: null };
+  }
+  function flush(){
+    if(!tm || tm.cur==null || !tm.enterAt) return;
+    if(!tm.hiddenAt){ tm.qSec[tm.cur] += (now() - tm.enterAt)/1000; }
+    tm.enterAt = now();
+  }
+  function enter(i){ if(!tm) return; flush(); tm.cur = i; tm.enterAt = now(); }
+  document.addEventListener('visibilitychange', ()=>{
+    if(!tm) return;
+    if(document.visibilityState==='hidden'){ flush(); tm.hiddenAt = now(); }
+    else if(tm.hiddenAt){ tm.hiddenMs += now() - tm.hiddenAt; tm.hiddenAt = null; tm.enterAt = now(); }
+  });
+  const _rq = window.renderQ;
+  if(typeof _rq==='function') window.renderQ = function(){
+    const r = _rq.apply(this, arguments);
+    try{ if(!st.reviewing){ if(!tm || tm.qs!==st.questions) initTm(); if(tm.cur!==st.idx) enter(st.idx); } }catch(e){}
+    return r;
+  };
+  const _ha = window.handleAns;
+  if(typeof _ha==='function') window.handleAns = function(chosen){
+    try{ if(tm && !st.reviewing){ const i=st.idx, prev=(st.answers||[])[i];
+      flush();
+      if(tm.first[i]==null) tm.first[i] = Math.round(tm.qSec[i]*10)/10;
+      else if(prev && prev.chosen!==chosen) tm.changes[i]++; } }catch(e){}
+    return _ha.apply(this, arguments);
+  };
+  // 給 saveExamRecord 用：交卷時的計時摘要
+  window._examTiming = function(){
+    if(!tm) return null; flush();
+    const end = now(), hid = tm.hiddenMs + (tm.hiddenAt ? end-tm.hiddenAt : 0);
+    return { startedAt: tm.startedAt, endedAt: end, durationSec: Math.round((end-tm.startedAt)/1000), activeSec: Math.round((end-tm.startedAt-hid)/1000),
+             qSec: tm.qSec.map(x=>Math.round(x*10)/10), first: tm.first.slice(), changes: tm.changes.slice() };
+  };
+  window._examTimingReset = function(){ tm = null; };
+
+  // ── 使用紀錄 ──
+  const sid = Math.random().toString(36).slice(2,10) + now().toString(36);
+  const dev = (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || window.innerWidth<720) ? 'mobile' : 'desktop';
+  const myUid = () => { try{ return (_auth && _auth.currentUser) ? _auth.currentUser.uid : null; }catch(e){ return null; } };
+  let _last = {};
+  window.logUse = function(event, detail){
+    try{
+      if(typeof _db==='undefined' || !_db) return;
+      const k = event+'|'+JSON.stringify(detail||'');
+      if(_last[k] && now()-_last[k] < 3000) return;   // 3 秒內重複的不記
+      _last[k] = now();
+      const d = { event:String(event).slice(0,40), at:now(), sid, dev };
+      const u = myUid(); if(u) d.uid = u;
+      else { try{ if(typeof getGuestId==='function' && st && st.isGuest) d.gid = getGuestId(); }catch(e){} }
+      if(detail!=null) d.detail = (typeof detail==='string') ? detail.slice(0,200) : JSON.parse(JSON.stringify(detail));
+      _db.collection('usageLog').add(d).catch(e=>console.warn('usageLog:', e));
+    }catch(e){ console.warn(e); }
+  };
+  function wrap(fn, ev, det){ const o=window[fn]; if(typeof o!=='function') return; window[fn]=function(){ const r=o.apply(this, arguments); try{ logUse(ev, det?det.apply(this, arguments):null); }catch(e){} return r; }; }
+  // 開始測驗
+  const _se = window.startExam;
+  if(typeof _se==='function') window.startExam = function(){
+    const r = _se.apply(this, arguments);
+    try{ if(document.getElementById('exam-screen').style.display==='block'){ initTm(); enter(0);
+      logUse('exam_start', {subjects:(st.selected||[]).slice(), years:(st.selectedYears||[]).slice(), n:(st.questions||[]).length, order:st.mode||'', reveal:st.revealMode||'', timer:(typeof _timerSecsPerQ!=='undefined'?_timerSecsPerQ:0)}); } }catch(e){}
+    return r;
+  };
+  wrap('startReviewMode', 'review_start', s=>({subject:s||'all'}));
+  // 交卷：在原本的 showResult 之前先記下摘要
+  const _sr = window.showResult;
+  if(typeof _sr==='function') window.showResult = function(){
+    let t=null; try{ t=_examTiming(); }catch(e){}
+    const answered = (st.answers||[]).filter(a=>a).length;
+    const r = _sr.apply(this, arguments);
+    try{ if(!st.isReviewMode && answered){ const tot=(st.questions||[]).length; logUse('exam_finish', {n:tot, answered, correct:st.correct||0, pct: tot?Math.round((st.correct||0)/tot*100):0, durationSec:t?t.durationSec:null, activeSec:t?t.activeSec:null}); }
+      else if(st.isReviewMode) logUse('review_finish', {n:(st.questions||[]).length}); }catch(e){}
+    tm = null; return r;
+  };
+  wrap('leaveExamNoRecord', 'exam_leave_noanswer');
+  wrap('showHistory', 'open', ()=>'我的紀錄');
+  wrap('showProfile', 'open', ()=>'帳號設定');
+  wrap('showRank', 'open', ()=>'排行榜');
+  wrap('showBoard', 'open', ()=>'交流區');
+  wrap('openEssay', 'open', ()=>'問答題練習');
+  wrap('openReviewPicker', 'open', ()=>'錯題複習');
+  wrap('exportPDF', 'download_pdf');
+  wrap('shareResult', 'share_result');
+  wrap('enterGuest', 'guest_start');
+  // 作答時間顯示在成績頁
+  const _sr2 = window.showResult;
+  window.showResult = function(){
+    let t=null; try{ t = tm ? _examTiming() : null; }catch(e){}
+    const r = _sr2.apply(this, arguments);
+    try{ const lab=document.getElementById('res-label'); const rec=window._lastTiming;
+      if(lab && rec && rec.durationSec!=null){ const n=(st.questions||[]).length; const m=Math.floor(rec.activeSec/60), s=rec.activeSec%60;
+        lab.textContent = lab.textContent.replace(/・作答.*$/,'') + '・作答 '+(m?m+' 分 ':'')+s+' 秒'+(n?'（平均每題 '+Math.round(rec.activeSec/n)+' 秒）':''); } }catch(e){}
+    return r;
+  };
+  // 登入、離開
+  let _loggedUid = null;
+  setInterval(()=>{ const u=myUid(); if(u && u!==_loggedUid){ _loggedUid=u; logUse('login'); } }, 3000);
+  let _openAt = now();
+  logUse('visit', {w:window.innerWidth});
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden'){ logUse('leave', {sec:Math.round((now()-_openAt)/1000)}); } else { _openAt = now(); } });
 })();
 </script>
 

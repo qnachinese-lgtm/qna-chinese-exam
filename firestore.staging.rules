@@ -164,6 +164,16 @@ service cloud.firestore {
       allow delete: if isMaster();
     }
 
+    // ── 使用紀錄（v3.28）：任何人可新增（登入者只能用自己的 uid；訪客不能帶 uid），只有管理員能看；不能修改 ──
+    match /usageLog/{id} {
+      allow create: if request.resource.data.event is string && request.resource.data.event.size() <= 40
+        && request.resource.data.keys().hasOnly(['event','at','sid','dev','uid','gid','detail'])
+        && (!('uid' in request.resource.data) || (signedIn() && request.resource.data.uid == request.auth.uid));
+      allow read: if isAdmin();
+      allow update: if false;
+      allow delete: if isMaster();
+    }
+
     // ── 訪客來訪統計：任何人可新增（每位訪客每月一筆，只能有 gid／month／first 三個欄位），只有管理員能看 ──
     match /guestVisits/{id} {
       allow create: if request.resource.data.keys().hasOnly(['gid','month','first'])

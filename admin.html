@@ -306,6 +306,11 @@ body { overflow-x:clip; }
 .ab-log-acc { font-size:12px; color:var(--muted); }
 .ab-log-txt { font-size:13px; color:#5d554d; margin-top:3px; word-break:break-word; } .ab-log-txt s { color:#a99f94; }
 @media(max-width:640px){ .ab-log-row { flex-wrap:wrap; } .ab-log-t { flex-basis:100%; } }
+/* 研究資料（v3.28） */
+.rs-card { padding:18px 20px; margin-bottom:12px; }
+.rs-ev { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+.rs-opts { display:flex; flex-wrap:wrap; gap:16px; align-items:center; margin-top:12px; font-size:14px; }
+.rs-opts input[type=date] { height:32px; padding:0 8px; border:1px solid var(--line); border-radius:8px; font:inherit; }
 /* 問答題（v3.26） */
 .es-card, .es-bank, .es-edit { padding:14px 18px; margin-bottom:10px; }
 .es-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; cursor:pointer; }
@@ -491,6 +496,7 @@ button.qb-yr-head:hover { background:#f4ede2; }
         <button class="tab" data-page="guests" onclick="showPage('guests')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/><path d="M10.5 7.2a1.6 1.6 0 1 1 2.2 1.5c-.5.2-.7.6-.7 1.1"/></svg>訪客</button>
         <button class="tab" data-page="board" onclick="showPage('board')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>留言板</button>
         <button class="tab" data-page="essay" onclick="showPage('essay')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"/></svg>問答題</button>
+        <button class="tab" data-page="research" onclick="showPage('research')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><rect x="5" y="10" width="3" height="7"/><rect x="10.5" y="6" width="3" height="11"/><rect x="16" y="12" width="3" height="5"/></svg>研究資料</button>
         <button class="tab master-only" data-page="admins" onclick="showPage('admins')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><rect x="9" y="11" width="6" height="5" rx="1"/><path d="M10.5 11V9.5a1.5 1.5 0 0 1 3 0V11"/></svg>管理員</button>
         <button class="tab master-only" data-page="backup" onclick="showPage('backup')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="8" ry="2.5"/><path d="M4 5.5v6c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5v-6"/><path d="M4 11.5v6c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5v-6"/></svg>備份</button>
       </nav>
@@ -597,6 +603,11 @@ button.qb-yr-head:hover { background:#f4ede2; }
       <div class="page-head"><div class="page-head-text head-inline"><h2 class="page-title">問答題</h2><span id="essay-status" class="chip-note"></span></div></div>
       <div class="seg" id="essay-seg" style="grid-template-columns:repeat(4,1fr);max-width:720px"></div>
       <div id="essay-list"></div>
+    </section>
+
+    <section class="page" id="page-research">
+      <div class="page-head"><div class="page-head-text"><h2 class="page-title">研究資料</h2></div></div>
+      <div id="research-body"></div>
     </section>
 
     <section class="page" id="page-backup">
@@ -1252,6 +1263,7 @@ function showPage(name){
   closeRowMenu();
   if(name==='board') loadAdminBoard();
   if(name==='essay') loadEssayAdmin();
+  if(name==='research') loadResearch();
 }
 // 留言板管理：看全部留言，主管理員可刪除
 let _adminBoardUnsub=null, _abAll=[], _abMode='q', _abLogUnsub=null, _abLog=[], _abOpenHist={};
@@ -2199,6 +2211,122 @@ async function esSaveQ(){
   msg.textContent='儲存中…';
   try{ await _db.collection('essaybank').doc('all').set({items:next, updatedAt:Date.now()}); _esBank=next; _esEditId=null; _esDraft=null; renderEssayAdmin(); }
   catch(e){ console.warn(e); msg.textContent='儲存失敗：'+(e.message||e); }
+}
+</script>
+
+<script>
+// ═══ 研究資料（v3.28）：使用紀錄摘要、去識別化匯出 Excel ═══
+let _rsData = null;
+async function loadResearch(force){
+  const el=document.getElementById('research-body'); if(!el) return;
+  if(_rsData && !force){ renderResearch(); return; }
+  el.innerHTML='<div class="card qb-empty"><div class="qb-empty-sub" style="margin:0">讀取中…</div></div>';
+  const get = async (ref, name) => { try{ const s=await ref.get(); return s.docs.map(d=>Object.assign({_id:d.id}, d.data())); }catch(e){ console.warn(name, e); return []; } };
+  const [recs, users, essays, usage, guests] = await Promise.all([
+    get(_db.collection('config').doc('examHistory').collection('records'), 'records'),
+    get(_db.collection('users'), 'users'),
+    get(_db.collection('essaySubs'), 'essaySubs'),
+    get(_db.collection('usageLog'), 'usageLog'),
+    get(_db.collection('config').doc('guestHistory').collection('records'), 'guestHistory')]);
+  _rsData = {recs, users, essays, usage, guests, at:Date.now()};
+  renderResearch();
+}
+function _rsCodes(){
+  // 依第一次出現的時間編代號：學習者 P001、訪客 G001；用 uid（或帳號名）對應，不輸出姓名與信箱
+  const d=_rsData, first={}, seen=(k,t)=>{ if(!k) return; if(!(k in first) || (t||0)<first[k]) first[k]=t||0; };
+  const ukey = x => x.uid ? 'u:'+x.uid : (x.name ? 'n:'+x.name : (x.account ? 'n:'+x.account : null));
+  const nameToUid = {}; d.users.forEach(u=>{ if(u.uid) nameToUid[u.name||u._id]=u.uid; });
+  const key = x => { if(x.uid) return 'u:'+x.uid; const nm=x.account||x.name; if(nm && nameToUid[nm]) return 'u:'+nameToUid[nm]; return nm?'n:'+nm:null; };
+  d.users.forEach(u=>seen(key(Object.assign({}, u, {name:u.name||u._id})), Date.parse(u.createdAt||'')||0));
+  d.recs.forEach(r=>seen(key(r), r.startedAt||Date.parse((r.date||'')+'T'+(r.time||'00:00'))||0));
+  d.essays.forEach(e=>seen(key(e), e.createdAt));
+  d.usage.forEach(u=>{ if(u.uid) seen('u:'+u.uid, u.at); });
+  const order=Object.keys(first).sort((a,b)=>first[a]-first[b]);
+  const map={}; order.forEach((k,i)=>map[k]='P'+String(i+1).padStart(3,'0'));
+  const gmap={}; let gi=0; d.usage.filter(u=>u.gid).sort((a,b)=>a.at-b.at).forEach(u=>{ if(!gmap[u.gid]) gmap[u.gid]='G'+String(++gi).padStart(3,'0'); });
+  return {code:x=>map[key(x)]||'', gcode:g=>gmap[g]||'', map, gmap, key, nameToUid};
+}
+function renderResearch(){
+  const el=document.getElementById('research-body'); const d=_rsData; if(!el||!d) return;
+  const C=_rsCodes();
+  const timed=d.recs.filter(r=>r.activeSec!=null);
+  const avgSec=timed.length?Math.round(timed.reduce((a,r)=>a+r.activeSec,0)/timed.length):null;
+  const sessions=new Set(d.usage.map(u=>u.sid)).size;
+  const mob=d.usage.filter(u=>u.event==='visit'&&u.dev==='mobile').length, vis=d.usage.filter(u=>u.event==='visit').length;
+  const evc={}; d.usage.forEach(u=>{ evc[u.event]=(evc[u.event]||0)+1; });
+  const EVN={visit:'打開網站',login:'登入',guest_start:'訪客試做',exam_start:'開始測驗',exam_finish:'交卷',exam_leave_noanswer:'沒作答就離開',review_start:'錯題複習',review_finish:'完成錯題複習',open:'打開頁面',download_pdf:'下載 PDF',share_result:'分享成績',leave:'離開網站'};
+  const fmtS=s=>s==null?'—':(Math.floor(s/60)?Math.floor(s/60)+' 分 ':'')+(s%60)+' 秒';
+  let h='<div class="card rs-card"><div class="gm-head">'
+    +'<div><div class="gm-big">'+Object.keys(C.map).length+' <small>人</small></div><div class="gm-lbl">參與者（學習者）</div></div>'
+    +'<div><div class="gm-big">'+d.recs.length+' <small>次</small></div><div class="gm-lbl">考試紀錄・有計時 '+timed.length+' 次</div></div>'
+    +'<div><div class="gm-big">'+fmtS(avgSec)+'</div><div class="gm-lbl">平均實際作答時間</div></div>'
+    +'<div><div class="gm-big">'+sessions+' <small>次</small></div><div class="gm-lbl">使用工作階段・手機 '+(vis?Math.round(mob/vis*100):0)+'%</div></div>'
+    +'</div><div class="rs-ev">'+Object.keys(evc).sort((a,b)=>evc[b]-evc[a]).map(k=>'<span class="chip info">'+esc(EVN[k]||k)+' '+evc[k]+'</span>').join('')+'</div>'
+    +'<div class="es-tip">作答時間、使用紀錄從 v3.28 上線後才開始記錄；之前的考試紀錄沒有時間資料。讀取時間：'+new Date(d.at).toLocaleString('zh-TW')+'　<button class="ab-hist-btn" onclick="loadResearch(true)">重新讀取</button></div></div>';
+  h+='<div class="card rs-card"><div class="rg-title">匯出研究資料（去識別化）</div>'
+    +'<div class="es-tip" style="margin-top:0">匯出成一個 Excel 檔，學習者以 P001、P002…、訪客以 G001… 代號表示，不含姓名、帳號、信箱。內含工作表：說明、參與者、考試紀錄、逐題作答、問答題、使用紀錄。</div>'
+    +'<div class="rs-opts"><label><input type="checkbox" id="rs-essay-text" checked> 問答題包含學生的回答內容</label><label>日期範圍 <input type="date" id="rs-from"> 到 <input type="date" id="rs-to"></label></div>'
+    +'<div class="es-btns" style="justify-content:flex-start"><button class="btn btn-primary" onclick="exportResearch()">匯出 Excel</button>'
+    +(_currentRole==='master'?'<button class="btn btn-secondary" onclick="exportCodeMap()">匯出代號對照表（含姓名，請勿外流）</button>':'')
+    +'<span class="es-msg" id="rs-msg"></span></div></div>';
+  el.innerHTML=h;
+}
+function _rsLoadXLSX(){
+  return new Promise((ok,no)=>{ if(window.XLSX) return ok(); const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; s.onload=ok; s.onerror=()=>no(new Error('無法載入 Excel 元件')); document.head.appendChild(s); });
+}
+const _rsSN={chinese:'國文',culture:'華人社會與文化',linguistics:'漢語語言學',teaching:'華語文教學'};
+const _rsTs=t=>{ if(!t) return ''; const d=new Date(t); const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds()); };
+async function exportResearch(){
+  const msg=document.getElementById('rs-msg'); msg.textContent='整理中…';
+  try{
+    await _rsLoadXLSX();
+    const d=_rsData, C=_rsCodes();
+    const from=document.getElementById('rs-from').value, to=document.getElementById('rs-to').value;
+    const inRange=t=>{ if(!t) return true; const s=_rsTs(t).slice(0,10); return (!from||s>=from)&&(!to||s<=to); };
+    const recT=r=>r.startedAt||Date.parse((r.date||'')+'T'+(r.time||'00:00:00'))||0;
+    const recs=d.recs.filter(r=>inRange(recT(r))).sort((a,b)=>recT(a)-recT(b));
+    const withText=document.getElementById('rs-essay-text').checked;
+    // 考試紀錄、逐題
+    const exams=[], items=[];
+    recs.forEach((r,ix)=>{ const eid='E'+String(ix+1).padStart(4,'0'), code=C.code(r);
+      exams.push({考試編號:eid, 參與者:code, 日期:r.date||'', 開始時間:_rsTs(r.startedAt), 結束時間:_rsTs(r.endedAt), 總秒數:r.durationSec??'', 實際作答秒數:r.activeSec??'',
+        科目:(r.subjects||[]).map(s=>_rsSN[s]||s).join('、'), 年份:(r.years||[]).join('、'), 題數:r.total??'', 答對:r.correct??'', 分數:r.pct??'',
+        出題順序:({sequential:'依序',seq:'依序',random:'隨機'})[(r.settings||{}).order]||(r.settings||{}).order||'', 看答案方式:({end:'全部做完再看',each:'逐題看答案',now:'逐題看答案'})[(r.settings||{}).reveal]||((r.settings||{}).reveal?'逐題看答案':''), 每題限時秒數:(r.settings||{}).timer||'', 錯題複習:(r.settings||{}).review?'是':''});
+      (r.questions||[]).forEach((q,i)=>items.push({考試編號:eid, 參與者:code, 題序:i+1, 科目:_rsSN[q.subject]||q.subject||'', 年份:q.yr||'', 題目開頭:String(q.q||'').replace(/<[^>]+>/g,'').slice(0,30),
+        作答:q.chosen==null?'':'ABCD'[q.chosen], 正解:'ABCD'[q.ans]||'', 對錯:q.chosen==null?'未作答':(q.correct?'對':'錯'), 送分題:q.free?'是':'', 停留秒數:q.sec??'', 第一次作答秒數:q.firstSec??'', 改答次數:q.changes??''})); });
+    // 問答題
+    const essays=d.essays.filter(e=>inRange(e.createdAt)).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)).map(e=>Object.assign({參與者:C.code(e), 科目:_rsSN[e.subject]||e.subject||'', 年份:e.yr||'', 題:e.label||('第 '+e.no+' 題'), 配分:e.pts??'', 字數:String(e.answer||'').length,
+      狀態:({self:'自評',submitted:'待批改',graded:'已批改'})[e.status]||e.status, 自評分數:e.selfScore??'', 老師分數:e.teacherScore??'', 作答時間:_rsTs(e.createdAt), 批改時間:_rsTs(e.gradedAt)}, withText?{回答內容:e.answer||'', 老師評語:e.teacherComment||''}:{}));
+    // 使用紀錄
+    const usage=d.usage.filter(u=>inRange(u.at)).sort((a,b)=>a.at-b.at).map(u=>({時間:_rsTs(u.at), 參與者:u.uid?(C.map['u:'+u.uid]||''):(u.gid?C.gcode(u.gid):''), 事件:u.event, 細節:u.detail==null?'':(typeof u.detail==='string'?u.detail:JSON.stringify(u.detail)), 裝置:u.dev||'', 工作階段:u.sid||''}));
+    // 參與者
+    const parts=Object.entries(C.map).map(([k,code])=>{ const mine=x=>C.key(x)===k; const rs=d.recs.filter(mine); const es=d.essays.filter(mine); const us=d.usage.filter(u=>'u:'+u.uid===k);
+      const u=d.users.find(x=>C.key(Object.assign({},x,{name:x.name||x._id}))===k)||{};
+      const times=[...rs.map(recT),...es.map(e=>e.createdAt||0),...us.map(x=>x.at)].filter(Boolean);
+      return {參與者:code, 註冊日期:String(u.createdAt||'').slice(0,10), 考試次數:rs.length, 平均分數:rs.length?Math.round(rs.reduce((a,r)=>a+(r.pct||0),0)/rs.length):'', 問答題次數:es.length, 使用紀錄筆數:us.length,
+        第一次使用:times.length?_rsTs(Math.min(...times)):'', 最後一次使用:times.length?_rsTs(Math.max(...times)):''}; }).sort((a,b)=>a.參與者.localeCompare(b.參與者));
+    const info=[['美娟華語工作室 模擬考網站 研究資料（去識別化）'],['匯出時間',_rsTs(Date.now())],['日期範圍',(from||'不限')+' ～ '+(to||'不限')],[''],
+      ['參與者代號','學習者依第一次使用時間編為 P001、P002…；訪客編為 G001…。不含姓名、帳號、信箱。'],
+      ['考試紀錄','每次交卷一列。開始／結束時間、總秒數、實際作答秒數（切到其他分頁的時間不算）。v3.28 之前的紀錄沒有時間資料。'],
+      ['逐題作答','每次考試的每一題一列。停留秒數＝這題畫面停留時間（可能來回多次，合計）；第一次作答秒數＝第一次選答案前的停留時間；改答次數＝「全部做完再看答案」模式下改選的次數。'],
+      ['問答題','每次自評或送批改一列。'+(withText?'包含學生回答與老師評語。':'不含回答內容。')],
+      ['使用紀錄','網站操作事件：visit 打開網站、login 登入、guest_start 訪客試做、exam_start 開始測驗、exam_finish 交卷、exam_leave_noanswer 沒作答就離開、review_start 錯題複習、open 打開頁面、download_pdf 下載 PDF、share_result 分享成績、leave 離開網站（細節為停留秒數）。']];
+    const wb=XLSX.utils.book_new();
+    const add=(name,rows,head)=>{ const ws=rows.length?XLSX.utils.json_to_sheet(rows):XLSX.utils.aoa_to_sheet([head||['（沒有資料）']]); XLSX.utils.book_append_sheet(wb, ws, name); };
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(info), '說明');
+    add('參與者',parts); add('考試紀錄',exams); add('逐題作答',items); add('問答題',essays); add('使用紀錄',usage);
+    XLSX.writeFile(wb, '研究資料_去識別化_'+_rsTs(Date.now()).slice(0,10)+'.xlsx');
+    msg.textContent='已匯出：'+parts.length+' 位參與者、'+exams.length+' 次考試、'+items.length+' 題作答、'+essays.length+' 份問答題、'+usage.length+' 筆使用紀錄';
+  }catch(e){ console.warn(e); msg.textContent='匯出失敗：'+(e.message||e); }
+}
+async function exportCodeMap(){
+  if(!confirm('對照表含有學生姓名與信箱，只能自己保存，不能放進論文或分享。要匯出嗎？')) return;
+  const msg=document.getElementById('rs-msg');
+  try{ await _rsLoadXLSX(); const d=_rsData, C=_rsCodes();
+    const rows=Object.entries(C.map).map(([k,code])=>{ const u=d.users.find(x=>C.key(Object.assign({},x,{name:x.name||x._id}))===k)||{}; return {參與者:code, 帳號名稱:u.name||u._id||k.replace(/^[un]:/,''), 顯示名稱:u.displayName||'', 信箱:u.email||''}; }).sort((a,b)=>a.參與者.localeCompare(b.參與者));
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), '代號對照'); XLSX.writeFile(wb,'代號對照表_請勿外流_'+_rsTs(Date.now()).slice(0,10)+'.xlsx');
+    msg.textContent='已匯出對照表（'+rows.length+' 人）';
+  }catch(e){ msg.textContent='匯出失敗：'+(e.message||e); }
 }
 </script>
 
