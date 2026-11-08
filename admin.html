@@ -506,7 +506,6 @@ button.qb-yr-head:hover { background:#f4ede2; }
     <section class="page" id="page-overview">
       <div class="page-head"><div class="page-head-text"><h2 class="page-title">總覽</h2></div></div>
       <div id="dashboard"></div>
-      <div id="dash-visits"></div>
     </section>
 
     <!-- 學習者 -->
@@ -566,6 +565,7 @@ button.qb-yr-head:hover { background:#f4ede2; }
             <button id="guest-clear-btn" class="btn btn-danger" onclick="clearGuestRecords()" style="display:none"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg>清空紀錄</button>
           </div>
         </div>
+        <div id="dash-visits" class="gm-wrap"></div>
         <div id="guest-months" class="gm-wrap"></div>
         <div id="guest-table-container" class="sec-table">
           <table class="admin-table">
@@ -1264,6 +1264,7 @@ function showPage(name){
   if(name==='board') loadAdminBoard();
   if(name==='essay') loadEssayAdmin();
   if(name==='research') loadResearch();
+  if(name==='guests') loadVisitStats();
 }
 // 留言板管理：看全部留言，主管理員可刪除
 let _adminBoardUnsub=null, _abAll=[], _abMode='q', _abLogUnsub=null, _abLog=[], _abOpenHist={};
@@ -1413,7 +1414,7 @@ async function loadVisitStats(force){
   const el=document.getElementById('dash-visits'); if(!el) return;
   if(!force && _pvCache && Date.now()-_pvAt<60000){ renderVisitStats(); return; }
   try{ const snap=await _db.collection('pageStats').get(); _pvCache={}; snap.docs.forEach(d=>{ _pvCache[d.id]=d.data()||{}; }); _pvAt=Date.now(); }
-  catch(e){ console.warn('pageStats:', e); el.innerHTML='<div class="dash-panel" style="margin-top:12px"><div class="dash-panel-title">網站瀏覽</div><div class="dash-empty">讀取失敗：'+esc(e.message||String(e))+'</div></div>'; return; }
+  catch(e){ console.warn('pageStats:', e); el.innerHTML='<div class="dash-panel"><div class="dash-panel-title">網站瀏覽人數</div><div class="dash-empty">讀取失敗：'+esc(e.message||String(e))+'</div></div>'; return; }
   renderVisitStats();
 }
 function renderVisitStats(){
@@ -1423,7 +1424,7 @@ function renderVisitStats(){
   const g=(k,f)=>Number((_pvCache[k]||{})[f]||0);
   let mV=0,mP=0; Object.keys(_pvCache).forEach(k=>{ if(k.slice(0,7)===month){ mV+=g(k,'visitors'); mP+=g(k,'views'); } });
   const fmt=n=>Number(n||0).toLocaleString('en-US');
-  const box=(lbl,v,p)=>'<div><div class="gm-big">'+fmt(v)+' <small>人</small></div><div class="gm-lbl">'+lbl+'・'+fmt(p)+' 次瀏覽</div></div>';
+  const box=(lbl,v,p,u)=>'<div><div class="gm-big">'+fmt(v)+' <small>'+(u||'人次')+'</small></div><div class="gm-lbl">'+lbl+'・'+fmt(p)+' 次瀏覽</div></div>';
   const days=[]; for(let k=29;k>=0;k--){ const d=new Date(); d.setDate(d.getDate()-k); days.push(tw(d)); }
   const vs=days.map(d=>g(d,'visitors')), ps=days.map(d=>g(d,'views'));
   const mx=Math.max(1,...ps), W=600,H=150,pl=28,pb=22,pt=10,bw=(W-pl)/30, Y=v=>pt+(H-pt-pb)*(1-v/mx);
@@ -1435,8 +1436,8 @@ function renderVisitStats(){
   svg+='<path d="'+ps.map((v,k)=>(k?'L':'M')+(pl+k*bw+bw/2).toFixed(1)+' '+Y(v).toFixed(1)).join(' ')+'" fill="none" stroke="#8b1a1a" stroke-width="1.5" stroke-dasharray="4 3" opacity=".7"/>';
   svg+='</svg>';
   const sum30=vs.reduce((a,b)=>a+b,0);
-  el.innerHTML='<div class="dash-panel" style="margin-top:12px"><div class="dash-panel-title">網站瀏覽<span>人數＝同一個瀏覽器每天算 1 人；瀏覽次數＝每打開一次算 1 次（台灣時間）</span></div>'
-    +'<div class="gm-head">'+box('今天',g(today,'visitors'),g(today,'views'))+box('本月',mV,mP)+box('近 30 天',sum30,ps.reduce((a,b)=>a+b,0))+box('累計',g('total','visitors'),g('total','views'))+'</div>'
+  el.innerHTML='<div class="dash-panel"><div class="dash-panel-title">網站瀏覽人數<span>今天＝今天來了幾個人；本月、近 30 天、累計是把每天的人數加起來（同一人不同天來會重複算，所以是「人次」）；瀏覽次數＝每打開一次算 1 次（台灣時間）</span></div>'
+    +'<div class="gm-head">'+box('今天',g(today,'visitors'),g(today,'views'),'人')+box('本月',mV,mP)+box('近 30 天',sum30,ps.reduce((a,b)=>a+b,0))+box('累計',g('total','visitors'),g('total','views'))+'</div>'
     +'<div class="dash-panel-title" style="margin:6px 0 8px">近 30 天<span>長條＝人數，虛線＝瀏覽次數</span></div>'
     +(g('total','views')?svg:'<div class="dash-empty">還沒有瀏覽紀錄，新版網站上線後開始計算</div>')+'</div>';
 }
@@ -1487,7 +1488,6 @@ function renderDashboard(){
   } else html+='<div class="dash-empty">還沒有作答資料</div>';
   html+='</div></div>';
   el.innerHTML=html;
-  loadVisitStats();
 }
 
 // 點學生看詳情
