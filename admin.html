@@ -316,7 +316,36 @@ body { overflow-x:clip; }
 .rs-card { padding:18px 20px; margin-bottom:12px; }
 .rs-ev { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
 .rs-opts { display:flex; flex-wrap:wrap; gap:16px; align-items:center; margin-top:12px; font-size:14px; }
-.rs-opts input[type=date] { height:32px; padding:0 8px; border:1px solid var(--line); border-radius:8px; font:inherit; }
+/* 日期範圍選擇（v3.34）：取代瀏覽器內建的日期視窗 */
+.dr-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px; font-size:14px; position:relative; }
+.dr-lbl { color:var(--muted); margin-right:2px; }
+.dr-chip { height:32px; padding:0 14px; border:1px solid var(--line); border-radius:999px; background:#fff; font:inherit; font-size:13px; color:var(--ink); cursor:pointer; }
+.dr-chip:hover { border-color:var(--brand); color:var(--brand); }
+.dr-chip.on { background:var(--brand); border-color:var(--brand); color:#fff; font-weight:600; }
+.dr-pick { display:inline-flex; align-items:center; gap:6px; }
+.dr-pick svg { width:14px; height:14px; }
+.dr-pop { position:absolute; top:calc(100% + 8px); left:0; z-index:80; width:300px; background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:0 14px 36px rgba(60,30,20,.16); padding:14px 14px 12px; }
+.dr-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.dr-title { font-weight:700; font-size:15px; }
+.dr-nav { width:30px; height:30px; border:none; border-radius:8px; background:none; color:var(--ink); cursor:pointer; font-size:18px; line-height:1; }
+.dr-nav:hover { background:var(--brand-soft); color:var(--brand); }
+.dr-grid { display:grid; grid-template-columns:repeat(7,1fr); row-gap:2px; text-align:center; }
+.dr-wk { font-size:12px; color:var(--muted); padding:4px 0 6px; }
+.dr-d { height:36px; border:none; background:none; font:inherit; font-size:14px; color:var(--ink); cursor:pointer; border-radius:0; position:relative; }
+.dr-d span { display:inline-flex; width:32px; height:32px; align-items:center; justify-content:center; border-radius:50%; }
+.dr-d:hover span { background:var(--brand-soft); }
+.dr-d.today span { box-shadow:inset 0 0 0 1.5px var(--brand); color:var(--brand); font-weight:700; }
+.dr-d.mid { background:var(--brand-soft); }
+.dr-d.st { background:linear-gradient(90deg,transparent 50%,var(--brand-soft) 50%); }
+.dr-d.en { background:linear-gradient(90deg,var(--brand-soft) 50%,transparent 50%); }
+.dr-d.st.en { background:none; }
+.dr-d.st span, .dr-d.en span { background:var(--brand); color:#fff; font-weight:700; box-shadow:none; }
+.dr-d.fut { color:#c9c2b8; cursor:default; }
+.dr-d.fut:hover span { background:none; }
+.dr-foot { display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:10px; border-top:1px solid var(--line); font-size:12px; color:var(--muted); }
+.dr-foot button { border:none; background:none; font:inherit; font-size:13px; color:var(--brand); cursor:pointer; padding:4px 6px; border-radius:6px; }
+.dr-foot button:hover { background:var(--brand-soft); }
+@media(max-width:480px){ .dr-pop { width:calc(100vw - 40px); } }
 /* 問答題（v3.26） */
 .es-card, .es-bank, .es-edit { padding:14px 18px; margin-bottom:10px; }
 .es-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; cursor:pointer; }
@@ -2198,11 +2227,12 @@ function renderEssayBank(){
   h+='<div class="es-tip" style="margin:0 0 10px">題目文字是從教育部考卷 PDF 自動擷取，請順便檢查。參考答案和評分要點寫好後，學生就能自評；評分要點的分數加起來最好等於配分。'+(isM?'':'（只有主管理員能修改）')+'</div>';
   if(isM) h+='<div class="es-btns" style="justify-content:flex-start;margin:0 0 10px"><button class="btn btn-secondary" onclick="esNewQ()">＋ 新增題目</button></div>';
   const items=_esBank.filter(e=>e.subject===_esSubj).sort((a,b)=>(b.yr.localeCompare(a.yr))||(a.no-b.no));
+  { const nr=items.filter(q=>q.ref||(q.rubric||[]).length).length; h+='<div class="es-tip" style="margin:0 0 10px"><b>這一科：已寫好參考答案 '+nr+' 題／共 '+items.length+' 題。</b>右邊標「還沒寫參考答案」的題目，學生交卷後只看得到自己的回答，沒有答案可以對照自評；按「編輯」就能補上。送老師批改不受影響。</div>'; }
   h+=items.map(q=>{
     const rs=(q.rubric||[]).reduce((a,r)=>a+(Number(r.pts)||0),0), ready=!!(q.ref||(q.rubric||[]).length);
     if(_esEditId===q.id) return renderEssayEditor();
     return '<div class="card es-bank"><div class="es-card-head"><div><b>'+esc(q.yr)+' 年'+esc(q.label?'・'+q.label:'第 '+q.no+' 題')+'</b><span class="es-acc">'+(q.pts||0)+' 分</span><div class="es-sub">'+esc(String(String(q.q).split('\n')[q.label?1:0]||'')).slice(0,90)+'</div></div>'
-      +'<div class="es-right">'+(ready?'<span class="chip ok">已有評分要點 '+(q.rubric||[]).length+' 項'+(rs&&rs!==q.pts?'（合計 '+rs+' 分）':'')+'</span>':'<span class="chip warn">尚未準備</span>')+(isM?'<button class="btn btn-secondary" onclick="esEditQ(\''+esc(q.id)+'\')">編輯</button>':'')+'</div></div></div>';
+      +'<div class="es-right">'+(ready?'<span class="chip ok" title="學生交卷後可以對照參考答案自評">已寫好答案・評分要點 '+(q.rubric||[]).length+' 項'+(rs&&rs!==q.pts?'（合計 '+rs+' 分）':'')+'</span>':'<span class="chip warn" title="按「編輯」寫參考答案和評分要點，學生才能自評">還沒寫參考答案</span>')+(isM?'<button class="btn btn-secondary" onclick="esEditQ(\''+esc(q.id)+'\')">編輯</button>':'')+'</div></div></div>';
   }).join('');
   return h;
 }
@@ -2284,12 +2314,65 @@ function renderResearch(){
     +'<div class="es-tip">作答時間、使用紀錄從 v3.28 上線後才開始記錄；之前的考試紀錄沒有時間資料。讀取時間：'+new Date(d.at).toLocaleString('zh-TW')+'　<button class="ab-hist-btn" onclick="loadResearch(true)">重新讀取</button></div></div>';
   h+='<div class="card rs-card"><div class="rg-title">匯出研究資料（去識別化）</div>'
     +'<div class="es-tip" style="margin-top:0">匯出成一個 Excel 檔，學習者以 P001、P002…、訪客以 G001… 代號表示，不含姓名、帳號、信箱。內含工作表：說明、參與者、考試紀錄、逐題作答、問答題、使用紀錄。</div>'
-    +'<div class="rs-opts"><label><input type="checkbox" id="rs-essay-text" checked> 問答題包含學生的回答內容</label><label>日期範圍 <input type="date" id="rs-from"> 到 <input type="date" id="rs-to"></label></div>'
+    +'<div class="rs-opts"><label><input type="checkbox" id="rs-essay-text" checked> 問答題包含學生的回答內容</label></div>'
+    +'<div class="dr-row"><span class="dr-lbl">日期範圍</span>'+drHtml()+'</div>'
     +'<div class="es-btns" style="justify-content:flex-start"><button class="btn btn-primary" onclick="exportResearch()">匯出 Excel</button>'
     +(_currentRole==='master'?'<button class="btn btn-secondary" onclick="exportCodeMap()">匯出代號對照表（含姓名，請勿外流）</button>':'')
     +'<span class="es-msg" id="rs-msg"></span></div></div>';
   el.innerHTML=h;
 }
+
+// ── 日期範圍選擇（v3.34）：預設按鈕＋自訂月曆；值放在隱藏的 rs-from／rs-to ──
+let _dr={k:'all',from:'',to:''}, _drView=null, _drPick=0;
+const _drFmt=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const _drShow=v=>v?v.replace(/-/g,'/'):'';
+function drHtml(){
+  const P=[['all','全部'],['7','近 7 天'],['30','近 30 天'],['month','本月']];
+  const lab=_dr.k==='custom'&&_dr.from ? _drShow(_dr.from)+(_dr.to&&_dr.to!==_dr.from?' – '+_drShow(_dr.to):'') : '自訂';
+  return P.map(x=>'<button type="button" class="dr-chip'+(_dr.k===x[0]?' on':'')+'" onclick="drPreset(\''+x[0]+'\')">'+x[1]+'</button>').join('')
+    +'<button type="button" class="dr-chip dr-pick'+(_dr.k==='custom'?' on':'')+'" onclick="drToggle(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>'+lab+'</button>'
+    +'<input type="hidden" id="rs-from" value="'+_dr.from+'"><input type="hidden" id="rs-to" value="'+_dr.to+'">'
+    +'<div class="dr-pop" id="dr-pop" style="display:none" onclick="event.stopPropagation()"></div>';
+}
+function drRefresh(){ const row=document.querySelector('.dr-row'); if(row) row.innerHTML='<span class="dr-lbl">日期範圍</span>'+drHtml(); }
+function drPreset(k){
+  const t=new Date(); let f='', e='';
+  if(k==='7'||k==='30'){ const a=new Date(); a.setDate(a.getDate()-(+k-1)); f=_drFmt(a); e=_drFmt(t); }
+  if(k==='month'){ f=_drFmt(new Date(t.getFullYear(),t.getMonth(),1)); e=_drFmt(t); }
+  _dr={k,from:f,to:e}; drRefresh();
+}
+function drToggle(ev){
+  ev.stopPropagation(); const p=document.getElementById('dr-pop'); if(!p) return;
+  if(p.style.display==='block'){ p.style.display='none'; return; }
+  const b=_dr.from?new Date(_dr.from+'T00:00'):new Date(); _drView=new Date(b.getFullYear(),b.getMonth(),1); _drPick=0;
+  p.style.display='block'; drCal();
+}
+function drMove(n){ _drView=new Date(_drView.getFullYear(),_drView.getMonth()+n,1); drCal(); }
+function drCal(){
+  const p=document.getElementById('dr-pop'); if(!p) return;
+  const y=_drView.getFullYear(), m=_drView.getMonth(), first=new Date(y,m,1).getDay(), n=new Date(y,m+1,0).getDate(), today=_drFmt(new Date());
+  const f=_dr.k==='custom'?_dr.from:'', e=_dr.k==='custom'?(_dr.to||_dr.from):'';
+  let g='日一二三四五六'.split('').map(w=>'<div class="dr-wk">'+w+'</div>').join('');
+  for(let i=0;i<first;i++) g+='<div></div>';
+  for(let d=1;d<=n;d++){
+    const v=_drFmt(new Date(y,m,d)); const c=['dr-d'];
+    if(v===today) c.push('today'); if(v>today) c.push('fut');
+    if(f && v===f) c.push('st'); if(e && v===e) c.push('en'); if(f && e && v>f && v<e) c.push('mid');
+    g+='<button type="button" class="'+c.join(' ')+'"'+(v>today?' disabled':' onclick="drDay(\''+v+'\')"')+'><span>'+d+'</span></button>';
+  }
+  const tip=_drPick===1?'再點一下結束日期':'點一下開始日期';
+  p.innerHTML='<div class="dr-head"><button type="button" class="dr-nav" onclick="drMove(-1)" aria-label="上個月">‹</button><div class="dr-title">'+y+' 年 '+(m+1)+' 月</div><button type="button" class="dr-nav" onclick="drMove(1)" aria-label="下個月">›</button></div>'
+    +'<div class="dr-grid">'+g+'</div>'
+    +'<div class="dr-foot"><button type="button" onclick="drPreset(\'all\')">清除</button><span>'+tip+'</span><button type="button" onclick="drDone()">完成</button></div>';
+}
+function drDay(v){
+  if(_drPick!==1 || _dr.k!=='custom'){ _dr={k:'custom',from:v,to:v}; _drPick=1; }
+  else { if(v<_dr.from){ _dr.to=_dr.from; _dr.from=v; } else _dr.to=v; _drPick=0; }
+  const keep=_drView; drRefresh(); const p=document.getElementById('dr-pop'); _drView=keep;
+  if(_drPick===1){ p.style.display='block'; drCal(); }
+}
+function drDone(){ const p=document.getElementById('dr-pop'); if(p) p.style.display='none'; }
+document.addEventListener('click', ()=>{ const p=document.getElementById('dr-pop'); if(p && p.style.display==='block') p.style.display='none'; });
 function _rsLoadXLSX(){
   return new Promise((ok,no)=>{ if(window.XLSX) return ok(); const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; s.onload=ok; s.onerror=()=>no(new Error('無法載入 Excel 元件')); document.head.appendChild(s); });
 }
