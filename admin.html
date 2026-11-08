@@ -317,6 +317,12 @@ body { overflow-x:clip; }
 .rs-ev { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
 .rs-opts { display:flex; flex-wrap:wrap; gap:16px; align-items:center; margin-top:12px; font-size:14px; }
 /* 日期範圍選擇（v3.34）：取代瀏覽器內建的日期視窗 */
+.es-click { cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
+.es-click:hover b { color:var(--brand); }
+.es-open { cursor:pointer; }
+.es-open:hover b { color:var(--brand); }
+.es-fold { border:1px solid var(--line); background:#fff; border-radius:999px; padding:4px 12px; font:inherit; font-size:13px; color:var(--muted); cursor:pointer; }
+.es-fold:hover { color:var(--brand); border-color:var(--brand); }
 .dr-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px; font-size:14px; position:relative; }
 .dr-lbl { color:var(--muted); margin-right:2px; }
 .dr-chip { height:32px; padding:0 14px; border:1px solid var(--line); border-radius:999px; background:#fff; font:inherit; font-size:13px; color:var(--ink); cursor:pointer; }
@@ -2231,7 +2237,7 @@ function renderEssayBank(){
   h+=items.map(q=>{
     const rs=(q.rubric||[]).reduce((a,r)=>a+(Number(r.pts)||0),0), ready=!!(q.ref||(q.rubric||[]).length);
     if(_esEditId===q.id) return renderEssayEditor();
-    return '<div class="card es-bank"><div class="es-card-head"><div><b>'+esc(q.yr)+' 年'+esc(q.label?'・'+q.label:'第 '+q.no+' 題')+'</b><span class="es-acc">'+(q.pts||0)+' 分</span><div class="es-sub">'+esc(String(String(q.q).split('\n')[q.label?1:0]||'')).slice(0,90)+'</div></div>'
+    return '<div class="card es-bank"><div class="es-card-head'+(isM?' es-open':'')+'"'+(isM?' onclick="if(!event.target.closest(\'button\'))esEditQ(\''+esc(q.id)+'\')" title="點一下展開編輯"':'')+'><div><b>'+esc(q.yr)+' 年'+esc(q.label?'・'+q.label:'第 '+q.no+' 題')+'</b><span class="es-acc">'+(q.pts||0)+' 分</span><div class="es-sub">'+esc(String(String(q.q).split('\n')[q.label?1:0]||'')).slice(0,90)+'</div></div>'
       +'<div class="es-right">'+(ready?'<span class="chip ok" title="學生交卷後可以對照參考答案自評">已寫好答案・評分要點 '+(q.rubric||[]).length+' 項'+(rs&&rs!==q.pts?'（合計 '+rs+' 分）':'')+'</span>':'<span class="chip warn" title="按「編輯」寫參考答案和評分要點，學生才能自評">還沒寫參考答案</span>')+(isM?'<button class="btn btn-secondary" onclick="esEditQ(\''+esc(q.id)+'\')">編輯</button>':'')+'</div></div></div>';
   }).join('');
   return h;
@@ -2242,7 +2248,7 @@ function esNewQ(){ const yr=prompt('年份（例如 2026）'); if(!yr) return; c
   _esBank.push({id, subject:_esSubj, yr:yr.trim(), no, pts:10, q:'', ref:'', rubric:[]}); esEditQ(id); }
 function renderEssayEditor(){
   const d=_esDraft, rs=d.rubric.reduce((a,r)=>a+(Number(r.pts)||0),0);
-  return '<div class="card es-edit"><div class="es-card-head"><b>'+esc(d.yr)+' 年'+esc(d.label?'・'+d.label:'第 '+d.no+' 題')+'（'+ES_SN[d.subject]+'）</b></div>'
+  return '<div class="card es-edit"><div class="es-card-head es-click" onclick="esCollapse()" title="點一下收起"><b>'+esc(d.yr)+' 年'+esc(d.label?'・'+d.label:'第 '+d.no+' 題')+'（'+ES_SN[d.subject]+'）</b><button type="button" class="es-fold">收起 ▴</button></div>'
     +'<div class="es-sec">題目</div><textarea class="es-ta" rows="5" oninput="_esDraft.q=this.value">'+esc(d.q)+'</textarea>'
     +'<div class="es-sec">配分 <input type="number" class="es-num" min="0" value="'+(d.pts||0)+'" oninput="_esDraft.pts=Number(this.value)||0"> 分</div>'
     +'<div class="es-sec">參考答案</div><textarea class="es-ta" rows="7" placeholder="寫給學生看的參考答案" oninput="_esDraft.ref=this.value">'+esc(d.ref||'')+'</textarea>'
@@ -2251,6 +2257,8 @@ function renderEssayEditor(){
     +'<button class="btn btn-secondary" onclick="_esDraft.rubric.push({text:\'\',pts:0});renderEssayAdmin()">＋ 新增評分要點</button>'
     +'<div class="es-btns"><span class="es-msg" id="es-bank-msg"></span><button class="btn btn-secondary" onclick="esCancelEdit()">取消</button><button class="btn btn-primary" onclick="esSaveQ()">儲存</button></div></div>';
 }
+function esCollapse(){ const q=esQ(_esEditId)||{}; const o=JSON.stringify({q:q.q||'',pts:q.pts||0,ref:q.ref||'',r:q.rubric||[]}), n=JSON.stringify({q:_esDraft.q||'',pts:_esDraft.pts||0,ref:_esDraft.ref||'',r:_esDraft.rubric||[]});
+  if(o!==n && !confirm('這一題有修改還沒儲存，確定要收起（不儲存）嗎？')) return; esCancelEdit(); }
 function esCancelEdit(){ const q=esQ(_esEditId); if(q && !q.q && !q.ref && !(q.rubric||[]).length && !_esDraft.q) _esBank=_esBank.filter(e=>e!==q); _esEditId=null; _esDraft=null; renderEssayAdmin(); }
 async function esSaveQ(){
   const msg=document.getElementById('es-bank-msg'); const d=_esDraft;
