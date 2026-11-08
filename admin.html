@@ -155,6 +155,12 @@ main { max-width:1080px; padding:0 16px 40px; }
 .tabs::-webkit-scrollbar { display:none; }
 .tab { display:flex; align-items:center; gap:7px; padding:10px 14px 11px; border:none; background:none; font:inherit; font-size:14px; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; white-space:nowrap; }
 .tab:hover { color:var(--ink); }
+.subtabs { display:flex; gap:6px; padding:10px 0 2px; overflow-x:auto; scrollbar-width:none; }
+.subtabs:empty { display:none; }
+.subtab { padding:6px 14px; border:1px solid var(--line); border-radius:999px; background:#fff; font:inherit; font-size:13px; color:var(--muted); cursor:pointer; white-space:nowrap; }
+.subtab:hover { color:var(--ink); }
+.subtab.active { background:var(--brand); border-color:var(--brand); color:#fff; font-weight:600; }
+
 .tab.active { color:var(--brand); border-bottom-color:var(--brand); font-weight:600; }
 /* 每一頁 */
 .page { display:none; padding-top:22px; }
@@ -490,16 +496,12 @@ button.qb-yr-head:hover { background:#f4ede2; }
         <button class="icon-btn" onclick="adminLogout()" title="登出" aria-label="登出"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><polyline points="10 8 6 12 10 16"/><line x1="6" y1="12" x2="16" y2="12"/></svg></button>
       </div>
       <nav class="tabs" role="tablist">
-        <button class="tab" data-page="overview" onclick="showPage('overview')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>總覽</button>
-        <button class="tab" data-page="learners" onclick="showPage('learners')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/></svg>學習者</button>
-        <button class="tab master-only" data-page="qb" onclick="showPage('qb')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><line x1="8" y1="8" x2="16" y2="8"/></svg>題庫</button>
-        <button class="tab" data-page="guests" onclick="showPage('guests')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/><path d="M10.5 7.2a1.6 1.6 0 1 1 2.2 1.5c-.5.2-.7.6-.7 1.1"/></svg>訪客</button>
-        <button class="tab" data-page="board" onclick="showPage('board')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>留言板</button>
-        <button class="tab" data-page="essay" onclick="showPage('essay')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"/></svg>問答題</button>
-        <button class="tab" data-page="research" onclick="showPage('research')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16"/><rect x="5" y="10" width="3" height="7"/><rect x="10.5" y="6" width="3" height="11"/><rect x="16" y="12" width="3" height="5"/></svg>研究資料</button>
-        <button class="tab master-only" data-page="admins" onclick="showPage('admins')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><rect x="9" y="11" width="6" height="5" rx="1"/><path d="M10.5 11V9.5a1.5 1.5 0 0 1 3 0V11"/></svg>管理員</button>
-        <button class="tab master-only" data-page="backup" onclick="showPage('backup')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="8" ry="2.5"/><path d="M4 5.5v6c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5v-6"/><path d="M4 11.5v6c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5v-6"/></svg>備份</button>
+        <button class="tab" data-group="home" onclick="showGroup('home')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>總覽</button>
+        <button class="tab" data-group="people" onclick="showGroup('people')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/></svg>學生</button>
+        <button class="tab" data-group="content" onclick="showGroup('content')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><line x1="13.5" y1="6.5" x2="17.5" y2="10.5"/></svg>內容</button>
+        <button class="tab master-only" data-group="settings" onclick="showGroup('settings')"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><rect x="9" y="11" width="6" height="5" rx="1"/><path d="M10.5 11V9.5a1.5 1.5 0 0 1 3 0V11"/></svg>設定</button>
       </nav>
+      <div class="subtabs" id="subtabs"></div>
     </div>
 
     <!-- 總覽 -->
@@ -1255,6 +1257,20 @@ async function sendResetFor(email){
 // ═══════════════════════════════════════════
 //  分頁切換與「⋯」操作選單
 // ═══════════════════════════════════════════
+
+// ── 分頁分組（v3.33）：主分頁 4 個，底下用小按鈕切換 ──
+const PAGE_GROUPS={ home:[['overview','總覽']], people:[['learners','學習者'],['guests','訪客'],['research','研究資料']],
+  content:[['qb','題庫',1],['essay','問答題'],['board','留言板']], settings:[['admins','管理員',1],['backup','備份',1]] };
+const _grpLast={};
+function groupOf(page){ for(const g in PAGE_GROUPS) if(PAGE_GROUPS[g].some(x=>x[0]===page)) return g; return 'home'; }
+function showGroup(g){ const ok=PAGE_GROUPS[g].filter(x=>!x[2]||_currentRole==='master'); if(!ok.length) return; showPage(_grpLast[g]&&ok.some(x=>x[0]===_grpLast[g])?_grpLast[g]:ok[0][0]); }
+function renderGroupNav(name){
+  const g=groupOf(name); _grpLast[g]=name;
+  document.querySelectorAll('.tab[data-group]').forEach(t=>{ const on=t.dataset.group===g; t.classList.toggle('active',on); t.setAttribute('aria-selected',on?'true':'false'); });
+  const ok=PAGE_GROUPS[g].filter(x=>!x[2]||_currentRole==='master');
+  const box=document.getElementById('subtabs'); if(!box) return;
+  box.innerHTML= ok.length>1 ? ok.map(x=>'<button class="subtab'+(x[0]===name?' active':'')+'" onclick="showPage(\''+x[0]+'\')">'+x[1]+'</button>').join('') : '';
+}
 function showPage(name){
   if(_currentRole!=='master' && ['qb','admins','backup'].includes(name)) name='overview';
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', p.id==='page-'+name));
@@ -1265,6 +1281,7 @@ function showPage(name){
   if(name==='essay') loadEssayAdmin();
   if(name==='research') loadResearch();
   if(name==='guests') loadVisitStats();
+  renderGroupNav(name);
 }
 // 留言板管理：看全部留言，主管理員可刪除
 let _adminBoardUnsub=null, _abAll=[], _abMode='q', _abLogUnsub=null, _abLog=[], _abOpenHist={};
